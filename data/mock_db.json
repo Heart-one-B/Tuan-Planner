@@ -1,0 +1,18 @@
+{
+  "activities": {
+    "family":[
+      {"id": "A1", "name": "奥林匹克森林公园", "type": "outdoor", "price": 0, "child_friendly": true},
+      {"id": "A2", "name": "奇幻森林室内亲子乐园", "type": "indoor", "price": 128, "child_friendly": true}
+    ],
+    "friends":[
+      {"id": "B1", "name": "滨江 Citywalk", "type": "outdoor", "price": 0},
+      {"id": "B2", "name": "星空艺术沉浸展", "type": "indoor", "price": 88}
+    ]
+  },
+  "restaurants":[
+    {"id": "R1", "name": "Wagas 轻食沙拉", "distance": "800m", "tags":["减脂", "健康"]},
+    {"id": "R2", "name": "GreenBites 有机简餐", "distance": "1.2km", "tags": ["减脂", "有机"]},
+    {"id": "R3", "name": "胡桃里音乐酒馆", "distance": "500m", "tags":["聚会", "音乐"]},
+    {"id": "R4", "name": "大馥烧肉", "distance": "600m", "tags": ["烤肉", "聚餐"]}
+  ]
+}
