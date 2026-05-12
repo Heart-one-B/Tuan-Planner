@@ -1,0 +1,12 @@
+.idea/
+__pycache__/
+*.pyc
+
+.env
+
+config/model.yml
+config/tools.yml
+
+Agents.md
+
+docs

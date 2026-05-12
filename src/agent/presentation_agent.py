@@ -7,7 +7,7 @@ class PresentationAgent:
         """
         根据规划结果，生成带有表格、详细说明和满意度询问的文本
         """
-        print("📱 [Presentation Agent] 正在排版最终方案...")
+        print("[Presentation Agent] 正在排版最终方案...")
 
         # 整理干预信息，让模型知道“救场”的背景
         intervention_context = " ".join(plan.get("exceptions_handled", []))
@@ -45,4 +45,35 @@ class PresentationAgent:
             ])
             return response.content
         except Exception as e:
-            return f"方案生成失败，请稍后重试。错误: {e}"
+            return self._generate_fallback_display(plan, intent, str(e))
+
+    def _generate_fallback_display(self, plan: dict, intent: dict, error: str) -> str:
+        activities = plan.get("activities") or [{}]
+        activity = activities[0]
+        restaurant = plan.get("restaurant") or {}
+        exceptions = plan.get("exceptions_handled") or []
+        exception_text = "\n".join(f"- {item}" for item in exceptions) or "- 暂无异常，当前方案可执行。"
+
+        return f"""# 下午行程建议（{intent.get('scenario', 'family')} 场景）
+
+## 第一部分：行程时间表
+
+| 时间段 | 活动 | 备注 |
+| --- | --- | --- |
+| 14:00-17:00 | {activity.get('name', '待确认活动')} | 类型：{activity.get('type', '未知')} |
+| 17:00-18:00 | 休息/转场 | 预留交通和休息时间 |
+| 18:00-19:30 | {restaurant.get('name', '待确认餐厅')} | 已按当前约束匹配 |
+
+## 第二部分：方案亮点说明
+
+{exception_text}
+
+- 已结合用户场景、天气风险和餐厅可用性生成方案。
+- 模型文案生成不可用，当前使用规则化 fallback 展示，不影响 Mock 规划与执行。
+
+## 第三部分：结束语
+
+您对这个安排满意吗？如果没问题，我可以为您一键完成预订。
+
+> fallback reason: {error}
+"""

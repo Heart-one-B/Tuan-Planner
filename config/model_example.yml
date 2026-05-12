@@ -1,0 +1,9 @@
+provider: deepseek
+
+chat_model_name: qwen3-8b
+embedding_model_name: text-embedding-v4
+dashscope_api_key:
+
+deepseek_model_name: deepseek-v4-flash
+deepseek_api_key:
+deepseek_base_url:

@@ -1,39 +1,62 @@
-#模型较多时，用该代码文件封装模型
 from abc import ABC, abstractmethod
 from typing import Optional
 
 from langchain_community.chat_models import ChatTongyi
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
+from langchain_openai import ChatOpenAI
+
 from src.utils.config_handler import model_conf
 
 
-"""
-    BaseModelFactory 继承自ABC，是一个抽象基类
-    作用：定义规范，禁止直接实例化，唯一作用就是被继承， 是工厂类的模板
-"""
 class BaseModelFactory(ABC):
-    """
-        abstractmethod:强制子类实现
-        强制约束：任何继承了 BaseModelFactory 的子类，必须自己写一个 generator 方法。
-
-    """
     @abstractmethod
-    # Optional[Embeddings | BaseChatModel] —— 返回值类型注解，这是 Python 的 Type Hinting（类型提示）。
     def generator(self) -> Optional[Embeddings | BaseChatModel]:
         pass
 
+
 class ChatModelFactory(BaseModelFactory):
     def generator(self) -> Optional[Embeddings | BaseChatModel]:
+        provider = model_conf.get("provider", "dashscope")
+        if provider == "dashscope":
+            return self._generator_dashscope()
+        if provider == "deepseek":
+            return self._generator_deepseek()
+        raise ValueError(f"Unsupported model provider: {provider}")
+
+    def _generator_dashscope(self) -> BaseChatModel:
+        api_key = model_conf.get("dashscope_api_key")
+        if not api_key:
+            raise ValueError("Missing dashscope_api_key in config/model.yml")
         return ChatTongyi(
             model=model_conf["chat_model_name"],
-            dashscope_api_key=model_conf["dashscope_api_key"],
+            dashscope_api_key=api_key,
             model_kwargs={"enable_thinking": False}
         )
 
+    def _generator_deepseek(self) -> BaseChatModel:
+        api_key = model_conf.get("deepseek_api_key")
+        if not api_key:
+            raise ValueError("Missing deepseek_api_key in config/model.yml")
+        return ChatOpenAI(
+            model=model_conf.get("deepseek_model_name", "deepseek-v4-flash"),
+            api_key=api_key,
+            base_url=model_conf.get("deepseek_base_url", "https://api.deepseek.com"),
+            extra_body={"thinking": {"type": "disabled"}}
+        )
 
-chat_model=ChatModelFactory().generator()
+
+class LazyChatModel:
+    def __init__(self):
+        self._model: Optional[BaseChatModel] = None
+
+    def _get_model(self) -> BaseChatModel:
+        if self._model is None:
+            self._model = ChatModelFactory().generator()
+        return self._model
+
+    def invoke(self, *args, **kwargs):
+        return self._get_model().invoke(*args, **kwargs)
 
 
-
-
+chat_model = LazyChatModel()
