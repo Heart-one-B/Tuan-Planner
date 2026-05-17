@@ -7,6 +7,7 @@ from src.agent.planning_agent import PlanningAgent
 from src.agent.presentation_agent import PresentationAgent
 from src.agent.retrieval_agent import RetrievalAgent
 from src.graph.state import AgentState
+from src.graph.time_contract import missing_required_time_fields
 from src.model.factory import chat_model
 from src.tools.mock_api import MockToolAPI
 
@@ -202,6 +203,22 @@ def _safe_constraints(state: AgentState) -> dict:
     return constraints if isinstance(constraints, dict) else {}
 
 
+def _has_required_time_fields(constraints: dict, node_name: str) -> bool:
+    return len(missing_required_time_fields(constraints, node_name)) == 0
+
+
+def _print_time_context(node_name: str, constraints: dict) -> None:
+    print(
+        f"[{node_name}] time="
+        f"date_label={constraints.get('date_label')!r}, "
+        f"daypart={constraints.get('daypart')!r}, "
+        f"time_phrase={constraints.get('time_phrase')!r}, "
+        f"time_window={constraints.get('time_window')!r}, "
+        f"start_time={constraints.get('start_time')!r}, "
+        f"duration_hours={constraints.get('duration_hours')!r}"
+    )
+
+
 def _infer_queue_time_slot(time_window: str) -> str:
     """time_window → estimate_restaurant_queue 所需 slot。
 
@@ -231,13 +248,112 @@ def _infer_crowd_time_slot(time_window: str) -> str:
     return "weekend_morning"
 
 
+def _derive_weather_scenario_key(constraints: dict) -> str:
+    explicit = constraints.get("weather_scenario")
+    if isinstance(explicit, str) and explicit.strip():
+        return explicit.strip()
+
+    date_label = constraints.get("date_label")
+    if not isinstance(date_label, str):
+        date_label = ""
+    daypart = constraints.get("daypart")
+    if not isinstance(daypart, str):
+        daypart = ""
+
+    is_weekend = any(token in date_label for token in ("周末", "周六", "周日", "周天"))
+    if daypart == "晚上":
+        return "storm"
+    if daypart == "下午" and is_weekend:
+        return "sunny"
+    return "default"
+
+
+def _derive_traffic_depart_context(constraints: dict) -> str:
+    date_label = constraints.get("date_label")
+    if not isinstance(date_label, str):
+        date_label = ""
+    daypart = constraints.get("daypart")
+    if not isinstance(daypart, str):
+        daypart = ""
+    if not date_label or not daypart:
+        return ""
+    return f"{date_label}:{daypart}"
+
+
+def _activity_matches_daypart(activity: dict, daypart: str) -> bool:
+    peak_hours = activity.get("peak_hours")
+    if not isinstance(peak_hours, list) or not peak_hours:
+        return False
+
+    for slot in peak_hours:
+        if not isinstance(slot, str) or "-" not in slot:
+            continue
+        start_text, end_text = slot.split("-", 1)
+        try:
+            start_hour = int(start_text.split(":")[0])
+            end_hour = int(end_text.split(":")[0])
+        except (TypeError, ValueError):
+            continue
+
+        if daypart == "下午" and start_hour < 18:
+            return True
+        if daypart == "晚上" and end_hour >= 18:
+            return True
+    return False
+
+
+def _restaurant_matches_daypart(restaurant: dict, daypart: str) -> bool:
+    peak_hours = restaurant.get("peak_hours")
+    if not isinstance(peak_hours, list) or not peak_hours:
+        return False
+
+    for slot in peak_hours:
+        if not isinstance(slot, str) or "-" not in slot:
+            continue
+        start_text, end_text = slot.split("-", 1)
+        try:
+            start_hour = int(start_text.split(":")[0])
+            end_hour = int(end_text.split(":")[0])
+        except (TypeError, ValueError):
+            continue
+
+        if daypart == "下午" and start_hour < 18:
+            return True
+        if daypart == "晚上" and end_hour >= 18:
+            return True
+    return False
+
+
 def weather_check_node(state: AgentState) -> AgentState:
     """并行节点 1：查询天气，写 ``state.weather``。"""
     print("[Weather Check Node] 查询天气...")
     try:
         constraints = _safe_constraints(state)
-        scenario_key = constraints.get("weather_scenario") or "default"
+        _print_time_context("Weather Check Node", constraints)
+        if not _has_required_time_fields(constraints, "weather_check"):
+            missing = ",".join(missing_required_time_fields(constraints, "weather_check"))
+            update = _append_error(state, f"Weather Check node skipped: missing time fields [{missing}]")
+            print(f"[Weather Check Node] skipped, missing_fields=[{missing}]")
+            update["weather"] = {
+                "target_id": "weather",
+                "status": "unknown",
+                "weather": "",
+                "risk_level": "unknown",
+                "advice": "",
+            }
+            return update
+
+        scenario_key = _derive_weather_scenario_key(constraints)
         weather = MockToolAPI().get_weather(scenario_key)
+        if not isinstance(weather, dict):
+            weather = {}
+        weather["scenario_key_used"] = scenario_key
+        weather["date_label_used"] = constraints.get("date_label")
+        weather["daypart_used"] = constraints.get("daypart")
+        print(
+            f"[Weather Check Node] result scenario_key_used={scenario_key!r}, "
+            f"risk_level={weather.get('risk_level')!r}, advice={weather.get('advice')!r}"
+        )
         return {"weather": weather}
     except Exception as exc:
         print(f"[Weather Check Node][WARN] 节点异常，跳过并记录错误: {exc}")
@@ -249,11 +365,52 @@ def activity_search_node(state: AgentState) -> AgentState:
     print("[Activity Search Node] 搜索候选活动...")
     try:
         constraints = _safe_constraints(state)
+        _print_time_context("Activity Search Node", constraints)
+        if not _has_required_time_fields(constraints, "activity_search"):
+            missing = ",".join(missing_required_time_fields(constraints, "activity_search"))
+            update = _append_error(state, f"Activity Search node skipped: missing time fields [{missing}]")
+            print(f"[Activity Search Node] skipped, missing_fields=[{missing}]")
+            update["activities"] = []
+            return update
+
         scenario = constraints.get("scenario") or "family"
+        daypart = constraints.get("daypart")
+        if not isinstance(daypart, str):
+            daypart = ""
         activities = MockToolAPI().search_activities(scenario)
         if not isinstance(activities, list):
             activities = []
-        return {"activities": activities}
+
+        child_friendly_required = constraints.get("child_friendly_required") is True
+        normalized_activities: list[dict] = []
+        for item in activities:
+            if not isinstance(item, dict):
+                continue
+            normalized_activities.append(dict(item))
+
+        if child_friendly_required:
+            child_friendly_matches = [
+                item for item in normalized_activities if item.get("child_friendly") is True
+            ]
+            if child_friendly_matches:
+                normalized_activities = child_friendly_matches
+
+        matched = [
+            item for item in normalized_activities if _activity_matches_daypart(item, daypart)
+        ]
+        if not matched:
+            update = _append_error(state, f"Activity Search node found no activities for daypart [{daypart}]")
+            print(f"[Activity Search Node] no matched activities for daypart={daypart!r}")
+            update["activities"] = []
+            return update
+
+        for item in matched:
+            item["daypart_used"] = daypart
+        print(
+            f"[Activity Search Node] matched_ids={[item.get('id') for item in matched]}, "
+            f"daypart_used={daypart!r}"
+        )
+        return {"activities": matched}
     except Exception as exc:
         print(f"[Activity Search Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Activity Search node failed: {exc}")
@@ -264,11 +421,63 @@ def restaurant_search_node(state: AgentState) -> AgentState:
     print("[Restaurant Search Node] 搜索候选餐厅...")
     try:
         constraints = _safe_constraints(state)
+        _print_time_context("Restaurant Search Node", constraints)
+        if not _has_required_time_fields(constraints, "restaurant_search"):
+            missing = ",".join(missing_required_time_fields(constraints, "restaurant_search"))
+            update = _append_error(state, f"Restaurant Search node skipped: missing time fields [{missing}]")
+            print(f"[Restaurant Search Node] skipped, missing_fields=[{missing}]")
+            update["restaurants"] = []
+            return update
+
         diet_preference = constraints.get("diet_preference") or ""
+        scenario = constraints.get("scenario") or ""
+        if not isinstance(scenario, str):
+            scenario = ""
+        daypart = constraints.get("daypart")
+        if not isinstance(daypart, str):
+            daypart = ""
         restaurants = MockToolAPI().search_restaurants(diet_preference)
         if not isinstance(restaurants, list):
             restaurants = []
-        return {"restaurants": restaurants}
+
+        normalized_restaurants: list[dict] = []
+        for item in restaurants:
+            if not isinstance(item, dict):
+                continue
+            normalized_restaurants.append(dict(item))
+
+        matched = [
+            item for item in normalized_restaurants if _restaurant_matches_daypart(item, daypart)
+        ]
+        if not matched:
+            update = _append_error(state, f"Restaurant Search node found no restaurants for daypart [{daypart}]")
+            print(f"[Restaurant Search Node] no matched restaurants for daypart={daypart!r}")
+            update["restaurants"] = []
+            return update
+
+        def _scenario_rank(item: dict) -> int:
+            tags = item.get("tags") or []
+            tags_semantic = item.get("tags_semantic") or []
+            merged = []
+            if isinstance(tags, list):
+                merged.extend(str(tag) for tag in tags)
+            if isinstance(tags_semantic, list):
+                merged.extend(str(tag) for tag in tags_semantic)
+            text = " ".join(merged)
+            if scenario == "friends" and any(token in text for token in ("聚会", "音乐", "氛围", "晚餐", "酒馆")):
+                return 0
+            if scenario == "family" and any(token in text for token in ("健康", "轻食", "有机", "简餐")):
+                return 0
+            return 1
+
+        matched.sort(key=_scenario_rank)
+        for item in matched:
+            item["daypart_used"] = daypart
+        print(
+            f"[Restaurant Search Node] matched_ids={[item.get('id') for item in matched]}, "
+            f"daypart_used={daypart!r}"
+        )
+        return {"restaurants": matched}
     except Exception as exc:
         print(f"[Restaurant Search Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Restaurant Search node failed: {exc}")
@@ -283,7 +492,19 @@ def traffic_eta_node(state: AgentState) -> AgentState:
     print("[Traffic ETA Node] 批量查询通勤 ETA...")
     try:
         constraints = _safe_constraints(state)
+        _print_time_context("Traffic ETA Node", constraints)
+        if not _has_required_time_fields(constraints, "traffic_eta"):
+            missing = ",".join(missing_required_time_fields(constraints, "traffic_eta"))
+            update = _append_error(state, f"Traffic ETA node skipped: missing time fields [{missing}]")
+            print(f"[Traffic ETA Node] skipped, missing_fields=[{missing}]")
+            update["traffic"] = {
+                "origin_area_used": constraints.get("origin_area") or "",
+                "depart_context_used": "",
+                "eta_by_target": {},
+            }
+            return update
         origin_area = constraints.get("origin_area") or "area_central"
+        depart_context = _derive_traffic_depart_context(constraints)
         api = MockToolAPI()
         activity_ids: list[str] = []
         activities_by_scenario = api.db.get("activities", {}) or {}
@@ -300,13 +521,25 @@ def traffic_eta_node(state: AgentState) -> AgentState:
 
         eta_by_target: dict[str, dict] = {}
         for target_id in all_targets:
-            record = api.get_traffic_eta(origin_area, target_id)
+            record = api.get_traffic_eta(origin_area, target_id, depart_context)
             eta_by_target[target_id] = {
                 "eta_minutes": record.get("eta_minutes"),
                 "congestion": record.get("congestion"),
                 "fallback_hint": record.get("fallback_hint"),
+                "depart_context_used": depart_context,
             }
-        return {"traffic": {"origin_area_used": origin_area, "eta_by_target": eta_by_target}}
+        print(
+            f"[Traffic ETA Node] origin_area_used={origin_area!r}, "
+            f"depart_context_used={depart_context!r}, "
+            f"target_count={len(eta_by_target)}"
+        )
+        return {
+            "traffic": {
+                "origin_area_used": origin_area,
+                "depart_context_used": depart_context,
+                "eta_by_target": eta_by_target,
+            }
+        }
     except Exception as exc:
         print(f"[Traffic ETA Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Traffic ETA node failed: {exc}")
@@ -318,6 +551,11 @@ def queue_check_node(state: AgentState) -> AgentState:
     try:
         constraints = _safe_constraints(state)
         time_window = constraints.get("time_window") or ""
+        if not _has_required_time_fields(constraints, "queue_check"):
+            missing = ",".join(missing_required_time_fields(constraints, "queue_check"))
+            update = _append_error(state, f"Queue Check node skipped: missing time fields [{missing}]")
+            update["queue"] = {"time_slot_used": "", "wait_by_restaurant": {}}
+            return update
         time_slot = _infer_queue_time_slot(time_window)
         people_count = constraints.get("people_count")
         if not isinstance(people_count, int) or isinstance(people_count, bool) or people_count <= 0:
@@ -350,6 +588,11 @@ def crowd_risk_node(state: AgentState) -> AgentState:
     try:
         constraints = _safe_constraints(state)
         time_window = constraints.get("time_window") or ""
+        if not _has_required_time_fields(constraints, "crowd_risk"):
+            missing = ",".join(missing_required_time_fields(constraints, "crowd_risk"))
+            update = _append_error(state, f"Crowd Risk node skipped: missing time fields [{missing}]")
+            update["crowd"] = {"crowd_by_activity": {}}
+            return update
         time_slot = _infer_crowd_time_slot(time_window)
 
         api = MockToolAPI()
@@ -414,6 +657,9 @@ def validate_plan_node(state: AgentState) -> AgentState:
 
             max_traffic = constraints.get("max_traffic_minutes")
             max_queue = constraints.get("max_queue_minutes")
+            if not _has_required_time_fields(constraints, "validate_plan"):
+                violations.append("时间语义未澄清完整，无法判断具体安排在哪一天的下午或晚上")
+                suggested_fixes.append("先把日期/星期和下午或晚上都澄清清楚，再继续生成方案")
 
             def _is_num(v):
                 return isinstance(v, (int, float)) and not isinstance(v, bool)

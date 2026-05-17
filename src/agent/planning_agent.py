@@ -108,10 +108,36 @@ def _ordered_unique(items):
     return out
 
 
-def _format_timeline(activity, restaurant):
+def _format_timeline(activity, restaurant, constraints):
     activity_name = (activity or {}).get("name") or "待确认活动"
     restaurant_name = (restaurant or {}).get("name") or "待确认餐厅"
-    return f"14:00-17:00 {activity_name} → 18:00-19:30 {restaurant_name}"
+    constraints = _safe_dict(constraints)
+
+    time_phrase = constraints.get("time_phrase")
+    if not isinstance(time_phrase, str) or not time_phrase.strip():
+        time_phrase = "待确认时间"
+
+    start_time = constraints.get("start_time")
+    if isinstance(start_time, str) and start_time.strip():
+        return f"{time_phrase} {start_time.strip()} 出发：{activity_name} → {restaurant_name}"
+    return f"{time_phrase}：{activity_name} → {restaurant_name}"
+
+
+def _derive_time_window_from_intent_time(time_info):
+    time_info = _safe_dict(time_info)
+    explicit_time_window = time_info.get("time_window")
+    if isinstance(explicit_time_window, str) and explicit_time_window.strip():
+        return explicit_time_window.strip()
+
+    time_phrase = time_info.get("time_phrase")
+    if not isinstance(time_phrase, str):
+        time_phrase = ""
+    is_weekend = any(token in time_phrase for token in ("周末", "周六", "周日", "周天"))
+    if "晚上" in time_phrase or "今晚" in time_phrase:
+        return "weekend_evening" if is_weekend else "today_evening"
+    if "下午" in time_phrase or "中午" in time_phrase or "白天" in time_phrase:
+        return "weekend_afternoon" if is_weekend else "today_afternoon"
+    return ""
 
 
 def _gather_fallbacks(weather, traffic, queue, crowd):
@@ -324,15 +350,23 @@ class PlanningAgent:
             "activity": act_primary,
             "restaurant": res_primary,
             "weather": weather,
+            "time_window": constraints.get("time_window"),
+            "time_phrase": constraints.get("time_phrase"),
+            "start_time": constraints.get("start_time"),
+            "duration_hours": constraints.get("duration_hours"),
             "exceptions_handled": exceptions_handled,
             "fallbacks": fallbacks,
-            "timeline": _format_timeline(act_primary, res_primary),
+            "timeline": _format_timeline(act_primary, res_primary, constraints),
         }
         backup = {
             "activity": act_backup,
             "restaurant": res_backup,
+            "time_window": constraints.get("time_window"),
+            "time_phrase": constraints.get("time_phrase"),
+            "start_time": constraints.get("start_time"),
+            "duration_hours": constraints.get("duration_hours"),
             "exceptions_handled": [],
-            "timeline": _format_timeline(act_backup, res_backup),
+            "timeline": _format_timeline(act_backup, res_backup, constraints),
         }
         return {"primary": primary, "backup": backup}
 
@@ -360,7 +394,22 @@ class PlanningAgent:
             diet_pref = " ".join(str(item) for item in diet)
         else:
             diet_pref = ""
-        time_window = intent.get("time_window") if isinstance(intent.get("time_window"), str) else "today_afternoon"
+        time_info = intent.get("time")
+        time_window = (
+            intent.get("time_window")
+            if isinstance(intent.get("time_window"), str)
+            else _derive_time_window_from_intent_time(time_info)
+        )
+        time_info = _safe_dict(time_info)
+        time_phrase = time_info.get("time_phrase")
+        if not isinstance(time_phrase, str):
+            time_phrase = ""
+        start_time = time_info.get("start_time_hint")
+        if not isinstance(start_time, str):
+            start_time = ""
+        duration_hours = time_info.get("duration_hours_hint")
+        if isinstance(duration_hours, bool) or not isinstance(duration_hours, int) or duration_hours <= 0:
+            duration_hours = None
         origin_area = (
             intent.get("origin_area")
             if isinstance(intent.get("origin_area"), str) and intent.get("origin_area")
@@ -429,6 +478,9 @@ class PlanningAgent:
             "scenario": scenario,
             "diet_preference": diet_pref,
             "time_window": time_window,
+            "time_phrase": time_phrase,
+            "start_time": start_time,
+            "duration_hours": duration_hours,
             "origin_area": origin_area,
             "max_traffic_minutes": _DEFAULT_MAX_TRAFFIC,
             "max_queue_minutes": _DEFAULT_MAX_QUEUE,
