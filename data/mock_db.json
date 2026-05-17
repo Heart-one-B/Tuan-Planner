@@ -1,18 +1,123 @@
 {
   "activities": {
-    "family":[
-      {"id": "A1", "name": "奥林匹克森林公园", "type": "outdoor", "price": 0, "child_friendly": true},
-      {"id": "A2", "name": "奇幻森林室内亲子乐园", "type": "indoor", "price": 128, "child_friendly": true}
+    "family": [
+      {
+        "id": "A1",
+        "name": "奥林匹克森林公园",
+        "type": "outdoor",
+        "price": 0,
+        "child_friendly": true,
+        "location": "area_north",
+        "tags_semantic": ["亲子", "遛娃", "跑步", "公园", "户外", "自然"],
+        "description": "北部大型城市公园，绿地面积大，跑步道和儿童活动区配套齐全，适合家庭周末遛娃。",
+        "peak_hours": ["09:00-11:00", "16:00-18:00"]
+      },
+      {
+        "id": "A2",
+        "name": "奇幻森林室内亲子乐园",
+        "type": "indoor",
+        "price": 128,
+        "child_friendly": true,
+        "location": "area_central",
+        "tags_semantic": ["亲子", "室内", "游乐", "蹦床", "沙池"],
+        "description": "市中心商场内的室内亲子乐园，恒温空调，含蹦床、沙池、攀爬区，雨天和高温天首选。",
+        "peak_hours": ["10:00-12:00", "14:00-17:00"]
+      }
     ],
-    "friends":[
-      {"id": "B1", "name": "滨江 Citywalk", "type": "outdoor", "price": 0},
-      {"id": "B2", "name": "星空艺术沉浸展", "type": "indoor", "price": 88}
+    "friends": [
+      {
+        "id": "B1",
+        "name": "滨江 Citywalk",
+        "type": "outdoor",
+        "price": 0,
+        "location": "area_south",
+        "tags_semantic": ["citywalk", "散步", "江景", "拍照", "户外"],
+        "description": "滨江绿道沿线步行路线，江景开阔，适合朋友聚会拍照和傍晚散步。",
+        "peak_hours": ["17:00-19:00", "20:00-22:00"]
+      },
+      {
+        "id": "B2",
+        "name": "星空艺术沉浸展",
+        "type": "indoor",
+        "price": 88,
+        "location": "area_central",
+        "tags_semantic": ["艺术", "沉浸", "展览", "室内", "拍照"],
+        "description": "市中心沉浸式光影艺术展，室内恒温，单次约 60-90 分钟，适合朋友聚会与拍照打卡。",
+        "peak_hours": ["13:00-15:00", "19:00-21:00"]
+      }
     ]
   },
-  "restaurants":[
-    {"id": "R1", "name": "Wagas 轻食沙拉", "distance": "800m", "tags":["减脂", "健康"]},
-    {"id": "R2", "name": "GreenBites 有机简餐", "distance": "1.2km", "tags": ["减脂", "有机"]},
-    {"id": "R3", "name": "胡桃里音乐酒馆", "distance": "500m", "tags":["聚会", "音乐"]},
-    {"id": "R4", "name": "大馥烧肉", "distance": "600m", "tags": ["烤肉", "聚餐"]}
-  ]
+  "restaurants": [
+    {
+      "id": "R1",
+      "name": "Wagas 轻食沙拉",
+      "distance": "800m",
+      "tags": ["减脂", "健康"],
+      "location": "area_central",
+      "tags_semantic": ["轻食", "沙拉", "减脂", "低卡", "工作日午餐"],
+      "description": "市中心连锁轻食店，主打沙拉与谷物碗，午市高峰排队明显。",
+      "peak_hours": ["12:00-13:30", "18:30-19:30"]
+    },
+    {
+      "id": "R2",
+      "name": "GreenBites 有机简餐",
+      "distance": "1.2km",
+      "tags": ["减脂", "有机"],
+      "location": "area_central",
+      "tags_semantic": ["有机", "简餐", "减脂", "蔬食", "可外带"],
+      "description": "有机食材简餐店，分量适中，午市等位时间短，是 Wagas 的近距离备选。",
+      "peak_hours": ["12:30-13:30"]
+    },
+    {
+      "id": "R3",
+      "name": "胡桃里音乐酒馆",
+      "distance": "500m",
+      "tags": ["聚会", "音乐"],
+      "location": "area_central",
+      "tags_semantic": ["聚会", "现场音乐", "酒馆", "晚餐", "氛围"],
+      "description": "市中心现场音乐酒馆，晚间聚会氛围浓，周末晚市需要提前订位。",
+      "peak_hours": ["19:00-22:00"]
+    },
+    {
+      "id": "R4",
+      "name": "大馥烧肉",
+      "distance": "600m",
+      "tags": ["烤肉", "聚餐"],
+      "location": "area_central",
+      "tags_semantic": ["烤肉", "聚餐", "和牛", "包间", "晚餐"],
+      "description": "市中心日式烧肉店，提供包间，适合朋友/家庭聚餐，晚市等位通常较短。",
+      "peak_hours": ["18:00-20:30"]
+    }
+  ],
+  "traffic": {
+    "area_central->A1": {"eta_minutes": 55, "congestion": "high"},
+    "area_central->A2": {"eta_minutes": 8, "congestion": "low"},
+    "area_central->B1": {"eta_minutes": 30, "congestion": "medium"},
+    "area_central->B2": {"eta_minutes": 6, "congestion": "low"},
+    "area_central->R1": {"eta_minutes": 10, "congestion": "low"},
+    "area_central->R2": {"eta_minutes": 15, "congestion": "low"},
+    "area_central->R3": {"eta_minutes": 7, "congestion": "low"},
+    "area_central->R4": {"eta_minutes": 9, "congestion": "low"}
+  },
+  "queues": {
+    "R1@lunch": {"wait_minutes": 60, "party_acceptable": false},
+    "R2@lunch": {"wait_minutes": 5, "party_acceptable": true},
+    "R3@dinner": {"wait_minutes": 35, "party_acceptable": true},
+    "R4@dinner": {"wait_minutes": 10, "party_acceptable": true},
+    "R1@dinner": {"wait_minutes": 20, "party_acceptable": true},
+    "R2@dinner": {"wait_minutes": 5, "party_acceptable": true}
+  },
+  "crowd": {
+    "A1@weekend_morning": {"crowd_level": "high", "advice": "建议提前出发或改去室内场地"},
+    "A2@weekend_morning": {"crowd_level": "low"},
+    "B1@weekend_evening": {"crowd_level": "medium", "advice": "傍晚人流上升，注意拍照排队"},
+    "B2@weekend_evening": {"crowd_level": "low"},
+    "A1@weekday_evening": {"crowd_level": "medium"},
+    "A2@weekday_evening": {"crowd_level": "low"}
+  },
+  "weather_scenarios": {
+    "default": {"weather": "35℃ 阵雨", "risk": "High", "advice": "建议室内活动"},
+    "sunny": {"weather": "26℃ 晴", "risk": "Low", "advice": "适合户外"},
+    "storm": {"weather": "暴雨橙色预警", "risk": "High", "advice": "必须室内"}
+  }
 }
