@@ -24,14 +24,29 @@ def _append_error(state: AgentState, error: str) -> AgentState:
 
 def intent_node(state: AgentState) -> AgentState:
     try:
-        intent = IntentAgent().parse(state["user_input"])
-        return {"intent": intent}
+        intent = IntentAgent().parse(
+            state["user_input"],
+            state.get("runtime_origin_area", ""),
+        )
+        return {
+            "intent": intent,
+            "is_leisure_planning": intent.get("is_leisure_planning"),
+            "need_retrieval": intent.get("need_retrieval"),
+            "clarification_needed": intent.get("clarification_needed"),
+            "missing_slots": intent.get("missing_slots"),
+            "follow_up_message": intent.get("follow_up_message"),
+        }
     except Exception as exc:
         return _append_error(state, f"Intent node failed: {exc}")
 
 
 def llm_answer_node(state: AgentState) -> AgentState:
     """非规划任务直答节点：让 LLM 直接回答用户输入。失败时写入固定 fallback 文案。"""
+    if state.get("clarification_needed") is True:
+        follow_up = state.get("follow_up_message")
+        if isinstance(follow_up, str) and follow_up.strip():
+            print("[LLM Answer Node] 当前需要澄清，直接返回追问文案。")
+            return {"llm_answer": follow_up}
     user_input = state.get("user_input", "")
     print("[LLM Answer Node] 检测到非本地生活规划任务，调用 LLM 直接回答...")
     try:
@@ -100,6 +115,25 @@ def plan_candidate_node(state: AgentState) -> AgentState:
         return _append_error(state, f"Plan Candidate node failed: {exc}")
 
 
+def _derive_plan_compat_from_state(state: AgentState) -> dict:
+    """优先使用兼容 plan；缺失时从 candidates.primary 派生最小兼容视图。"""
+    plan = state.get("plan")
+    if isinstance(plan, dict) and plan:
+        return plan
+
+    candidates = state.get("candidates")
+    primary = candidates.get("primary") if isinstance(candidates, dict) else None
+    if not isinstance(primary, dict) or not primary:
+        return {}
+
+    plan_compat = dict(primary)
+    activity = primary.get("activity")
+    restaurant = primary.get("restaurant")
+    plan_compat["activities"] = [activity] if isinstance(activity, dict) else []
+    plan_compat["restaurant"] = restaurant if isinstance(restaurant, dict) else {}
+    return plan_compat
+
+
 def retrieval_node(state: AgentState) -> AgentState:
     """Retrieval Node：基于 intent 做 mock RAG 检索，写入 ``state.retrieval_context``。
 
@@ -130,10 +164,13 @@ def constraint_collect_node(state: AgentState) -> AgentState:
             state.get("intent", {}),
             state.get("retrieval_context", {}),
             state.get("replan_reason", ""),
+            state.get("replan_reason_type", ""),
+            state.get("runtime_origin_area", ""),
         )
         print(
             f"[Constraint Collect Node][OK] scenario={constraints.get('scenario')}, "
             f"party={constraints.get('party')}, "
+            f"origin_area={constraints.get('origin_area')}, "
             f"max_traffic_minutes={constraints.get('max_traffic_minutes')}, "
             f"max_queue_minutes={constraints.get('max_queue_minutes')}, "
             f"replan_hints_n={len(constraints.get('replan_hints', []))}, "
@@ -169,10 +206,11 @@ def _infer_queue_time_slot(time_window: str) -> str:
     """time_window → estimate_restaurant_queue 所需 slot。
 
     规则：
-        * 含 "evening" → "dinner"；
-        * 其它（含 "morning" / 缺省 / 非字符串） → "lunch"。
+        * `today_evening` / `weekend_evening` → `dinner`
+        * `today_afternoon` / `weekend_afternoon` → `lunch`
+        * 其它缺省回退 `lunch`
     """
-    if isinstance(time_window, str) and "evening" in time_window:
+    if isinstance(time_window, str) and time_window in {"today_evening", "weekend_evening"}:
         return "dinner"
     return "lunch"
 
@@ -180,12 +218,16 @@ def _infer_queue_time_slot(time_window: str) -> str:
 def _infer_crowd_time_slot(time_window: str) -> str:
     """time_window → evaluate_crowd_risk 所需 slot。
 
-    支持三种 mock 表内键：weekend_morning / weekend_evening / weekday_evening。
-    其它输入回退 "weekend_morning"，与 DEFAULT_POLICY 默认一致。
+    外部统一使用业务标签，内部映射到当前 mock 支持的 crowd slot。
     """
-    valid = {"weekend_morning", "weekend_evening", "weekday_evening"}
-    if isinstance(time_window, str) and time_window in valid:
-        return time_window
+    mapping = {
+        "today_afternoon": "weekend_morning",
+        "weekend_afternoon": "weekend_morning",
+        "today_evening": "weekday_evening",
+        "weekend_evening": "weekend_evening",
+    }
+    if isinstance(time_window, str):
+        return mapping.get(time_window, "weekend_morning")
     return "weekend_morning"
 
 
@@ -240,6 +282,8 @@ def traffic_eta_node(state: AgentState) -> AgentState:
     """
     print("[Traffic ETA Node] 批量查询通勤 ETA...")
     try:
+        constraints = _safe_constraints(state)
+        origin_area = constraints.get("origin_area") or "area_central"
         api = MockToolAPI()
         activity_ids: list[str] = []
         activities_by_scenario = api.db.get("activities", {}) or {}
@@ -256,13 +300,13 @@ def traffic_eta_node(state: AgentState) -> AgentState:
 
         eta_by_target: dict[str, dict] = {}
         for target_id in all_targets:
-            record = api.get_traffic_eta("area_central", target_id)
+            record = api.get_traffic_eta(origin_area, target_id)
             eta_by_target[target_id] = {
                 "eta_minutes": record.get("eta_minutes"),
                 "congestion": record.get("congestion"),
                 "fallback_hint": record.get("fallback_hint"),
             }
-        return {"traffic": {"eta_by_target": eta_by_target}}
+        return {"traffic": {"origin_area_used": origin_area, "eta_by_target": eta_by_target}}
     except Exception as exc:
         print(f"[Traffic ETA Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Traffic ETA node failed: {exc}")
@@ -275,6 +319,9 @@ def queue_check_node(state: AgentState) -> AgentState:
         constraints = _safe_constraints(state)
         time_window = constraints.get("time_window") or ""
         time_slot = _infer_queue_time_slot(time_window)
+        people_count = constraints.get("people_count")
+        if not isinstance(people_count, int) or isinstance(people_count, bool) or people_count <= 0:
+            people_count = 2
 
         api = MockToolAPI()
         restaurant_ids = [
@@ -285,13 +332,13 @@ def queue_check_node(state: AgentState) -> AgentState:
 
         wait_by_restaurant: dict[str, dict] = {}
         for rid in restaurant_ids:
-            record = api.estimate_restaurant_queue(rid, time_slot)
+            record = api.estimate_restaurant_queue(rid, time_slot, people_count)
             wait_by_restaurant[rid] = {
                 "wait_minutes": record.get("wait_minutes"),
                 "party_acceptable": record.get("party_acceptable"),
                 "fallback_hint": record.get("fallback_hint"),
             }
-        return {"queue": {"wait_by_restaurant": wait_by_restaurant}}
+        return {"queue": {"time_slot_used": time_slot, "wait_by_restaurant": wait_by_restaurant}}
     except Exception as exc:
         print(f"[Queue Check Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Queue Check node failed: {exc}")
@@ -552,6 +599,7 @@ def replan_node(state: AgentState) -> AgentState:
             "constraints": new_constraints,
             "replan_count": new_count,
             "replan_reason": "",
+            "replan_reason_type": state.get("replan_reason_type", "validation_failure") or "validation_failure",
         }
 
         if new_count >= _REPLAN_BUDGET:
@@ -598,14 +646,15 @@ def route_after_replan(state: AgentState) -> str:
 
 def presentation_node(state: AgentState) -> AgentState:
     try:
+        plan = _derive_plan_compat_from_state(state)
         display_text = PresentationAgent().generate_plan_display(
-            state.get("plan", {}),
+            plan,
             state.get("intent", {}),
         )
         print("\n" + "=" * 20 + " 方案详情 " + "=" * 20)
         print(display_text)
         print("=" * 50)
-        return {"display_text": display_text}
+        return {"display_text": display_text, "plan": plan}
     except Exception as exc:
         return _append_error(state, f"Presentation node failed: {exc}")
 
@@ -614,15 +663,23 @@ def confirmation_node(state: AgentState) -> AgentState:
     if "user_confirmed" in state:
         return {"user_confirmed": state["user_confirmed"]}
     confirm = input("\n[系统提示] 确定按照此方案执行一键下单吗？(y/n): ")
-    return {"user_confirmed": confirm.lower() == "y"}
+    confirmed = confirm.lower() == "y"
+    if confirmed:
+        return {"user_confirmed": True}
+    return {
+        "user_confirmed": False,
+        "replan_reason": "用户未确认当前方案",
+        "replan_reason_type": "user_feedback",
+    }
 
 
 def execution_node(state: AgentState) -> AgentState:
     try:
-        result = ExecutionAgent().execute(state.get("plan", {}))
+        plan = _derive_plan_compat_from_state(state)
+        result = ExecutionAgent().execute(plan)
         if result is None:
             result = {"status": "success", "message": "Execution completed"}
-        return {"execution_result": result}
+        return {"execution_result": result, "plan": plan}
     except Exception as exc:
         return _append_error(state, f"Execution node failed: {exc}")
 
@@ -636,10 +693,73 @@ def reject_node(state: AgentState) -> AgentState:
     }
 
 
+def final_message_node(state: AgentState) -> AgentState:
+    """Final Message Node：把执行结果转成可转发的最终消息。"""
+    execution_result = state.get("execution_result") or {}
+    plan = _derive_plan_compat_from_state(state)
+    intent = state.get("intent") or {}
+    status = execution_result.get("status")
+    scenario = intent.get("scenario", "family")
+
+    activity_name = "待确认活动"
+    restaurant_name = "待确认餐厅"
+    if isinstance(plan, dict):
+        activities = plan.get("activities") or []
+        if isinstance(activities, list) and activities and isinstance(activities[0], dict):
+            activity_name = activities[0].get("name") or activity_name
+        restaurant = plan.get("restaurant") or {}
+        if isinstance(restaurant, dict):
+            restaurant_name = restaurant.get("name") or restaurant_name
+
+    if status == "success":
+        orders = execution_result.get("orders") or []
+        order_lines = []
+        if isinstance(orders, list):
+            for item in orders:
+                if not isinstance(item, dict):
+                    continue
+                order_type = item.get("type", "order")
+                order_id = item.get("order_id", "N/A")
+                order_lines.append(f"- {order_type}: {order_id}")
+        order_text = "\n".join(order_lines) if order_lines else "- 已完成关键预约"
+        message = (
+            f"搞定了。{scenario} 场景下的本次安排已经完成。\n"
+            f"活动：{activity_name}\n"
+            f"餐厅：{restaurant_name}\n"
+            f"执行结果：\n{order_text}\n"
+            f"如果你要，我也可以继续帮你整理成可直接发给家人/朋友的版本。"
+        )
+    elif status == "cancelled":
+        message = (
+            f"你刚才选择了不执行当前方案。"
+            f"如果你想重新安排 {scenario} 场景的本地活动，我可以继续帮你重新规划。"
+        )
+    elif status == "error":
+        msg = execution_result.get("message") or "执行阶段发生异常。"
+        message = (
+            f"本次执行没有完全完成：{msg}\n"
+            f"如果你愿意，我可以基于当前结果帮你重新规划一版更稳妥的方案。"
+        )
+    else:
+        errors = state.get("errors") or []
+        if isinstance(errors, list) and errors:
+            message = (
+                "当前方案暂时没有收敛到可执行结果。\n"
+                f"原因：{errors[-1]}"
+            )
+        else:
+            message = (
+                f"本次安排已走到执行后的结果整理阶段。"
+                f"当前状态：{status or 'unknown'}。"
+            )
+
+    return {"final_message": message}
+
+
 def route_after_confirmation(state: AgentState) -> str:
     if state.get("user_confirmed"):
         return "execute"
-    return "reject"
+    return "replan"
 
 
 def route_after_intent(state: AgentState) -> str:
@@ -671,6 +791,8 @@ def route_after_intent_for_retrieval(state: AgentState) -> str:
     if not isinstance(intent, dict):
         return "planning"
     if intent.get("is_leisure_planning") is False:
+        return "llm_answer"
+    if intent.get("clarification_needed") is True:
         return "llm_answer"
     if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
         return "retrieval"

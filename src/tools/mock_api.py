@@ -18,9 +18,14 @@ class MockToolAPI:
         """根据场景搜索活动（兼容旧行为）。"""
         return self.db["activities"].get(scenario, self.db["activities"]["family"])
 
-    def search_restaurants(self, diet_preference: str):
+    def search_restaurants(self, diet_preference):
         """根据饮食偏好搜索餐厅（兼容旧行为）。"""
-        if "减脂" in diet_preference or "减肥" in diet_preference:
+        if isinstance(diet_preference, list):
+            diet_tokens = [str(item) for item in diet_preference]
+            diet_text = " ".join(diet_tokens)
+        else:
+            diet_text = str(diet_preference or "")
+        if "减脂" in diet_text or "减肥" in diet_text:
             return [r for r in self.db["restaurants"] if "减脂" in r["tags"]]
         return [r for r in self.db["restaurants"] if "减脂" not in r["tags"]]
 

@@ -45,6 +45,16 @@
     need_retrieval
         写入: Intent Node（或独立判定节点）
         读取: Need Retrieval? 路由
+    clarification_needed
+        写入: Intent Node
+        读取: Clarification 路由 / 调用方
+    missing_slots
+        写入: Intent Node
+        读取: Clarification 路由 / 调用方
+        形如: {"global": ["scenario", "origin_area"]}
+    follow_up_message
+        写入: Intent Node
+        读取: Clarification 路由 / 调用方
     llm_answer
         写入: LLM Answer Node
         读取: 终止前调用方
@@ -90,6 +100,9 @@
     replan_reason
         写入: Replan Node, User Confirm? 拒绝分支, Execution Result 核心变化分支
         读取: Replan Node, Plan Candidate Node
+    replan_reason_type
+        写入: Replan Node, User Confirm? 拒绝分支, Execution Result 核心变化分支
+        读取: Replan Node
     replan_count
         写入: Replan Node（自增；读取方应使用 ``state.get("replan_count", 0)`` 兜底）
         读取: Replan Node 防死循环判定
@@ -107,11 +120,15 @@ from typing import Any, TypedDict
 class AgentState(TypedDict, total=False):
     # --- 入口与意图 ---
     user_input: str
+    runtime_origin_area: str
     intent: dict[str, Any]
 
     # --- 路由布尔 ---
     is_leisure_planning: bool
     need_retrieval: bool
+    clarification_needed: bool
+    missing_slots: dict[str, list[str]]
+    follow_up_message: str
 
     # --- 非规划直答 ---
     llm_answer: str
@@ -134,6 +151,7 @@ class AgentState(TypedDict, total=False):
 
     # --- 重规划 ---
     replan_reason: str
+    replan_reason_type: str
     replan_count: int
 
     # --- 展示与确认（旧字段，迁移期保留）---

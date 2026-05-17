@@ -8,6 +8,7 @@ from src.graph.nodes import (
     execution_node,
     intent_node,
     llm_answer_node,
+    final_message_node,
     plan_candidate_node,
     presentation_node,
     queue_check_node,
@@ -63,6 +64,7 @@ def build_workflow():
     graph.add_node("presentation", presentation_node)
     graph.add_node("confirmation", confirmation_node)
     graph.add_node("execution", execution_node)
+    graph.add_node("final_message", final_message_node)
     graph.add_node("reject", reject_node)
 
     graph.set_entry_point("intent")
@@ -105,7 +107,7 @@ def build_workflow():
         route_after_replan,
         {
             "constraint_collect": "constraint_collect",
-            "final_message": "presentation",  # TODO(T15): 切到 final_message_node
+            "final_message": "final_message",
         },
     )
     graph.add_edge("presentation", "confirmation")
@@ -114,10 +116,11 @@ def build_workflow():
         route_after_confirmation,
         {
             "execute": "execution",
-            "reject": "reject",
+            "replan": "replan",
         },
     )
-    graph.add_edge("execution", END)
+    graph.add_edge("execution", "final_message")
+    graph.add_edge("final_message", END)
     graph.add_edge("reject", END)
 
     return graph.compile()

@@ -11,14 +11,25 @@ class PresentationAgent:
 
         # 整理干预信息，让模型知道“救场”的背景
         intervention_context = " ".join(plan.get("exceptions_handled", []))
+        activities = plan.get("activities") or [{}]
+        activity = activities[0] if isinstance(activities, list) and activities else {}
+        restaurant = plan.get("restaurant") or {}
+        activity_name = activity.get("name", "待确认活动")
+        activity_type = activity.get("type", "未知")
+        restaurant_name = restaurant.get("name", "待确认餐厅")
+        diet_pref = intent.get("diet_preference")
+        if isinstance(diet_pref, list):
+            diet_pref_text = "、".join(str(item) for item in diet_pref) if diet_pref else "无"
+        else:
+            diet_pref_text = diet_pref or "无"
 
         prompt = f"""
         你是一个专业的美团生活助理。请根据以下规划数据，为用户生成一份精美的下午行程建议。
 
-        用户背景: {intent.get('scenario')} 场景 (备注: {intent.get('diet_preference')}需求)
+        用户背景: {intent.get('scenario')} 场景 (备注: {diet_pref_text}需求)
         规划数据:
-        - 玩乐活动: {plan['activities'][0]['name']} (类型: {plan['activities'][0]['type']})
-        - 晚餐餐厅: {plan['restaurant']['name']} (备注: 已匹配{intent.get('diet_preference')}需求)
+        - 玩乐活动: {activity_name} (类型: {activity_type})
+        - 晚餐餐厅: {restaurant_name} (备注: 已匹配{diet_pref_text}需求)
         - 异常救场信息: {intervention_context}
 
         请严格按以下三个部分进行回复：
@@ -26,7 +37,7 @@ class PresentationAgent:
         第一部分：行程时间表
         以 Markdown 表格形式展示，包含三列：【时间段】、【活动】、【备注】。
         注意：下午行程从14:00开始，晚餐安排在18:00-19:30。
-        例子：18:00-19:30 | 晚餐 | {plan['restaurant']['name']} (已预留4人位)
+        例子：18:00-19:30 | 晚餐 | {restaurant_name} (待确认后执行订座)
 
         第二部分：方案亮点说明
         分点说明为什么这么安排。必须提到：

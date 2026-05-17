@@ -21,8 +21,14 @@ DEFAULT_POLICY: dict[str, Any] = {
     "max_traffic_minutes": 40,
     "max_queue_minutes": 30,
     "indoor_preferred": False,
-    "time_window": "weekend_morning",
+    "time_window": "today_afternoon",
     "party": "default",
+    "origin_area": "area_central",
+    "origin_type": "default",
+    "location_source": "default",
+    "start_time": "14:00",
+    "duration_hours": 5,
+    "people_count": 2,
 }
 
 
@@ -63,6 +69,21 @@ def _take_top_ids(container: dict[str, Any], key: str, limit: int = 3) -> list[s
     return out
 
 
+def _coerce_text_list(value: Any) -> list[str]:
+    if isinstance(value, str):
+        value = value.strip()
+        return [value] if value and value not in {"无", "none", "None"} else []
+    if isinstance(value, list):
+        out: list[str] = []
+        for item in value:
+            if isinstance(item, str):
+                item = item.strip()
+                if item and item not in {"无", "none", "None"} and item not in out:
+                    out.append(item)
+        return out
+    return []
+
+
 class ConstraintAgent:
     """Constraint Collect 纯函数 Agent：合并 intent / retrieval / 默认策略 / replan 反馈。"""
 
@@ -71,6 +92,8 @@ class ConstraintAgent:
         intent: dict[str, Any] | None,
         retrieval_context: dict[str, Any] | None,
         replan_reason: str = "",
+        replan_reason_type: str = "",
+        runtime_origin_area: str = "",
     ) -> dict[str, Any]:
         intent = _safe_dict(intent)
         retrieval_context = _safe_dict(retrieval_context)
@@ -82,15 +105,57 @@ class ConstraintAgent:
 
         # --- time_window ---
         time_window_raw = intent.get("time_window")
+        time_info = _safe_dict(intent.get("time"))
         time_window = (
             time_window_raw
             if isinstance(time_window_raw, str) and time_window_raw
-            else DEFAULT_POLICY["time_window"]
+            else (
+                "today_afternoon"
+                if isinstance(time_info.get("time_phrase"), str)
+                and "下午" in time_info.get("time_phrase", "")
+                else DEFAULT_POLICY["time_window"]
+            )
+        )
+        start_time = (
+            time_info.get("start_time_hint")
+            if isinstance(time_info.get("start_time_hint"), str) and time_info.get("start_time_hint")
+            else DEFAULT_POLICY["start_time"]
+        )
+        duration_hours = (
+            _coerce_positive_int(time_info.get("duration_hours_hint"))
+            or _coerce_positive_int(intent.get("duration_hours"))
+            or DEFAULT_POLICY["duration_hours"]
         )
 
+        # --- participants / people_count / child flags ---
+        participants = _safe_dict(intent.get("participants"))
+        people_count = (
+            _coerce_positive_int(participants.get("people_count"))
+            or _coerce_positive_int(intent.get("people_count"))
+            or DEFAULT_POLICY["people_count"]
+        )
+        has_child = bool(participants.get("has_child")) or intent.get("child_friendly") is True
+        child_age = _coerce_positive_int(participants.get("child_age"))
+        child_friendly_required = has_child or intent.get("child_friendly") is True
+
         # --- diet_preference ---
-        diet_raw = intent.get("diet_preference")
-        diet_preference = diet_raw if isinstance(diet_raw, str) and diet_raw else "无"
+        diet_preference = _coerce_text_list(intent.get("diet_preference"))
+
+        # --- location / origin ---
+        location_info = _safe_dict(intent.get("location"))
+        origin_area_hint = location_info.get("origin_area_hint")
+        if isinstance(origin_area_hint, str) and origin_area_hint:
+            origin_area = origin_area_hint
+            origin_type = "home"
+            location_source = "user_provided"
+        elif isinstance(runtime_origin_area, str) and runtime_origin_area.strip():
+            origin_area = runtime_origin_area.strip()
+            origin_type = "current"
+            location_source = "runtime_location"
+        else:
+            origin_area = DEFAULT_POLICY["origin_area"]
+            origin_type = DEFAULT_POLICY["origin_type"]
+            location_source = DEFAULT_POLICY["location_source"]
 
         # --- max_traffic_minutes ---
         max_traffic = DEFAULT_POLICY["max_traffic_minutes"]
@@ -98,7 +163,7 @@ class ConstraintAgent:
         if intent_traffic is not None:
             max_traffic = intent_traffic
         # child_friendly 收紧：与 intent 覆盖共存时取较小值（孩子优先）
-        if intent.get("child_friendly") is True:
+        if child_friendly_required:
             max_traffic = min(max_traffic, 30)
 
         # --- max_queue_minutes ---
@@ -124,6 +189,14 @@ class ConstraintAgent:
             "scenario": scenario,
             "party": party,
             "time_window": time_window,
+            "start_time": start_time,
+            "duration_hours": duration_hours,
+            "people_count": people_count,
+            "child_friendly_required": child_friendly_required,
+            "child_age": child_age,
+            "origin_area": origin_area,
+            "origin_type": origin_type,
+            "location_source": location_source,
             "diet_preference": diet_preference,
             "max_traffic_minutes": max_traffic,
             "max_queue_minutes": max_queue,
@@ -131,6 +204,7 @@ class ConstraintAgent:
             "replan_hints": replan_hints,
             "retrieval_pois": retrieval_pois,
             "retrieval_notes": retrieval_notes,
+            "replan_reason_type": replan_reason_type if isinstance(replan_reason_type, str) else "",
         }
         # deepcopy 防御：避免外部对返回 dict 的修改污染下次调用的局部变量（虽然本实现不复用，
         # 但保持纯函数语义更稳）。

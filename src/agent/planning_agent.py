@@ -353,15 +353,26 @@ class PlanningAgent:
         api = self._tools_lazy
 
         scenario = intent.get("scenario") if isinstance(intent.get("scenario"), str) else "family"
-        diet = intent.get("diet_preference") if isinstance(intent.get("diet_preference"), str) else ""
-        time_window = intent.get("time_window") if isinstance(intent.get("time_window"), str) else ""
+        diet = intent.get("diet_preference")
+        if isinstance(diet, str):
+            diet_pref = diet
+        elif isinstance(diet, list):
+            diet_pref = " ".join(str(item) for item in diet)
+        else:
+            diet_pref = ""
+        time_window = intent.get("time_window") if isinstance(intent.get("time_window"), str) else "today_afternoon"
+        origin_area = (
+            intent.get("origin_area")
+            if isinstance(intent.get("origin_area"), str) and intent.get("origin_area")
+            else "area_central"
+        )
 
         # 仿照 nodes.py 中并行节点的策略
         weather = api.get_weather("default")
         activities_list = api.search_activities(scenario)
         if not isinstance(activities_list, list):
             activities_list = []
-        restaurants_list = api.search_restaurants(diet)
+        restaurants_list = api.search_restaurants(diet_pref)
         if not isinstance(restaurants_list, list):
             restaurants_list = []
 
@@ -375,7 +386,7 @@ class PlanningAgent:
                 all_targets.append(r["id"])
         eta_by_target = {}
         for tid in all_targets:
-            rec = api.get_traffic_eta("area_central", tid)
+            rec = api.get_traffic_eta(origin_area, tid)
             eta_by_target[tid] = {
                 "eta_minutes": rec.get("eta_minutes"),
                 "congestion": rec.get("congestion"),
@@ -384,7 +395,7 @@ class PlanningAgent:
         traffic = {"eta_by_target": eta_by_target}
 
         # queue：默认 lunch（与 _infer_queue_time_slot 默认一致）
-        queue_slot = "dinner" if "evening" in time_window else "lunch"
+        queue_slot = "dinner" if time_window in {"today_evening", "weekend_evening"} else "lunch"
         wait_by_restaurant = {}
         for r in restaurants_list:
             if isinstance(r, dict) and r.get("id"):
@@ -397,8 +408,13 @@ class PlanningAgent:
         queue = {"wait_by_restaurant": wait_by_restaurant}
 
         # crowd：默认 weekend_morning
-        valid_slots = {"weekend_morning", "weekend_evening", "weekday_evening"}
-        crowd_slot = time_window if time_window in valid_slots else "weekend_morning"
+        crowd_slot_mapping = {
+            "today_afternoon": "weekend_morning",
+            "weekend_afternoon": "weekend_morning",
+            "today_evening": "weekday_evening",
+            "weekend_evening": "weekend_evening",
+        }
+        crowd_slot = crowd_slot_mapping.get(time_window, "weekend_morning")
         crowd_by_activity = {}
         for a in activities_list:
             if isinstance(a, dict) and a.get("id"):
@@ -411,8 +427,9 @@ class PlanningAgent:
 
         constraints = {
             "scenario": scenario,
-            "diet_preference": diet,
+            "diet_preference": diet_pref,
             "time_window": time_window,
+            "origin_area": origin_area,
             "max_traffic_minutes": _DEFAULT_MAX_TRAFFIC,
             "max_queue_minutes": _DEFAULT_MAX_QUEUE,
             "indoor_preferred": False,

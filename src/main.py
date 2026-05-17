@@ -17,7 +17,17 @@ def main():
     if not user_input.strip():
         user_input = "今天下午是空的，想和老婆孩子出去玩几个小时。老婆最近在减肥，孩子5岁。"
 
-    final_state = app.invoke({"user_input": user_input, "errors": []})
+    # MVP 运行时位置注入：当前 CLI 没有真实定位能力，先用稳定的默认区域，
+    # 避免“离家近/附近”类需求在手动测试时频繁卡在位置澄清。
+    runtime_origin_area = "area_central"
+
+    final_state = app.invoke(
+        {
+            "user_input": user_input,
+            "runtime_origin_area": runtime_origin_area,
+            "errors": [],
+        }
+    )
     if final_state.get("user_confirmed"):
         print("\n[DONE] 搞定了！所有订单已处理完成。")
         print("[MOCK] 详细凭证已发送至您的手机（模拟），您可以随时出发！")
