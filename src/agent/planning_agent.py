@@ -50,6 +50,59 @@ def _safe_list(value):
     return value if isinstance(value, list) else []
 
 
+def _normalize_constraints_for_compose(constraints, constraint_build):
+    """优先消费新 schema 的分层约束，回退到旧 constraints。"""
+    constraints = _safe_dict(constraints)
+    constraint_build = _safe_dict(constraint_build)
+
+    hard = _safe_dict(constraint_build.get("hard_constraints"))
+    soft = _safe_dict(constraint_build.get("soft_preferences"))
+    context = _safe_dict(constraint_build.get("context_memory"))
+
+    normalized = dict(constraints)
+
+    if hard:
+        if "max_traffic_minutes" in hard:
+            normalized["max_traffic_minutes"] = hard.get("max_traffic_minutes")
+        if "max_queue_minutes" in hard:
+            normalized["max_queue_minutes"] = hard.get("max_queue_minutes")
+        if "time_window" in hard:
+            normalized["time_window"] = hard.get("time_window")
+        if "date_label" in hard:
+            normalized["date_label"] = hard.get("date_label")
+        if "daypart" in hard:
+            normalized["daypart"] = hard.get("daypart")
+        if "start_time" in hard:
+            normalized["start_time"] = hard.get("start_time")
+        if "duration_hours" in hard:
+            normalized["duration_hours"] = hard.get("duration_hours")
+        if "origin_area" in hard:
+            normalized["origin_area"] = hard.get("origin_area")
+        if "party_size" in hard:
+            normalized["people_count"] = hard.get("party_size")
+        if "child_friendly_required" in hard:
+            normalized["child_friendly_required"] = hard.get("child_friendly_required")
+        if "child_age" in hard:
+            normalized["child_age"] = hard.get("child_age")
+        if hard.get("indoor_only") is True:
+            normalized["indoor_preferred"] = True
+
+    if soft:
+        if "diet_preference" in soft:
+            normalized["diet_preference"] = soft.get("diet_preference")
+        if "activity_style" in soft:
+            normalized["activity_style"] = soft.get("activity_style")
+        if "must_avoid" in soft:
+            normalized["must_avoid"] = soft.get("must_avoid")
+
+    if context:
+        hints = context.get("replan_hints")
+        if isinstance(hints, list):
+            normalized["replan_hints"] = hints
+
+    return normalized
+
+
 def _weather_high(weather):
     """读取天气风险等级；优先 ``risk_level``，回退 ``risk``。"""
     level = weather.get("risk_level")
@@ -297,6 +350,7 @@ class PlanningAgent:
         self,
         *,
         constraints,
+        constraint_build=None,
         weather,
         activities,
         restaurants,
@@ -309,7 +363,7 @@ class PlanningAgent:
         参数全部 keyword-only，全部允许 None / 缺键 / 错类型，按"安全默认"路径
         处理；候选为空时返回 ``{}``，绝不抛异常。
         """
-        constraints = _safe_dict(constraints)
+        constraints = _normalize_constraints_for_compose(constraints, constraint_build)
         weather = _safe_dict(weather)
         activities = _safe_list(activities)
         restaurants = _safe_list(restaurants)

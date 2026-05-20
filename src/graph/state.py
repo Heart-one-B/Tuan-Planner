@@ -1,6 +1,7 @@
 """LangGraph shared state contract for the local life planning workflow."""
 
-from typing import Any, TypedDict
+from operator import add
+from typing import Any, Annotated, TypedDict
 
 
 class AgentState(TypedDict, total=False):
@@ -22,6 +23,7 @@ class AgentState(TypedDict, total=False):
     # --- retrieval and unified constraints ---
     retrieval_context: dict[str, Any]
     constraints: dict[str, Any]
+    constraint_build: dict[str, Any]
     # constraints currently carries at least:
     # scenario / party / time_window / date_label / daypart / time_phrase /
     # start_time / duration_hours / diet_preference / origin_area /
@@ -36,15 +38,23 @@ class AgentState(TypedDict, total=False):
     traffic: dict[str, Any]
     queue: dict[str, Any]
     crowd: dict[str, Any]
+    fact_gathering_result: dict[str, Any]
 
     # --- planning and validation ---
     candidates: dict[str, Any]
+    candidate_plans: dict[str, Any]
     validation_result: dict[str, Any]
+    rule_validation_result: dict[str, Any]
+    repair_loop_result: dict[str, Any]
+    scoring_result: dict[str, Any]
+    final_plan_result: dict[str, Any]
+    final_plan_selection: dict[str, Any]
 
     # --- replan loop ---
     replan_reason: str
     replan_reason_type: str
     replan_count: int
+    repair_round: int
 
     # --- compatibility display/execution view ---
     plan: dict[str, Any]
@@ -57,4 +67,4 @@ class AgentState(TypedDict, total=False):
     final_message: str
 
     # --- aggregated errors ---
-    errors: list[str]
+    errors: Annotated[list[str], add]

@@ -1,66 +1,99 @@
-from langgraph.graph import END, StateGraph
+﻿from langgraph.graph import END, StateGraph
 
 from src.graph.nodes import (
     activity_search_node,
+    candidate_planning_node,
+    clarification_node,
     confirmation_node,
     constraint_collect_node,
     crowd_risk_node,
     execution_node,
+    fact_gathering_node,
+    final_message_node,
+    final_plan_node,
     intent_node,
     llm_answer_node,
-    final_message_node,
-    plan_candidate_node,
     presentation_node,
     queue_check_node,
     reject_node,
-    replan_node,
-    restaurant_search_node,
+    repair_loop_node,
     retrieval_node,
+    rule_validation_node,
     route_after_confirmation,
-    route_after_intent_for_retrieval,
-    route_after_replan,
-    route_after_validate,
+    restaurant_search_node,
     traffic_eta_node,
-    validate_plan_node,
     weather_check_node,
+    scoring_node,
 )
 from src.graph.state import AgentState
 
 
-# T7 起的并行工具节点名常量（注册名 / 边名 一处定义，避免拼写漂移）。
-_PARALLEL_TOOL_NODES: tuple[str, ...] = (
-    "weather_check",
-    "activity_search",
-    "restaurant_search",
-    "traffic_eta",
-    "queue_check",
-    "crowd_risk",
-)
+_MAX_CLARIFICATION_ROUNDS = 5
+
+
+def route_after_intent_with_clarification(state: AgentState) -> str:
+    intent = state.get("intent")
+    if not isinstance(intent, dict):
+        return "constraint_build"
+    if intent.get("is_leisure_planning") is False:
+        return "llm_answer"
+    if intent.get("clarification_needed") is True:
+        return "clarification"
+    if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
+        return "retrieval"
+    return "constraint_build"
+
+
+def route_after_clarification(state: AgentState) -> str:
+    clarification_round = state.get("clarification_round", 0)
+    if isinstance(clarification_round, bool) or not isinstance(clarification_round, int):
+        clarification_round = 0
+    if clarification_round >= _MAX_CLARIFICATION_ROUNDS:
+        return "llm_answer"
+    return "intent"
+
+
+def route_after_candidate_planning(state: AgentState) -> str:
+    return "rule_validation"
+
+
+def route_after_rule_validation(state: AgentState) -> str:
+    result = state.get("rule_validation_result")
+    if isinstance(result, dict) and isinstance(result.get("valid_plans"), list) and result.get("valid_plans"):
+        return "scoring"
+    return "repair_loop"
+
+
+def route_after_repair_loop_new(state: AgentState) -> str:
+    return "constraint_build"
+
+
+def route_after_scoring(state: AgentState) -> str:
+    return "final_plan"
 
 
 def build_workflow():
     graph = StateGraph(AgentState)
 
     graph.add_node("intent", intent_node)
+    graph.add_node("clarification", clarification_node)
     graph.add_node("llm_answer", llm_answer_node)
     graph.add_node("retrieval", retrieval_node)
-    graph.add_node("constraint_collect", constraint_collect_node)
+    graph.add_node("constraint_build", constraint_collect_node)
 
-    # T7：6 个并行工具节点，均从 constraint_collect 扇出。
     graph.add_node("weather_check", weather_check_node)
     graph.add_node("activity_search", activity_search_node)
     graph.add_node("restaurant_search", restaurant_search_node)
     graph.add_node("traffic_eta", traffic_eta_node)
     graph.add_node("queue_check", queue_check_node)
     graph.add_node("crowd_risk", crowd_risk_node)
+    graph.add_node("fact_gathering", fact_gathering_node)
 
-    # T8：plan_candidate 取代旧 planning，作为 6 个并行节点的汇聚点。
-    graph.add_node("plan_candidate", plan_candidate_node)
-    # T9：在 plan_candidate 与 presentation 之间插入 Validate Plan 节点。
-    graph.add_node("validate_plan", validate_plan_node)
-    # T10：Replan Node 接住 validate_plan 失败 / 用户拒绝时的反馈，
-    # 把 reason 结构化成新约束并回到 constraint_collect 重新走 6 个并行节点。
-    graph.add_node("replan", replan_node)
+    graph.add_node("candidate_planning", candidate_planning_node)
+    graph.add_node("rule_validation", rule_validation_node)
+    graph.add_node("repair_loop", repair_loop_node)
+    graph.add_node("scoring", scoring_node)
+    graph.add_node("final_plan", final_plan_node)
     graph.add_node("presentation", presentation_node)
     graph.add_node("confirmation", confirmation_node)
     graph.add_node("execution", execution_node)
@@ -68,55 +101,70 @@ def build_workflow():
     graph.add_node("reject", reject_node)
 
     graph.set_entry_point("intent")
-    # route_after_intent_for_retrieval 仍返回 "planning" / "retrieval" / "llm_answer"
-    # 三个语义；映射表把 "planning" 路由到 constraint_collect，确保所有进入规划链路的请求
-    # 都先经过 constraint_collect 再到 plan_candidate。
     graph.add_conditional_edges(
         "intent",
-        route_after_intent_for_retrieval,
+        route_after_intent_with_clarification,
         {
             "llm_answer": "llm_answer",
+            "clarification": "clarification",
             "retrieval": "retrieval",
-            "planning": "constraint_collect",
+            "constraint_build": "constraint_build",
+        },
+    )
+    graph.add_conditional_edges(
+        "clarification",
+        route_after_clarification,
+        {
+            "intent": "intent",
+            "llm_answer": "llm_answer",
         },
     )
     graph.add_edge("llm_answer", END)
-    graph.add_edge("retrieval", "constraint_collect")
-    # T8：constraint_collect 扇出到 6 个并行工具节点；6 个节点全部汇聚到
-    # plan_candidate（旧 planning 节点已不再连入主图）。
-    for node_name in _PARALLEL_TOOL_NODES:
-        graph.add_edge("constraint_collect", node_name)
-        graph.add_edge(node_name, "plan_candidate")
-    graph.add_edge("plan_candidate", "validate_plan")
-    # T9 / T10：validate_plan 之后做条件路由：通过 → presentation；不通过 → replan。
+    graph.add_edge("retrieval", "constraint_build")
+    graph.add_edge("constraint_build", "weather_check")
+    graph.add_edge("constraint_build", "activity_search")
+    graph.add_edge("constraint_build", "restaurant_search")
+    graph.add_edge("constraint_build", "traffic_eta")
+    graph.add_edge("constraint_build", "queue_check")
+    graph.add_edge("constraint_build", "crowd_risk")
+    graph.add_edge("weather_check", "fact_gathering")
+    graph.add_edge("activity_search", "fact_gathering")
+    graph.add_edge("restaurant_search", "fact_gathering")
+    graph.add_edge("traffic_eta", "fact_gathering")
+    graph.add_edge("queue_check", "fact_gathering")
+    graph.add_edge("crowd_risk", "fact_gathering")
+    graph.add_edge("fact_gathering", "candidate_planning")
     graph.add_conditional_edges(
-        "validate_plan",
-        route_after_validate,
+        "candidate_planning",
+        route_after_candidate_planning,
+        {"rule_validation": "rule_validation"},
+    )
+    graph.add_conditional_edges(
+        "rule_validation",
+        route_after_rule_validation,
         {
-            "presentation": "presentation",
-            "replan": "replan",
+            "scoring": "scoring",
+            "repair_loop": "repair_loop",
         },
     )
-    # T10：replan 之后的条件路由。
-    # constraint_collect → 回边重跑 6 个并行节点 + plan_candidate + validate；
-    # final_message → 命中 replan_count 上限时进入兜底展示。T15 之前 final_message
-    # 节点尚未实现，这里占位映射到 presentation，待 T15 上线后改为真正的
-    # final_message 节点。
     graph.add_conditional_edges(
-        "replan",
-        route_after_replan,
-        {
-            "constraint_collect": "constraint_collect",
-            "final_message": "final_message",
-        },
+        "repair_loop",
+        route_after_repair_loop_new,
+        {"constraint_build": "constraint_build"},
     )
+    graph.add_conditional_edges(
+        "scoring",
+        route_after_scoring,
+        {"final_plan": "final_plan"},
+    )
+    graph.add_edge("final_plan", "presentation")
     graph.add_edge("presentation", "confirmation")
     graph.add_conditional_edges(
         "confirmation",
         route_after_confirmation,
         {
             "execute": "execution",
-            "replan": "replan",
+            "replan": "repair_loop",
         },
     )
     graph.add_edge("execution", "final_message")

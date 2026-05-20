@@ -1,4 +1,4 @@
-from langchain_core.messages import HumanMessage
+﻿from langchain_core.messages import HumanMessage
 
 from src.agent.constraint_agent import ConstraintAgent
 from src.agent.execution_agent import ExecutionAgent
@@ -43,11 +43,6 @@ def intent_node(state: AgentState) -> AgentState:
 
 def llm_answer_node(state: AgentState) -> AgentState:
     """非规划任务直答节点：让 LLM 直接回答用户输入。失败时写入固定 fallback 文案。"""
-    if state.get("clarification_needed") is True:
-        follow_up = state.get("follow_up_message")
-        if isinstance(follow_up, str) and follow_up.strip():
-            print("[LLM Answer Node] 当前需要澄清，直接返回追问文案。")
-            return {"llm_answer": follow_up}
     user_input = state.get("user_input", "")
     print("[LLM Answer Node] 检测到非本地生活规划任务，调用 LLM 直接回答...")
     try:
@@ -66,6 +61,42 @@ def llm_answer_node(state: AgentState) -> AgentState:
 
 # DEPRECATED (T8 起替换为 plan_candidate_node)：保留实现以便向后兼容旧链路 / 测试。
 # 不再被 workflow.py 主图连入，移除前请确认无外部调用方依赖。
+
+def clarification_node(state: AgentState) -> AgentState:
+    """图内澄清节点：读取追问并收集补充输入。"""
+    follow_up = state.get("follow_up_message")
+    if not isinstance(follow_up, str) or not follow_up.strip():
+        follow_up = "为了继续规划，请补充一下关键信息。"
+
+    clarification_round = state.get("clarification_round", 0)
+    if isinstance(clarification_round, bool) or not isinstance(clarification_round, int):
+        clarification_round = 0
+
+    print(f"[Clarification Node] {follow_up}")
+    extra_input = input("> ")
+    while not extra_input.strip():
+        extra_input = input("> ")
+    extra_input = extra_input.strip()
+
+    turns = list(state.get("conversation_turns", []))
+    if not turns:
+        first_turn = state.get("user_input", "")
+        if isinstance(first_turn, str) and first_turn.strip():
+            turns = [first_turn]
+
+    turns.append(extra_input)
+    combined_input = "\n".join([turn for turn in turns if isinstance(turn, str) and turn.strip()])
+
+    return {
+        "clarification_round": clarification_round + 1,
+        "conversation_turns": turns,
+        "user_input": combined_input,
+        "clarification_needed": False,
+        "missing_slots": {},
+        "follow_up_message": "",
+    }
+
+
 def planning_node(state: AgentState) -> AgentState:
     try:
         plan = PlanningAgent().plan(state.get("intent", {}))
@@ -90,14 +121,26 @@ def plan_candidate_node(state: AgentState) -> AgentState:
     """
     print("[Plan Candidate Node] 合成 primary + backup 候选方案...")
     try:
+        fact_gathering = state.get("fact_gathering_result")
+        if not isinstance(fact_gathering, dict):
+            fact_gathering = {}
+
+        weather = fact_gathering.get("weather") if isinstance(fact_gathering.get("weather"), dict) else state.get("weather") or {}
+        activities = fact_gathering.get("activities") if isinstance(fact_gathering.get("activities"), list) else state.get("activities") or []
+        restaurants = fact_gathering.get("restaurants") if isinstance(fact_gathering.get("restaurants"), list) else state.get("restaurants") or []
+        traffic = fact_gathering.get("traffic") if isinstance(fact_gathering.get("traffic"), dict) else state.get("traffic") or {}
+        queue = fact_gathering.get("queue") if isinstance(fact_gathering.get("queue"), dict) else state.get("queue") or {}
+        crowd = fact_gathering.get("crowd") if isinstance(fact_gathering.get("crowd"), dict) else state.get("crowd") or {}
+
         candidates = PlanningAgent().compose(
             constraints=state.get("constraints") or {},
-            weather=state.get("weather") or {},
-            activities=state.get("activities") or [],
-            restaurants=state.get("restaurants") or [],
-            traffic=state.get("traffic") or {},
-            queue=state.get("queue") or {},
-            crowd=state.get("crowd") or {},
+            constraint_build=state.get("constraint_build") or {},
+            weather=weather,
+            activities=activities,
+            restaurants=restaurants,
+            traffic=traffic,
+            queue=queue,
+            crowd=crowd,
         )
         if not isinstance(candidates, dict):
             candidates = {}
@@ -114,6 +157,450 @@ def plan_candidate_node(state: AgentState) -> AgentState:
     except Exception as exc:
         print(f"[Plan Candidate Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Plan Candidate node failed: {exc}")
+
+
+def candidate_planning_node(state: AgentState) -> AgentState:
+    """新架构候选计划节点骨架：使用 LLM 生成 3 个结构化候选计划。"""
+    print("[Candidate Planning Node] 生成 3 个候选计划骨架...")
+    try:
+        constraint_build = state.get("constraint_build")
+        if not isinstance(constraint_build, dict):
+            constraint_build = {}
+
+        fact_gathering_result = state.get("fact_gathering_result")
+        if not isinstance(fact_gathering_result, dict):
+            fact_gathering_result = {}
+
+        request_type = constraint_build.get("request_type", "generic_local_plan")
+        plan_mode = constraint_build.get("plan_mode", "activity_plus_meal")
+        hard_constraints = constraint_build.get("hard_constraints") or {}
+        soft_preferences = constraint_build.get("soft_preferences") or {}
+        query_constraints = constraint_build.get("query_constraints") or {}
+
+        prompt = f"""
+你是本地生活行程规划助手。
+请根据给定的结构化约束和事实数据，生成 3 个候选计划。
+
+要求：
+1. 只输出 JSON，不要输出任何额外解释。
+2. 输出字段必须是：
+{{
+  "candidates": [
+    {{
+      "id": "plan_1",
+      "title": "...",
+      "timeline": [],
+      "activity": {{}},
+      "restaurant": {{}},
+      "reasoning": []
+    }},
+    {{
+      "id": "plan_2",
+      "title": "...",
+      "timeline": [],
+      "activity": {{}},
+      "restaurant": {{}},
+      "reasoning": []
+    }},
+    {{
+      "id": "plan_3",
+      "title": "...",
+      "timeline": [],
+      "activity": {{}},
+      "restaurant": {{}},
+      "reasoning": []
+    }}
+  ]
+}}
+3. 必须只基于输入事实生成，不允许编造输入里不存在的事实。
+4. timeline/activity/restaurant 可以先保持最小骨架，但结构必须完整。
+
+输入：
+- request_type: {request_type}
+- plan_mode: {plan_mode}
+- hard_constraints: {hard_constraints}
+- soft_preferences: {soft_preferences}
+- query_constraints: {query_constraints}
+- fact_gathering_result: {fact_gathering_result}
+"""
+
+        response = chat_model.invoke([HumanMessage(content=prompt)])
+        content = getattr(response, "content", "") or ""
+
+        import json
+        import re
+
+        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        payload = json.loads(json_match.group() if json_match else content)
+        if not isinstance(payload, dict):
+            payload = {}
+
+        candidates = payload.get("candidates")
+        if not isinstance(candidates, list):
+            candidates = []
+
+        normalized_candidates = []
+        for index in range(3):
+            item = candidates[index] if index < len(candidates) and isinstance(candidates[index], dict) else {}
+            normalized_candidates.append(
+                {
+                    "id": item.get("id") if isinstance(item.get("id"), str) and item.get("id") else f"plan_{index + 1}",
+                    "title": item.get("title") if isinstance(item.get("title"), str) else "",
+                    "timeline": item.get("timeline") if isinstance(item.get("timeline"), list) else [],
+                    "activity": item.get("activity") if isinstance(item.get("activity"), dict) else {},
+                    "restaurant": item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {},
+                    "reasoning": item.get("reasoning") if isinstance(item.get("reasoning"), list) else [],
+                }
+            )
+
+        return {
+            "candidate_plans": {
+                "request_type": request_type,
+                "plan_mode": plan_mode,
+                "candidates": normalized_candidates,
+            }
+        }
+    except Exception as exc:
+        print(f"[Candidate Planning Node][WARN] 节点异常，返回空骨架: {exc}")
+        update = _append_error(state, f"Candidate Planning node failed: {exc}")
+        update["candidate_plans"] = {
+            "request_type": "generic_local_plan",
+            "plan_mode": "activity_plus_meal",
+            "candidates": [
+                {"id": "plan_1", "title": "", "timeline": [], "activity": {}, "restaurant": {}, "reasoning": []},
+                {"id": "plan_2", "title": "", "timeline": [], "activity": {}, "restaurant": {}, "reasoning": []},
+                {"id": "plan_3", "title": "", "timeline": [], "activity": {}, "restaurant": {}, "reasoning": []},
+            ],
+        }
+        return update
+
+
+def rule_validation_node(state: AgentState) -> AgentState:
+    """新架构规则校验节点骨架：逐个检查 candidate_plans，并输出合法/非法结果。"""
+    print("[Rule Validation Node] 校验候选计划骨架...")
+    try:
+        candidate_plans = state.get("candidate_plans")
+        if not isinstance(candidate_plans, dict):
+            candidate_plans = {}
+
+        constraint_build = state.get("constraint_build")
+        if not isinstance(constraint_build, dict):
+            constraint_build = {}
+
+        fact_gathering_result = state.get("fact_gathering_result")
+        if not isinstance(fact_gathering_result, dict):
+            fact_gathering_result = {}
+
+        validation_profile = constraint_build.get("validation_profile")
+        if not isinstance(validation_profile, dict):
+            validation_profile = {}
+
+        candidates = candidate_plans.get("candidates")
+        if not isinstance(candidates, list):
+            candidates = []
+
+        valid_plans = []
+        invalid_plans = []
+
+        weather = fact_gathering_result.get("weather") if isinstance(fact_gathering_result.get("weather"), dict) else {}
+        weather_risk = weather.get("risk_level") or weather.get("risk") or ""
+
+        for item in candidates:
+            if not isinstance(item, dict):
+                continue
+
+            candidate_id = item.get("id") if isinstance(item.get("id"), str) else "unknown_plan"
+            activity = item.get("activity") if isinstance(item.get("activity"), dict) else {}
+            restaurant = item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {}
+
+            violations = []
+            repair_instructions = []
+
+            if validation_profile.get("check_weather_compatibility") is True:
+                if weather_risk in {"High", "high"} and activity.get("type") == "outdoor":
+                    violations.append("weather_outdoor_conflict")
+                    repair_instructions.append(
+                        {"type": "replace_activity", "constraint": "indoor_only"}
+                    )
+
+            if validation_profile.get("check_party_fit") is True:
+                if not restaurant:
+                    violations.append("restaurant_missing")
+                    repair_instructions.append(
+                        {"type": "replace_restaurant", "constraint": "party_fit_required"}
+                    )
+
+            if violations:
+                invalid_plans.append(
+                    {
+                        "candidate_id": candidate_id,
+                        "violations": violations,
+                        "repair_instructions": repair_instructions,
+                    }
+                )
+            else:
+                valid_plans.append(item)
+
+        return {
+            "rule_validation_result": {
+                "request_type": candidate_plans.get("request_type", "generic_local_plan"),
+                "plan_mode": candidate_plans.get("plan_mode", "activity_plus_meal"),
+                "valid_plans": valid_plans,
+                "invalid_plans": invalid_plans,
+            }
+        }
+    except Exception as exc:
+        print(f"[Rule Validation Node][WARN] 节点异常，返回空骨架: {exc}")
+        update = _append_error(state, f"Rule Validation node failed: {exc}")
+        update["rule_validation_result"] = {
+            "request_type": "generic_local_plan",
+            "plan_mode": "activity_plus_meal",
+            "valid_plans": [],
+            "invalid_plans": [],
+        }
+        return update
+
+
+def repair_loop_node(state: AgentState) -> AgentState:
+    """新架构修复回环节点骨架：把非法候选转成下一轮规划修正输入。"""
+    print("[Repair Loop Node] 生成修复回环输入骨架...")
+    try:
+        rule_validation_result = state.get("rule_validation_result")
+        if not isinstance(rule_validation_result, dict):
+            rule_validation_result = {}
+
+        constraint_build = state.get("constraint_build")
+        if not isinstance(constraint_build, dict):
+            constraint_build = {}
+
+        invalid_plans = rule_validation_result.get("invalid_plans")
+        if not isinstance(invalid_plans, list):
+            invalid_plans = []
+
+        repair_targets = []
+        merged_repair_instructions = []
+        merged_violations = []
+
+        for item in invalid_plans:
+            if not isinstance(item, dict):
+                continue
+            candidate_id = item.get("candidate_id") if isinstance(item.get("candidate_id"), str) else "unknown_plan"
+            violations = item.get("violations") if isinstance(item.get("violations"), list) else []
+            repair_instructions = item.get("repair_instructions") if isinstance(item.get("repair_instructions"), list) else []
+
+            repair_targets.append(candidate_id)
+            for violation in violations:
+                if isinstance(violation, str) and violation not in merged_violations:
+                    merged_violations.append(violation)
+            for instruction in repair_instructions:
+                if isinstance(instruction, dict):
+                    merged_repair_instructions.append(instruction)
+
+        hard_constraints = constraint_build.get("hard_constraints")
+        if not isinstance(hard_constraints, dict):
+            hard_constraints = {}
+        soft_preferences = constraint_build.get("soft_preferences")
+        if not isinstance(soft_preferences, dict):
+            soft_preferences = {}
+        context_memory = constraint_build.get("context_memory")
+        if not isinstance(context_memory, dict):
+            context_memory = {}
+
+        next_hard_constraints = dict(hard_constraints)
+        next_soft_preferences = dict(soft_preferences)
+        next_context_memory = dict(context_memory)
+
+        for instruction in merged_repair_instructions:
+            instruction_type = instruction.get("type")
+            constraint = instruction.get("constraint")
+            if instruction_type == "replace_activity" and constraint == "indoor_only":
+                next_hard_constraints["indoor_only"] = True
+            if instruction_type == "replace_restaurant" and constraint == "party_fit_required":
+                next_hard_constraints["restaurant_required"] = True
+            if instruction_type == "reduce_eta":
+                current_eta = next_hard_constraints.get("max_traffic_minutes", 40)
+                if isinstance(current_eta, int) and current_eta > 20:
+                    next_hard_constraints["max_traffic_minutes"] = current_eta - 10
+            if instruction_type == "reduce_queue":
+                current_queue = next_hard_constraints.get("max_queue_minutes", 30)
+                if isinstance(current_queue, int) and current_queue > 10:
+                    next_hard_constraints["max_queue_minutes"] = current_queue - 10
+
+        next_context_memory["repair_round"] = state.get("replan_count", 0)
+        next_context_memory["repair_targets"] = repair_targets
+        next_context_memory["repair_violations"] = merged_violations
+
+        return {
+            "repair_loop_result": {
+                "repair_targets": repair_targets,
+                "violations": merged_violations,
+                "repair_instructions": merged_repair_instructions,
+                "next_constraint_build": {
+                    "request_type": constraint_build.get("request_type", "generic_local_plan"),
+                    "plan_mode": constraint_build.get("plan_mode", "activity_plus_meal"),
+                    "hard_constraints": next_hard_constraints,
+                    "soft_preferences": next_soft_preferences,
+                    "query_constraints": constraint_build.get("query_constraints", {}),
+                    "validation_profile": constraint_build.get("validation_profile", {}),
+                    "scoring_profile": constraint_build.get("scoring_profile", {}),
+                    "context_memory": next_context_memory,
+                },
+            }
+        }
+    except Exception as exc:
+        print(f"[Repair Loop Node][WARN] 节点异常，返回空骨架: {exc}")
+        update = _append_error(state, f"Repair Loop node failed: {exc}")
+        update["repair_loop_result"] = {
+            "repair_targets": [],
+            "violations": [],
+            "repair_instructions": [],
+            "next_constraint_build": {},
+        }
+        return update
+
+
+def scoring_node(state: AgentState) -> AgentState:
+    """新架构打分节点骨架：对合法候选计划做结构化打分。"""
+    print("[Scoring Node] 对合法候选计划进行打分骨架...")
+    try:
+        rule_validation_result = state.get("rule_validation_result")
+        if not isinstance(rule_validation_result, dict):
+            rule_validation_result = {}
+
+        constraint_build = state.get("constraint_build")
+        if not isinstance(constraint_build, dict):
+            constraint_build = {}
+
+        fact_gathering_result = state.get("fact_gathering_result")
+        if not isinstance(fact_gathering_result, dict):
+            fact_gathering_result = {}
+
+        valid_plans = rule_validation_result.get("valid_plans")
+        if not isinstance(valid_plans, list):
+            valid_plans = []
+
+        scoring_profile = constraint_build.get("scoring_profile")
+        if not isinstance(scoring_profile, dict):
+            scoring_profile = {}
+
+        weights = scoring_profile.get("weights")
+        if not isinstance(weights, dict):
+            weights = {
+                "semantic_match": 0.30,
+                "time_relaxation": 0.20,
+                "weather_fit": 0.15,
+                "distance_fit": 0.15,
+                "queue_fit": 0.10,
+                "review_quality": 0.10,
+            }
+
+        scored_candidates = []
+        weather = fact_gathering_result.get("weather") if isinstance(fact_gathering_result.get("weather"), dict) else {}
+        weather_risk = weather.get("risk_level") or weather.get("risk") or ""
+
+        for item in valid_plans:
+            if not isinstance(item, dict):
+                continue
+
+            candidate_id = item.get("id") if isinstance(item.get("id"), str) else "unknown_plan"
+            activity = item.get("activity") if isinstance(item.get("activity"), dict) else {}
+            restaurant = item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {}
+
+            semantic_match = 8.0 if activity or restaurant else 3.0
+            time_relaxation = 7.0
+            weather_fit = 9.0 if weather_risk not in {"High", "high"} or activity.get("type") == "indoor" else 4.0
+            distance_fit = 8.0
+            queue_fit = 7.0
+            review_quality = 7.0
+
+            final_score = (
+                semantic_match * float(weights.get("semantic_match", 0.30)) * 10
+                + time_relaxation * float(weights.get("time_relaxation", 0.20)) * 10
+                + weather_fit * float(weights.get("weather_fit", 0.15)) * 10
+                + distance_fit * float(weights.get("distance_fit", 0.15)) * 10
+                + queue_fit * float(weights.get("queue_fit", 0.10)) * 10
+                + review_quality * float(weights.get("review_quality", 0.10)) * 10
+            )
+
+            scored_candidates.append(
+                {
+                    "candidate_id": candidate_id,
+                    "score_breakdown": {
+                        "semantic_match": semantic_match,
+                        "time_relaxation": time_relaxation,
+                        "weather_fit": weather_fit,
+                        "distance_fit": distance_fit,
+                        "queue_fit": queue_fit,
+                        "review_quality": review_quality,
+                    },
+                    "final_score": round(final_score, 2),
+                }
+            )
+
+        scored_candidates.sort(key=lambda item: item.get("final_score", 0), reverse=True)
+
+        return {
+            "scoring_result": {
+                "request_type": rule_validation_result.get("request_type", "generic_local_plan"),
+                "plan_mode": rule_validation_result.get("plan_mode", "activity_plus_meal"),
+                "weights": weights,
+                "scored_candidates": scored_candidates,
+            }
+        }
+    except Exception as exc:
+        print(f"[Scoring Node][WARN] 节点异常，返回空骨架: {exc}")
+        update = _append_error(state, f"Scoring node failed: {exc}")
+        update["scoring_result"] = {
+            "request_type": "generic_local_plan",
+            "plan_mode": "activity_plus_meal",
+            "weights": {},
+            "scored_candidates": [],
+        }
+        return update
+
+
+def final_plan_node(state: AgentState) -> AgentState:
+    """新架构最终计划节点骨架：从评分结果中选出分最高的计划。"""
+    print("[Final Plan Node] 选择分最高的候选计划...")
+    try:
+        scoring_result = state.get("scoring_result")
+        if not isinstance(scoring_result, dict):
+            scoring_result = {}
+
+        scored_candidates = scoring_result.get("scored_candidates")
+        if not isinstance(scored_candidates, list):
+            scored_candidates = []
+
+        best_candidate = None
+        best_score = None
+        for item in scored_candidates:
+            if not isinstance(item, dict):
+                continue
+            score = item.get("final_score")
+            if not isinstance(score, (int, float)):
+                continue
+            if best_score is None or score > best_score:
+                best_candidate = item
+                best_score = score
+
+        return {
+            "final_plan_result": {
+                "selected_candidate": best_candidate or {},
+                "selected_candidate_id": best_candidate.get("candidate_id") if isinstance(best_candidate, dict) else "",
+                "final_score": best_score if best_score is not None else 0,
+                "all_scored_candidates": scored_candidates,
+            }
+        }
+    except Exception as exc:
+        print(f"[Final Plan Node][WARN] 节点异常，返回空骨架: {exc}")
+        update = _append_error(state, f"Final Plan node failed: {exc}")
+        update["final_plan_result"] = {
+            "selected_candidate": {},
+            "selected_candidate_id": "",
+            "final_score": 0,
+            "all_scored_candidates": [],
+        }
+        return update
 
 
 def _derive_plan_compat_from_state(state: AgentState) -> dict:
@@ -161,13 +648,15 @@ def constraint_collect_node(state: AgentState) -> AgentState:
     """
     print("[Constraint Collect Node] 汇总意图 / 检索 / 默认策略 / 重规划反馈...")
     try:
-        constraints = ConstraintAgent().collect(
+        result = ConstraintAgent().collect(
             state.get("intent", {}),
             state.get("retrieval_context", {}),
             state.get("replan_reason", ""),
             state.get("replan_reason_type", ""),
             state.get("runtime_origin_area", ""),
         )
+        constraints = result.get("constraints") if isinstance(result, dict) else {}
+        constraint_build = result.get("constraint_build") if isinstance(result, dict) else {}
         print(
             f"[Constraint Collect Node][OK] scenario={constraints.get('scenario')}, "
             f"party={constraints.get('party')}, "
@@ -178,7 +667,10 @@ def constraint_collect_node(state: AgentState) -> AgentState:
             f"retrieval_pois_n={len(constraints.get('retrieval_pois', []))}, "
             f"retrieval_notes_n={len(constraints.get('retrieval_notes', []))}"
         )
-        return {"constraints": constraints}
+        return {
+            "constraints": constraints,
+            "constraint_build": constraint_build,
+        }
     except Exception as exc:
         print(f"[Constraint Collect Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Constraint Collect node failed: {exc}")
@@ -201,6 +693,18 @@ def constraint_collect_node(state: AgentState) -> AgentState:
 def _safe_constraints(state: AgentState) -> dict:
     constraints = state.get("constraints")
     return constraints if isinstance(constraints, dict) else {}
+
+
+def _fact_query_constraints(state: AgentState) -> dict:
+    """优先消费新 schema 中的 query_constraints，缺失时回退到旧 constraints。"""
+    constraint_build = state.get("constraint_build")
+    if isinstance(constraint_build, dict):
+        query_constraints = constraint_build.get("query_constraints")
+        if isinstance(query_constraints, dict) and query_constraints:
+            merged = dict(_safe_constraints(state))
+            merged.update(query_constraints)
+            return merged
+    return _safe_constraints(state)
 
 
 def _has_required_time_fields(constraints: dict, node_name: str) -> bool:
@@ -328,7 +832,7 @@ def weather_check_node(state: AgentState) -> AgentState:
     """并行节点 1：查询天气，写 ``state.weather``。"""
     print("[Weather Check Node] 查询天气...")
     try:
-        constraints = _safe_constraints(state)
+        constraints = _fact_query_constraints(state)
         _print_time_context("Weather Check Node", constraints)
         if not _has_required_time_fields(constraints, "weather_check"):
             missing = ",".join(missing_required_time_fields(constraints, "weather_check"))
@@ -364,7 +868,7 @@ def activity_search_node(state: AgentState) -> AgentState:
     """并行节点 2：根据场景搜活动，写 ``state.activities``。"""
     print("[Activity Search Node] 搜索候选活动...")
     try:
-        constraints = _safe_constraints(state)
+        constraints = _fact_query_constraints(state)
         _print_time_context("Activity Search Node", constraints)
         if not _has_required_time_fields(constraints, "activity_search"):
             missing = ",".join(missing_required_time_fields(constraints, "activity_search"))
@@ -420,7 +924,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
     """并行节点 3：根据饮食偏好搜餐厅，写 ``state.restaurants``。"""
     print("[Restaurant Search Node] 搜索候选餐厅...")
     try:
-        constraints = _safe_constraints(state)
+        constraints = _fact_query_constraints(state)
         _print_time_context("Restaurant Search Node", constraints)
         if not _has_required_time_fields(constraints, "restaurant_search"):
             missing = ",".join(missing_required_time_fields(constraints, "restaurant_search"))
@@ -491,7 +995,7 @@ def traffic_eta_node(state: AgentState) -> AgentState:
     """
     print("[Traffic ETA Node] 批量查询通勤 ETA...")
     try:
-        constraints = _safe_constraints(state)
+        constraints = _fact_query_constraints(state)
         _print_time_context("Traffic ETA Node", constraints)
         if not _has_required_time_fields(constraints, "traffic_eta"):
             missing = ",".join(missing_required_time_fields(constraints, "traffic_eta"))
@@ -549,7 +1053,7 @@ def queue_check_node(state: AgentState) -> AgentState:
     """并行节点 5：批量查餐厅排队，写 ``state.queue``。"""
     print("[Queue Check Node] 批量查询餐厅排队...")
     try:
-        constraints = _safe_constraints(state)
+        constraints = _fact_query_constraints(state)
         time_window = constraints.get("time_window") or ""
         if not _has_required_time_fields(constraints, "queue_check"):
             missing = ",".join(missing_required_time_fields(constraints, "queue_check"))
@@ -586,7 +1090,7 @@ def crowd_risk_node(state: AgentState) -> AgentState:
     """并行节点 6：批量评估活动人流风险，写 ``state.crowd``。"""
     print("[Crowd Risk Node] 批量评估活动人流风险...")
     try:
-        constraints = _safe_constraints(state)
+        constraints = _fact_query_constraints(state)
         time_window = constraints.get("time_window") or ""
         if not _has_required_time_fields(constraints, "crowd_risk"):
             missing = ",".join(missing_required_time_fields(constraints, "crowd_risk"))
@@ -614,6 +1118,27 @@ def crowd_risk_node(state: AgentState) -> AgentState:
     except Exception as exc:
         print(f"[Crowd Risk Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Crowd Risk node failed: {exc}")
+
+
+def fact_gathering_node(state: AgentState) -> AgentState:
+    """聚合事实采集层输出，同时保留旧字段兼容。"""
+    query_constraints = {}
+    constraint_build = state.get("constraint_build")
+    if isinstance(constraint_build, dict):
+        query_constraints = constraint_build.get("query_constraints") or {}
+        if not isinstance(query_constraints, dict):
+            query_constraints = {}
+
+    result = {
+        "query_constraints": query_constraints,
+        "weather": state.get("weather") if isinstance(state.get("weather"), dict) else {},
+        "activities": state.get("activities") if isinstance(state.get("activities"), list) else [],
+        "restaurants": state.get("restaurants") if isinstance(state.get("restaurants"), list) else [],
+        "traffic": state.get("traffic") if isinstance(state.get("traffic"), dict) else {},
+        "queue": state.get("queue") if isinstance(state.get("queue"), dict) else {},
+        "crowd": state.get("crowd") if isinstance(state.get("crowd"), dict) else {},
+    }
+    return {"fact_gathering_result": result}
 
 
 def validate_plan_node(state: AgentState) -> AgentState:
@@ -789,16 +1314,36 @@ def _resolve_replan_reason(state: AgentState) -> str:
     return ""
 
 
-def replan_node(state: AgentState) -> AgentState:
-    """Replan Node：把失败原因或拒绝反馈结构化成新约束，准备回到 plan_candidate。
+def _normalize_replan_reason_type(state: AgentState) -> str:
+    raw = state.get("replan_reason_type")
+    if isinstance(raw, str) and raw in {
+        "validation_failure",
+        "user_feedback",
+        "execution_core_change",
+    }:
+        return raw
 
-    输出字段（命中即写入）：
-        * constraints       —— 浅拷贝并按关键字收紧 max_traffic_minutes /
-                                max_queue_minutes / indoor_preferred；append replan_hints
-        * replan_count      —— +1
-        * replan_reason     —— 重置为 ""
-        * errors            —— 命中预算上限或异常时追加
-    """
+    execution_result = state.get("execution_result")
+    if isinstance(execution_result, dict) and execution_result.get("core_plan_changed") is True:
+        return "execution_core_change"
+
+    if state.get("user_confirmed") is False:
+        return "user_feedback"
+
+    return "validation_failure"
+
+
+def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
+    return any(keyword in text for keyword in keywords)
+
+
+def _append_unique_hint(hints: list[str], hint: str) -> None:
+    if isinstance(hint, str) and hint and hint not in hints:
+        hints.append(hint)
+
+
+def replan_node(state: AgentState) -> AgentState:
+    """Replan Node: map failure reasons into new constraints."""
     print("[Replan Node] 把失败原因 / 拒绝反馈映射成新约束...")
     try:
         prev_count = state.get("replan_count", 0)
@@ -807,37 +1352,50 @@ def replan_node(state: AgentState) -> AgentState:
         new_count = prev_count + 1
 
         reason = _resolve_replan_reason(state)
+        reason_type = _normalize_replan_reason_type(state)
 
-        # 浅拷贝 constraints / replan_hints，避免污染入参
         old_constraints = state.get("constraints")
         if not isinstance(old_constraints, dict):
             old_constraints = {}
         new_constraints = dict(old_constraints)
+
         old_hints = new_constraints.get("replan_hints")
         if not isinstance(old_hints, list):
             old_hints = []
         new_hints = list(old_hints)
 
+        if reason_type == "execution_core_change":
+            new_constraints["indoor_preferred"] = True
+            cur = new_constraints.get("max_traffic_minutes")
+            base = cur if _is_pos_num(cur) else _REPLAN_TRAFFIC_FALLBACK_BASE
+            new_constraints["max_traffic_minutes"] = max(_REPLAN_TRAFFIC_FLOOR, int(base) - 5)
+            _append_unique_hint(new_hints, "execution_core_change")
+
         if reason:
-            # 1) ETA / 通勤 → 收紧 max_traffic_minutes
-            if ("ETA" in reason) or ("通勤" in reason):
+            if _contains_any(reason, ("ETA", "通勤", "太远", "too far", "路线太长")):
                 cur = new_constraints.get("max_traffic_minutes")
                 base = cur if _is_pos_num(cur) else _REPLAN_TRAFFIC_FALLBACK_BASE
-                new_constraints["max_traffic_minutes"] = max(
-                    _REPLAN_TRAFFIC_FLOOR, int(base) - 10
-                )
-            # 2) 排队 → 收紧 max_queue_minutes
-            if "排队" in reason:
+                new_constraints["max_traffic_minutes"] = max(_REPLAN_TRAFFIC_FLOOR, int(base) - 10)
+                if reason_type == "user_feedback":
+                    _append_unique_hint(new_hints, "prefer_nearer_options")
+
+            if _contains_any(reason, ("排队", "没位", "没位置", "wait", "等太久")):
                 cur = new_constraints.get("max_queue_minutes")
                 base = cur if _is_pos_num(cur) else _REPLAN_QUEUE_FALLBACK_BASE
-                new_constraints["max_queue_minutes"] = max(
-                    _REPLAN_QUEUE_FLOOR, int(base) - 10
-                )
-            # 3) 天气 / 户外 / outdoor → 强制室内偏好
-            if ("天气" in reason) or ("户外" in reason) or ("outdoor" in reason):
+                new_constraints["max_queue_minutes"] = max(_REPLAN_QUEUE_FLOOR, int(base) - 10)
+                if reason_type == "user_feedback":
+                    _append_unique_hint(new_hints, "prefer_shorter_queue")
+
+            if _contains_any(reason, ("天气", "户外", "outdoor", "室内", "室外", "indoor")):
                 new_constraints["indoor_preferred"] = True
-            # 4) 不论是否命中关键字，都把 reason 加进 hints 历史，便于追溯
-            new_hints.append(reason)
+
+            if reason_type == "user_feedback":
+                if _contains_any(reason, ("轻松", "累", "不想太累", "relax")):
+                    _append_unique_hint(new_hints, "prefer_relaxed_schedule")
+                if _contains_any(reason, ("拍照", "好看", "氛围", "photo")):
+                    _append_unique_hint(new_hints, "prefer_photo_friendly")
+
+            _append_unique_hint(new_hints, reason)
 
         new_constraints["replan_hints"] = new_hints
 
@@ -845,19 +1403,14 @@ def replan_node(state: AgentState) -> AgentState:
             "constraints": new_constraints,
             "replan_count": new_count,
             "replan_reason": "",
-            "replan_reason_type": state.get("replan_reason_type", "validation_failure") or "validation_failure",
+            "replan_reason_type": reason_type,
         }
 
         if new_count >= _REPLAN_BUDGET:
             errors = list(state.get("errors", []))
-            errors.append(
-                f"已尝试重规划 {new_count} 次，仍无法满足全部约束，进入兜底展示"
-            )
+            errors.append(f"已尝试重规划 {new_count} 次，仍无法满足全部约束，进入兜底展示")
             update["errors"] = errors
-            print(
-                f"[Replan Node][WARN] replan_count={new_count} 命中上限 "
-                f"{_REPLAN_BUDGET}，进入兜底"
-            )
+            print(f"[Replan Node][WARN] replan_count={new_count} 命中上限 {_REPLAN_BUDGET}，进入兜底")
         else:
             print(
                 f"[Replan Node][OK] replan_count={new_count}, "
@@ -871,8 +1424,6 @@ def replan_node(state: AgentState) -> AgentState:
     except Exception as exc:
         print(f"[Replan Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Replan node failed: {exc}")
-
-
 def route_after_replan(state: AgentState) -> str:
     """Replan 之后的条件路由。
 
@@ -892,7 +1443,18 @@ def route_after_replan(state: AgentState) -> str:
 
 def presentation_node(state: AgentState) -> AgentState:
     try:
-        plan = _derive_plan_compat_from_state(state)
+        final_plan_result = state.get("final_plan_result")
+        if isinstance(final_plan_result, dict) and final_plan_result:
+            selected_candidate = final_plan_result.get("selected_candidate")
+            if not isinstance(selected_candidate, dict):
+                selected_candidate = {}
+            plan = dict(selected_candidate)
+            plan["selected_candidate_id"] = final_plan_result.get("selected_candidate_id", "")
+            plan["final_score"] = final_plan_result.get("final_score", 0)
+            plan["all_scored_candidates"] = final_plan_result.get("all_scored_candidates", [])
+        else:
+            plan = _derive_plan_compat_from_state(state)
+
         display_text = PresentationAgent().generate_plan_display(
             plan,
             state.get("intent", {}),
@@ -903,8 +1465,6 @@ def presentation_node(state: AgentState) -> AgentState:
         return {"display_text": display_text, "plan": plan}
     except Exception as exc:
         return _append_error(state, f"Presentation node failed: {exc}")
-
-
 def confirmation_node(state: AgentState) -> AgentState:
     if "user_confirmed" in state:
         return {"user_confirmed": state["user_confirmed"]}
@@ -1038,8 +1598,11 @@ def route_after_intent_for_retrieval(state: AgentState) -> str:
         return "planning"
     if intent.get("is_leisure_planning") is False:
         return "llm_answer"
-    if intent.get("clarification_needed") is True:
-        return "llm_answer"
     if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
         return "retrieval"
     return "planning"
+
+
+
+
+

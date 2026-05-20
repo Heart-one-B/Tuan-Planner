@@ -189,4 +189,102 @@ class ConstraintAgent:
             "retrieval_notes": retrieval_notes,
             "replan_reason_type": replan_reason_type if isinstance(replan_reason_type, str) else "",
         }
-        return deepcopy(constraints)
+
+        request_type = "generic_local_plan"
+        if scenario == "family" and child_friendly_required:
+            request_type = "family_with_kids"
+        elif scenario == "friends":
+            request_type = "friends_social"
+
+        plan_mode = "activity_plus_meal"
+        if not constraints["diet_preference"] and scenario == "friends":
+            plan_mode = "light_social"
+
+        hard_constraints: dict[str, Any] = {
+            "time_window": time_window,
+            "date_label": date_label,
+            "daypart": daypart,
+            "start_time": start_time,
+            "duration_hours": duration_hours,
+            "origin_area": origin_area,
+            "origin_type": origin_type,
+            "party_size": people_count,
+            "child_friendly_required": child_friendly_required,
+            "child_age": child_age,
+            "max_traffic_minutes": max_traffic,
+            "max_queue_minutes": max_queue,
+            "indoor_only": bool(indoor_preferred),
+            "dietary_must_match": False,
+        }
+
+        soft_preferences: dict[str, Any] = {
+            "diet_preference": diet_preference,
+            "activity_style": [],
+            "must_avoid": [],
+            "budget_level": "default",
+            "weather_sensitivity": "normal",
+            "queue_sensitivity": "high" if child_friendly_required else "medium",
+            "distance_preference": "nearby" if max_traffic <= 30 else "default",
+            "photo_friendly_preferred": False,
+            "atmosphere_preferred": scenario == "friends",
+        }
+
+        query_constraints: dict[str, Any] = {
+            "origin_area": origin_area,
+            "time_window": time_window,
+            "party_size": people_count,
+            "need_activity": True,
+            "need_restaurant": True,
+            "search_radius_level": "near" if max_traffic <= 30 else "default",
+            "indoor_preferred": bool(indoor_preferred),
+            "keywords_activity": [],
+            "keywords_restaurant": diet_preference,
+        }
+
+        validation_profile: dict[str, Any] = {
+            "check_time_feasibility": True,
+            "check_weather_compatibility": True,
+            "check_opening_hours": True,
+            "check_eta_threshold": True,
+            "check_queue_threshold": True,
+            "check_party_fit": True,
+            "check_indoor_outdoor_conflict": True,
+        }
+
+        scoring_profile: dict[str, Any] = {
+            "weights": {
+                "semantic_match": 0.30,
+                "time_relaxation": 0.20,
+                "weather_fit": 0.15,
+                "distance_fit": 0.15,
+                "queue_fit": 0.10,
+                "review_quality": 0.10,
+            },
+            "prefer_short_distance": max_traffic <= 30,
+            "prefer_low_queue": max_queue <= 20,
+            "prefer_indoor_when_bad_weather": True,
+        }
+
+        context_memory: dict[str, Any] = {
+            "raw_query": intent.get("raw_query", "") if isinstance(intent.get("raw_query"), str) else "",
+            "retrieval_pois": retrieval_pois,
+            "retrieval_notes": retrieval_notes,
+            "replan_hints": replan_hints,
+            "replan_reason_type": replan_reason_type if isinstance(replan_reason_type, str) else "",
+            "defaults_applied": [],
+            "location_source": location_source,
+        }
+
+        return {
+            "constraints": deepcopy(constraints),
+            "constraint_build": {
+                "request_type": request_type,
+                "plan_mode": plan_mode,
+                "hard_constraints": deepcopy(hard_constraints),
+                "soft_preferences": deepcopy(soft_preferences),
+                "query_constraints": deepcopy(query_constraints),
+                "validation_profile": deepcopy(validation_profile),
+                "scoring_profile": deepcopy(scoring_profile),
+                "context_memory": deepcopy(context_memory),
+            },
+        }
