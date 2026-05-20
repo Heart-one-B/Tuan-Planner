@@ -4,6 +4,34 @@ from src.model.factory import chat_model
 
 
 class PresentationAgent:
+    @staticmethod
+    def _format_timeline(timeline, date_label: str = "") -> str:
+        if not isinstance(timeline, list) or not timeline:
+            return "待确认时间：先活动，再用餐"
+        lines = ["| 时间 | 地点 | 类型 |", "| :--- | :--- | :--- |"]
+        last_time = ""
+        for item in timeline:
+            if not isinstance(item, dict):
+                continue
+            time_text = item.get("time") or "待确认"
+            place_text = item.get("item") or "待确认"
+            type_text = item.get("type") or "未知"
+            if type_text == "departure" and date_label != "今天":
+                continue
+            if time_text == last_time and type_text == "restaurant":
+                try:
+                    hour, minute = [int(x) for x in time_text.split(":", 1)]
+                    minute += 1
+                    if minute >= 60:
+                        hour += 1
+                        minute -= 60
+                    time_text = f"{hour:02d}:{minute:02d}"
+                except Exception:
+                    pass
+            lines.append(f"| {time_text} | {place_text} | {type_text} |")
+            last_time = time_text
+        return "\n".join(lines)
+
     def generate_plan_display(self, plan: dict, intent: dict) -> str:
         print("[Presentation Agent] 正在排版最终方案...")
 
@@ -14,7 +42,12 @@ class PresentationAgent:
         activity_name = activity.get("name", "待确认活动")
         activity_type = activity.get("type", "未知")
         restaurant_name = restaurant.get("name", "待确认餐厅")
-        timeline = plan.get("timeline") or "待确认时间：先活动，再用餐"
+        schedule_result = plan.get("schedule_timing_result") if isinstance(plan.get("schedule_timing_result"), dict) else {}
+        date_label = schedule_result.get("normalized_date_label") if isinstance(schedule_result.get("normalized_date_label"), str) else ""
+        if not date_label:
+            time_info = intent.get("time") if isinstance(intent.get("time"), dict) else {}
+            date_label = time_info.get("date_label") if isinstance(time_info.get("date_label"), str) else ""
+        timeline = self._format_timeline(plan.get("timeline"), date_label)
         time_phrase = plan.get("time_phrase") or "待确认时间"
         final_score = plan.get("final_score")
         selected_candidate_id = plan.get("selected_candidate_id")

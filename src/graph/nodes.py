@@ -1,4 +1,5 @@
-﻿from langchain_core.messages import HumanMessage
+﻿from datetime import datetime
+from langchain_core.messages import HumanMessage
 
 from src.agent.constraint_agent import ConstraintAgent
 from src.agent.execution_agent import ExecutionAgent
@@ -1196,6 +1197,19 @@ def traffic_eta_node(state: AgentState) -> AgentState:
     try:
         constraints = _fact_query_constraints(state)
         _print_time_context("Traffic ETA Node", constraints)
+        date_label = constraints.get("date_label")
+        if not isinstance(date_label, str) or date_label.strip() != "今天":
+            print("[Traffic ETA Node] skipped, only enabled for date_label='今天'")
+            return {
+                "traffic": {
+                    "origin_area_used": constraints.get("origin_area") or "",
+                    "origin_coordinates_used": state.get("runtime_origin_coordinates", "") or "",
+                    "traffic_origin_used": "",
+                    "depart_context_used": "",
+                    "eta_by_target": {},
+                    "enabled_for_today_only": True,
+                }
+            }
         if not _has_required_time_fields(constraints, "traffic_eta"):
             missing = ",".join(missing_required_time_fields(constraints, "traffic_eta"))
             update = _append_error(state, f"Traffic ETA node skipped: missing time fields [{missing}]")
@@ -1207,6 +1221,8 @@ def traffic_eta_node(state: AgentState) -> AgentState:
             }
             return update
         origin_area = constraints.get("origin_area") or "area_central"
+        origin_coordinates = state.get("runtime_origin_coordinates", "") or ""
+        traffic_origin = origin_coordinates if isinstance(origin_coordinates, str) and origin_coordinates.strip() else origin_area
         depart_context = _derive_traffic_depart_context(constraints)
         api = MockToolAPI()
         activity_ids: list[str] = []
@@ -1224,7 +1240,7 @@ def traffic_eta_node(state: AgentState) -> AgentState:
 
         eta_by_target: dict[str, dict] = {}
         for target_id in all_targets:
-            record = api.get_traffic_eta(origin_area, target_id, depart_context)
+            record = api.get_traffic_eta(traffic_origin, target_id, depart_context)
             eta_by_target[target_id] = {
                 "eta_minutes": record.get("eta_minutes"),
                 "congestion": record.get("congestion"),
@@ -1233,19 +1249,151 @@ def traffic_eta_node(state: AgentState) -> AgentState:
             }
         print(
             f"[Traffic ETA Node] origin_area_used={origin_area!r}, "
+            f"origin_coordinates_used={origin_coordinates!r}, "
+            f"traffic_origin_used={traffic_origin!r}, "
             f"depart_context_used={depart_context!r}, "
             f"target_count={len(eta_by_target)}"
         )
         return {
             "traffic": {
                 "origin_area_used": origin_area,
+                "origin_coordinates_used": origin_coordinates,
+                "traffic_origin_used": traffic_origin,
                 "depart_context_used": depart_context,
                 "eta_by_target": eta_by_target,
+                "enabled_for_today_only": True,
             }
         }
     except Exception as exc:
         print(f"[Traffic ETA Node][WARN] 节点异常，跳过并记录错误: {exc}")
         return _append_error(state, f"Traffic ETA node failed: {exc}")
+
+
+def schedule_timing_node(state: AgentState) -> AgentState:
+    """基于已选候选计划，生成顺序通勤时间和时刻表。"""
+    print("[Schedule Timing Node] 计算计划链顺序通勤时间与时刻表...")
+    try:
+        final_plan_result = state.get("final_plan_result")
+        if not isinstance(final_plan_result, dict):
+            final_plan_result = {}
+        selected_candidate = final_plan_result.get("selected_candidate")
+        if not isinstance(selected_candidate, dict):
+            selected_candidate = {}
+
+        activity = selected_candidate.get("activity") if isinstance(selected_candidate.get("activity"), dict) else {}
+        restaurant = selected_candidate.get("restaurant") if isinstance(selected_candidate.get("restaurant"), dict) else {}
+        constraints = state.get("constraints") if isinstance(state.get("constraints"), dict) else {}
+        date_label = constraints.get("date_label") if isinstance(constraints.get("date_label"), str) else ""
+        daypart = constraints.get("daypart") if isinstance(constraints.get("daypart"), str) else ""
+        time_phrase = constraints.get("time_phrase") if isinstance(constraints.get("time_phrase"), str) else ""
+        origin_coordinates = state.get("runtime_origin_coordinates", "") or ""
+        normalized_date_label = date_label
+        now = datetime.now()
+        now_minutes = now.hour * 60 + now.minute
+        cutoff_minutes = 18 * 60 if daypart == "下午" else 21 * 60
+        if date_label == "今天" and now_minutes > cutoff_minutes:
+            normalized_date_label = "明天"
+            if isinstance(time_phrase, str) and time_phrase:
+                time_phrase = time_phrase.replace("今天", "明天", 1)
+
+        def _detail_location(item: dict) -> str:
+            item_id = item.get("id")
+            source = item.get("source")
+            if not isinstance(item_id, str) or source != "mcp":
+                return item.get("coordinates") if isinstance(item.get("coordinates"), str) else ""
+            try:
+                detail = MockToolAPI()._get_amap().maps_search_detail(item_id)
+                if isinstance(detail, dict) and isinstance(detail.get("location"), str):
+                    return detail.get("location")
+            except Exception:
+                return item.get("coordinates") if isinstance(item.get("coordinates"), str) else ""
+            return ""
+
+        activity_location = _detail_location(activity) if activity else ""
+        restaurant_location = _detail_location(restaurant) if restaurant else ""
+        segment_eta = {}
+        amap = MockToolAPI()._get_amap()
+
+        def _distance_minutes(origin: str, destination: str) -> int | None:
+            if not amap or not origin or not destination:
+                return None
+            try:
+                result = amap.maps_distance(origin, destination, "1")
+                if isinstance(result, dict):
+                    results = result.get("results")
+                    if isinstance(results, list) and results and isinstance(results[0], dict):
+                        duration = results[0].get("duration")
+                        if isinstance(duration, str) and duration.isdigit():
+                            return max(1, int(duration) // 60)
+                return None
+            except Exception:
+                return None
+
+        start_eta = _distance_minutes(origin_coordinates, activity_location)
+        chain_eta = _distance_minutes(activity_location, restaurant_location)
+        if start_eta is not None:
+            segment_eta["origin_to_activity_minutes"] = start_eta
+        if chain_eta is not None:
+            segment_eta["activity_to_restaurant_minutes"] = chain_eta
+
+        def _minutes_to_hhmm(total_minutes: int) -> str:
+            total_minutes = max(0, int(total_minutes))
+            hour = total_minutes // 60
+            minute = total_minutes % 60
+            return f"{hour:02d}:{minute:02d}"
+
+        def _default_activity_start_minutes(daypart_value: str) -> int:
+            if daypart_value == "晚上":
+                return 18 * 60 + 30
+            return 14 * 60
+
+        timeline = []
+        activity_name = activity.get("name") or "待确认活动"
+        restaurant_name = restaurant.get("name") or "待确认餐厅"
+        start_eta_minutes = segment_eta.get("origin_to_activity_minutes") if isinstance(segment_eta.get("origin_to_activity_minutes"), int) else 0
+        chain_eta_minutes = segment_eta.get("activity_to_restaurant_minutes") if isinstance(segment_eta.get("activity_to_restaurant_minutes"), int) else 0
+        activity_duration_minutes = 90
+        buffer_minutes = 15
+
+        if normalized_date_label == "今天":
+            depart_minutes = now_minutes + buffer_minutes
+            activity_start_minutes = depart_minutes + start_eta_minutes
+            activity_end_minutes = activity_start_minutes + activity_duration_minutes
+            restaurant_arrive_minutes = activity_end_minutes + chain_eta_minutes + buffer_minutes
+
+            timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "从当前位置出发", "type": "departure"})
+            timeline.append({"time": _minutes_to_hhmm(activity_start_minutes), "item": activity_name, "type": "activity"})
+            timeline.append({"time": _minutes_to_hhmm(activity_end_minutes), "item": f"{activity_name}结束", "type": "activity_end"})
+            timeline.append({"time": _minutes_to_hhmm(restaurant_arrive_minutes), "item": restaurant_name, "type": "restaurant"})
+        else:
+            activity_start_minutes = _default_activity_start_minutes(daypart)
+            depart_minutes = max(0, activity_start_minutes - start_eta_minutes - buffer_minutes)
+            activity_end_minutes = activity_start_minutes + activity_duration_minutes
+            restaurant_arrive_minutes = activity_end_minutes + chain_eta_minutes + buffer_minutes
+
+            timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "按计划出发", "type": "departure"})
+            timeline.append({"time": _minutes_to_hhmm(activity_start_minutes), "item": activity_name, "type": "activity"})
+            timeline.append({"time": _minutes_to_hhmm(activity_end_minutes), "item": f"{activity_name}结束", "type": "activity_end"})
+            timeline.append({"time": _minutes_to_hhmm(restaurant_arrive_minutes), "item": restaurant_name, "type": "restaurant"})
+
+        selected_candidate["timeline"] = timeline
+        final_plan_result["selected_candidate"] = selected_candidate
+        print(
+            f"[Schedule Timing Node] date_label={date_label!r}, normalized_date_label={normalized_date_label!r}, "
+            f"origin_to_activity_minutes={segment_eta.get('origin_to_activity_minutes')!r}, "
+            f"activity_to_restaurant_minutes={segment_eta.get('activity_to_restaurant_minutes')!r}"
+        )
+        return {
+            "final_plan_result": final_plan_result,
+            "schedule_timing_result": {
+                "segment_eta": segment_eta,
+                "timeline": timeline,
+                "normalized_date_label": normalized_date_label,
+            },
+        }
+    except Exception as exc:
+        print(f"[Schedule Timing Node][WARN] 节点异常，跳过并记录错误: {exc}")
+        return _append_error(state, f"Schedule Timing node failed: {exc}")
 
 
 def queue_check_node(state: AgentState) -> AgentState:

@@ -52,6 +52,7 @@ class AgentState(TypedDict, total=False):
     scoring_result: dict[str, Any]
     final_plan_result: dict[str, Any]
     final_plan_selection: dict[str, Any]
+    schedule_timing_result: dict[str, Any]
 
     # --- replan loop ---
     replan_reason: str

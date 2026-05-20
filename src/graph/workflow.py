@@ -23,6 +23,7 @@ from src.graph.nodes import (
     retrieval_node,
     rule_validation_node,
     route_after_confirmation,
+    schedule_timing_node,
     restaurant_search_node,
     traffic_eta_node,
     weather_check_node,
@@ -110,6 +111,7 @@ def build_workflow():
     graph.add_node("repair_loop", repair_loop_node)
     graph.add_node("scoring", scoring_node)
     graph.add_node("final_plan", final_plan_node)
+    graph.add_node("schedule_timing", schedule_timing_node)
     graph.add_node("presentation", presentation_node)
     graph.add_node("confirmation", confirmation_node)
     graph.add_node("execution", execution_node)
@@ -191,7 +193,8 @@ def build_workflow():
         route_after_scoring,
         {"final_plan": "final_plan"},
     )
-    graph.add_edge("final_plan", "presentation")
+    graph.add_edge("final_plan", "schedule_timing")
+    graph.add_edge("schedule_timing", "presentation")
     graph.add_edge("presentation", "confirmation")
     graph.add_conditional_edges(
         "confirmation",
