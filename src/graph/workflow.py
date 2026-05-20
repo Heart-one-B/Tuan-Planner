@@ -13,6 +13,9 @@ from src.graph.nodes import (
     final_plan_node,
     intent_node,
     llm_answer_node,
+    location_lookup_node,
+    location_fallback_node,
+    location_permission_node,
     presentation_node,
     queue_check_node,
     reject_node,
@@ -37,10 +40,20 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
         return "constraint_build"
     if intent.get("is_leisure_planning") is False:
         return "llm_answer"
-    if intent.get("clarification_needed") is True:
+    if intent.get("clarification_needed") is True and "scenario" in (intent.get("missing_slots", {}) or {}).get("global", []):
         return "clarification"
+    location = intent.get("location")
+    origin_area_hint = ""
+    if isinstance(location, dict):
+        hint = location.get("origin_area_hint")
+        if isinstance(hint, str):
+            origin_area_hint = hint.strip()
+    if not origin_area_hint and not state.get("runtime_origin_area"):
+        return "location_permission"
     if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
         return "retrieval"
+    if intent.get("clarification_needed") is True:
+        return "clarification"
     return "constraint_build"
 
 
@@ -78,6 +91,9 @@ def build_workflow():
     graph.add_node("intent", intent_node)
     graph.add_node("clarification", clarification_node)
     graph.add_node("llm_answer", llm_answer_node)
+    graph.add_node("location_permission", location_permission_node)
+    graph.add_node("location_lookup", location_lookup_node)
+    graph.add_node("location_fallback", location_fallback_node)
     graph.add_node("retrieval", retrieval_node)
     graph.add_node("constraint_build", constraint_collect_node)
 
@@ -106,11 +122,29 @@ def build_workflow():
         route_after_intent_with_clarification,
         {
             "llm_answer": "llm_answer",
+            "location_permission": "location_permission",
             "clarification": "clarification",
             "retrieval": "retrieval",
             "constraint_build": "constraint_build",
         },
     )
+    graph.add_conditional_edges(
+        "location_permission",
+        lambda state: "location_lookup" if state.get("location_permission_granted") else "constraint_build",
+        {
+            "location_lookup": "location_lookup",
+            "constraint_build": "constraint_build",
+        },
+    )
+    graph.add_conditional_edges(
+        "location_lookup",
+        lambda state: "location_fallback" if not state.get("runtime_origin_area") else "constraint_build",
+        {
+            "location_fallback": "location_fallback",
+            "constraint_build": "constraint_build",
+        },
+    )
+    graph.add_edge("location_fallback", "constraint_build")
     graph.add_conditional_edges(
         "clarification",
         route_after_clarification,

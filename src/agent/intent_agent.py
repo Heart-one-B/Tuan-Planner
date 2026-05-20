@@ -26,8 +26,9 @@ _LOCATION_SENSITIVE_KEYWORDS = (
     "就在这边",
     "近一点",
 )
-_FAMILY_KEYWORDS = ("老婆", "孩子", "儿子", "女儿", "全家", "老公")
+_FAMILY_KEYWORDS = ("家人", "家庭", "亲子", "老婆", "孩子", "儿子", "女儿", "全家", "老公")
 _FRIENDS_KEYWORDS = ("朋友", "同学", "同事", "聚会")
+_CUISINE_KEYWORDS = ("烤肉", "烧烤", "火锅", "西餐", "日料", "韩餐", "川菜", "粤菜", "湘菜", "轻食", "自助")
 _LOCATION_HINTS = ("国贸", "望京", "朝阳", "海淀", "家附近", "公司附近")
 _WEEKDAY_TOKENS = ("周一", "周二", "周三", "周四", "周五", "周六", "周日", "周天")
 _VALID_DAYPARTS = {"下午", "晚上"}
@@ -204,9 +205,10 @@ def _extract_location_info(user_input: str) -> dict:
 
 def _normalize_intent(user_input: str, intent: dict) -> dict:
     normalized = dict(intent) if isinstance(intent, dict) else {}
+    heuristic_leisure = _heuristic_is_leisure(user_input)
     scenario = normalized.get("scenario")
     if scenario not in {"family", "friends", "unknown", "none"}:
-        scenario = "unknown" if _heuristic_is_leisure(user_input) else "none"
+        scenario = "unknown" if heuristic_leisure else "none"
     normalized["scenario"] = scenario
 
     child_friendly = bool(normalized.get("child_friendly"))
@@ -221,6 +223,10 @@ def _normalize_intent(user_input: str, intent: dict) -> dict:
         ]
     else:
         diet_preferences = []
+
+    for cuisine in _CUISINE_KEYWORDS:
+        if cuisine in user_input and cuisine not in diet_preferences:
+            diet_preferences.append(cuisine)
 
     participants = normalized.get("participants")
     if not isinstance(participants, dict):
@@ -254,10 +260,9 @@ def _normalize_intent(user_input: str, intent: dict) -> dict:
 
     normalized["child_friendly"] = child_friendly
     normalized["diet_preference"] = diet_preferences
-    normalized.setdefault("raw_query", user_input)
-    normalized["is_leisure_planning"] = bool(
-        normalized.get("is_leisure_planning", _heuristic_is_leisure(user_input))
-    )
+    normalized["raw_query"] = user_input
+    llm_leisure = normalized.get("is_leisure_planning")
+    normalized["is_leisure_planning"] = heuristic_leisure if llm_leisure is not True else True
     normalized["need_retrieval"] = bool(normalized.get("need_retrieval", False))
     return normalized
 

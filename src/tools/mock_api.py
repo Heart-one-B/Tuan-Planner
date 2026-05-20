@@ -2,6 +2,8 @@ import json
 import time
 
 from src.utils.path_tool import get_abs_path
+from src.tools.amap_mcp_client import AmapMCPClient
+from src.utils.config_handler import tools_conf
 
 
 class MockToolAPI:
@@ -9,15 +11,261 @@ class MockToolAPI:
         db_path = get_abs_path("data/mock_db.json")
         with open(db_path, "r", encoding="utf-8") as f:
             self.db = json.load(f)
+        self._amap = None
+
+    def _get_amap(self):
+        if self._amap is None:
+            try:
+                self._amap = AmapMCPClient()
+            except Exception:
+                self._amap = False
+        return self._amap if self._amap is not False else None
+
+    @staticmethod
+    def _resolve_weather_city(origin_area=None, runtime_origin_area=None):
+        candidates = [origin_area, runtime_origin_area]
+        area_to_city = {
+            "国贸": "北京",
+            "望京": "北京",
+            "朝阳": "北京",
+            "海淀": "北京",
+            "北京": "北京",
+            "上海": "上海",
+            "杭州": "杭州",
+            "广州": "广州",
+            "深圳": "深圳",
+            "成都": "成都",
+            "春熙路": "成都",
+            "天府广场": "成都",
+            "高新区": "成都",
+            "锦江": "成都",
+            "武侯": "成都"
+        }
+
+        for candidate in candidates:
+            if not isinstance(candidate, str):
+                continue
+            text = candidate.strip()
+            if not text:
+                continue
+            for key, city in area_to_city.items():
+                if key in text:
+                    return city
+
+        default_city = tools_conf.get("default_weather_city")
+        if isinstance(default_city, str) and default_city.strip():
+            return default_city.strip()
+        return "北京"
+
+    @staticmethod
+    def _normalize_amap_weather(payload):
+        if not isinstance(payload, dict):
+            return None
+
+        forecasts = payload.get("forecasts")
+        if not isinstance(forecasts, list) or not forecasts:
+            return None
+
+        today = forecasts[0] if isinstance(forecasts[0], dict) else {}
+        dayweather = str(today.get("dayweather") or "").strip()
+        nightweather = str(today.get("nightweather") or "").strip()
+        daytemp = str(today.get("daytemp") or "").strip()
+        nighttemp = str(today.get("nighttemp") or "").strip()
+        city = payload.get("city")
+        if not isinstance(city, str) or not city.strip():
+            city = None
+
+        weather_text = dayweather or nightweather or "未知"
+        if daytemp and nighttemp:
+            weather_text = f"{weather_text} {nighttemp}~{daytemp}℃"
+        elif daytemp:
+            weather_text = f"{weather_text} {daytemp}℃"
+
+        high_risk_tokens = ("暴雨", "大暴雨", "雷阵雨", "雷雨", "雨", "雪", "冰雹", "大风", "台风")
+        medium_risk_tokens = ("阴", "多云")
+
+        risk_level = "Low"
+        if any(token in weather_text for token in high_risk_tokens):
+            risk_level = "High"
+        elif any(token in weather_text for token in medium_risk_tokens):
+            risk_level = "Medium"
+
+        advice = "天气良好，可正常安排活动。"
+        fallback_hint = ""
+        if risk_level == "High":
+            advice = "天气风险较高，建议优先安排室内活动。"
+            fallback_hint = "天气不稳定，优先选择室内场馆，并预留路线调整空间。"
+        elif risk_level == "Medium":
+            advice = "天气一般，建议准备室内备选方案。"
+
+        return {
+            "target_id": "weather",
+            "status": "ok",
+            "weather": weather_text,
+            "risk": risk_level,
+            "risk_level": risk_level,
+            "advice": advice,
+            "fallback_hint": fallback_hint,
+            "source": "mcp",
+            "provider": "amap_mcp",
+            "resolved_city": city,
+            "raw_weather": payload,
+        }
+
+    @staticmethod
+    def _normalize_amap_pois(payload, *, kind: str):
+        if not isinstance(payload, dict):
+            return []
+
+        pois = payload.get("pois")
+        if not isinstance(pois, list):
+            return []
+
+        normalized = []
+        for idx, poi in enumerate(pois, start=1):
+            if not isinstance(poi, dict):
+                continue
+            poi_id = poi.get("id") or f"{kind.upper()}_{idx}"
+            name = poi.get("name") or f"{kind}_{idx}"
+            address = poi.get("address") or poi.get("pname") or ""
+            location = poi.get("location") or ""
+            type_name = poi.get("type") or ""
+
+            tags = []
+            if isinstance(type_name, str) and type_name.strip():
+                tags.extend([part.strip() for part in type_name.split(";") if part.strip()])
+
+            item = {
+                "id": poi_id,
+                "name": name,
+                "type": "indoor" if kind == "activity" else "restaurant",
+                "location": address,
+                "coordinates": location,
+                "address": address,
+                "source": "mcp",
+                "provider": "amap_mcp",
+                "raw_poi": poi,
+                "tags": tags,
+                "tags_semantic": tags,
+            }
+
+            if kind == "activity":
+                item["available_dayparts"] = ["下午", "晚上"]
+                item["peak_hours"] = ["13:00-17:00", "18:00-21:00"]
+                item["child_friendly"] = True
+                item["description"] = address or name
+            else:
+                item["available_dayparts"] = ["下午", "晚上"]
+                item["peak_hours"] = ["11:00-14:00", "17:00-21:00"]
+                item["description"] = address or name
+
+            normalized.append(item)
+
+        return normalized
+
+    @staticmethod
+    def _build_activity_keywords(scenario: str) -> str:
+        if scenario == "family":
+            return "亲子 乐园 儿童 活动"
+        if scenario == "friends":
+            return "聚会 玩乐 展览 桌游"
+        return "休闲 娱乐 活动"
+
+    @staticmethod
+    def _build_restaurant_keywords(diet_preference) -> str:
+        if isinstance(diet_preference, list):
+            diet_text = " ".join(str(item).strip() for item in diet_preference if str(item).strip())
+        else:
+            diet_text = str(diet_preference or "").strip()
+
+        if any(token in diet_text for token in ("烤肉", "烧烤")):
+            return "烤肉 烧烤 烤串 自助烤肉 韩式烤肉"
+        if "火锅" in diet_text:
+            return "火锅 麻辣火锅 鸳鸯锅"
+        if "轻食" in diet_text:
+            return "轻食 沙拉 健康餐"
+        if "减脂" in diet_text or "减肥" in diet_text:
+            return "轻食 沙拉 健康餐"
+        if diet_text:
+            return diet_text
+        return "餐厅 美食"
 
     # ------------------------------------------------------------------
     # Legacy-compatible methods
     # ------------------------------------------------------------------
 
-    def search_activities(self, scenario: str):
+    def search_activities(
+        self,
+        scenario: str,
+        origin_area: str = "",
+        runtime_origin_area: str = "",
+        runtime_origin_coordinates: str = "",
+    ):
+        requested_city = self._resolve_weather_city(origin_area, runtime_origin_area)
+        amap = self._get_amap()
+        if amap is not None:
+            try:
+                keywords = self._build_activity_keywords(scenario)
+                normalized = []
+                search_mode = ""
+                if isinstance(runtime_origin_coordinates, str) and runtime_origin_coordinates.strip():
+                    payload = amap.maps_around_search(
+                        keywords,
+                        location=runtime_origin_coordinates.strip(),
+                        radius="10000",
+                    )
+                    normalized = self._normalize_amap_pois(payload, kind="activity")
+                    if normalized:
+                        search_mode = "around"
+                if not normalized:
+                    payload = amap.maps_text_search(keywords, city=requested_city)
+                    normalized = self._normalize_amap_pois(payload, kind="activity")
+                    if normalized:
+                        search_mode = "text"
+                if normalized:
+                    for item in normalized:
+                        item["requested_city"] = requested_city
+                        item["search_mode"] = search_mode
+                    return normalized
+            except Exception:
+                pass
         return self.db["activities"].get(scenario, self.db["activities"]["family"])
 
-    def search_restaurants(self, diet_preference):
+    def search_restaurants(
+        self,
+        diet_preference,
+        origin_area: str = "",
+        runtime_origin_area: str = "",
+        runtime_origin_coordinates: str = "",
+    ):
+        requested_city = self._resolve_weather_city(origin_area, runtime_origin_area)
+        amap = self._get_amap()
+        if amap is not None:
+            try:
+                keywords = self._build_restaurant_keywords(diet_preference)
+                normalized = []
+                search_mode = ""
+                if isinstance(runtime_origin_coordinates, str) and runtime_origin_coordinates.strip():
+                    payload = amap.maps_around_search(
+                        keywords,
+                        location=runtime_origin_coordinates.strip(),
+                        radius="10000",
+                    )
+                    normalized = self._normalize_amap_pois(payload, kind="restaurant")
+                    if normalized:
+                        search_mode = "around"
+                if not normalized:
+                    payload = amap.maps_text_search(keywords, city=requested_city)
+                    normalized = self._normalize_amap_pois(payload, kind="restaurant")
+                    if normalized:
+                        search_mode = "text"
+                if normalized:
+                    for item in normalized:
+                        item["requested_city"] = requested_city
+                        item["search_mode"] = search_mode
+                    return normalized
+            except Exception:
+                pass
         if isinstance(diet_preference, list):
             diet_tokens = [str(item) for item in diet_preference]
             diet_text = " ".join(diet_tokens)
@@ -40,7 +288,18 @@ class MockToolAPI:
     # Weather
     # ------------------------------------------------------------------
 
-    def get_weather(self, scenario_key: str = "default"):
+    def get_weather(self, scenario_key: str = "default", origin_area: str = "", runtime_origin_area: str = ""):
+        requested_city = self._resolve_weather_city(origin_area, runtime_origin_area)
+        amap = self._get_amap()
+        if amap is not None:
+            try:
+                result = amap.maps_weather(requested_city)
+                normalized = self._normalize_amap_weather(result)
+                if isinstance(normalized, dict) and normalized:
+                    normalized["requested_city"] = requested_city
+                    return normalized
+            except Exception:
+                pass
         scenarios = self.db.get("weather_scenarios", {})
         default_payload = {
             "weather": "35℃ 阵雨",
@@ -55,6 +314,10 @@ class MockToolAPI:
             "weather": payload.get("weather", default_payload["weather"]),
             "risk": payload.get("risk", default_payload["risk"]),
             "advice": payload.get("advice", default_payload["advice"]),
+            "source": "mock",
+            "provider": "local_mock_db",
+            "resolved_city": None,
+            "requested_city": requested_city,
         }
         result["risk_level"] = result["risk"]
         return result

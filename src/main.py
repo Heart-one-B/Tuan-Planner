@@ -18,7 +18,7 @@ def main():
     if not user_input.strip():
         user_input = _DEFAULT_USER_INPUT
 
-    runtime_origin_area = "area_central"
+    runtime_origin_area = ""
     final_state = app.invoke(
         {
             "user_input": user_input,

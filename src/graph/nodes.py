@@ -41,6 +41,113 @@ def intent_node(state: AgentState) -> AgentState:
         return _append_error(state, f"Intent node failed: {exc}")
 
 
+def location_permission_node(state: AgentState) -> AgentState:
+    """定位权限节点：当用户未明确地点时，先询问是否允许自动定位。"""
+    print("[Location Permission Node] 用户未明确地点，准备请求定位授权...")
+    follow_up = "如果你没说具体地点，我可以先用当前定位继续规划。是否允许？(y/n): "
+    confirm = input(follow_up)
+    granted = confirm.strip().lower() == "y"
+    return {
+        "location_permission_granted": granted,
+    }
+
+
+def location_fallback_node(state: AgentState) -> AgentState:
+    """定位兜底节点：自动定位失败时，改为询问用户所在城市/区域。"""
+    print("[Location Fallback Node] 自动定位失败，改为询问城市/区域...")
+    user_area = input("你大概在哪个城市或区域？\n> ").strip()
+    while not user_area:
+        user_area = input("你大概在哪个城市或区域？\n> ").strip()
+    return {
+        "runtime_origin_area": user_area,
+        "location_lookup_result": {
+            "status": "fallback_user_input",
+            "city": user_area,
+            "reason": "用户手动补充城市/区域",
+        },
+    }
+
+
+def location_lookup_node(state: AgentState) -> AgentState:
+    """定位查询节点：根据 IP 做粗略定位，回填 runtime_origin_area。"""
+    print("[Location Lookup Node] 开始获取用户定位...")
+    try:
+        amap = MockToolAPI()._get_amap()
+        if amap is None:
+            return {
+                "location_lookup_result": {
+                    "status": "unavailable",
+                    "reason": "MCP 客户端不可用",
+                }
+            }
+
+        import requests
+
+        ip = ""
+        ip_sources = [
+            ("https://ifconfig.me/ip", "text"),
+        ]
+        for url, mode in ip_sources:
+            try:
+                resp = requests.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+                if not resp.ok:
+                    continue
+                if mode == "json":
+                    ip = resp.json().get("ip", "") or ""
+                else:
+                    ip = resp.text.strip()
+                if ip:
+                    break
+            except Exception as exc:
+                print(f"[Location Lookup Node][WARN] 获取公网 IP 失败: source={url!r}, error={exc}")
+
+        if not ip:
+            print("[Location Lookup Node][WARN] 无法获取公网 IP，无法调用 maps_ip_location")
+            return {
+                "runtime_origin_coordinates": "",
+                "location_lookup_result": {
+                    "status": "unavailable",
+                    "reason": "无法获取公网 IP",
+                }
+            }
+
+        lookup = amap.maps_ip_location(ip)
+        if not isinstance(lookup, dict):
+            lookup = {"status": "unknown"}
+
+        city = lookup.get("city") if isinstance(lookup.get("city"), str) else ""
+        adcode = lookup.get("adcode") if isinstance(lookup.get("adcode"), str) else ""
+        rectangle = lookup.get("rectangle") if isinstance(lookup.get("rectangle"), str) else ""
+        runtime_origin_coordinates = ""
+        if rectangle and ";" in rectangle:
+            try:
+                p1, p2 = rectangle.split(";", 1)
+                lng1, lat1 = [float(x) for x in p1.split(",")]
+                lng2, lat2 = [float(x) for x in p2.split(",")]
+                runtime_origin_coordinates = f"{(lng1 + lng2) / 2:.6f},{(lat1 + lat2) / 2:.6f}"
+            except Exception:
+                runtime_origin_coordinates = ""
+        runtime_origin_area = city or adcode or ""
+        print(
+            f"[Location Lookup Node] result status={lookup.get('status')!r}, "
+            f"city={city!r}, adcode={adcode!r}, rectangle={rectangle!r}, lookup={lookup}"
+        )
+        return {
+            "runtime_origin_area": runtime_origin_area,
+            "runtime_origin_coordinates": runtime_origin_coordinates,
+            "location_lookup_result": lookup,
+        }
+    except Exception as exc:
+        print(f"[Location Lookup Node][WARN] 定位失败: {exc}")
+        return {
+            "runtime_origin_coordinates": "",
+            "location_lookup_result": {
+                "status": "error",
+                "reason": str(exc),
+            }
+        }
+
+
 def llm_answer_node(state: AgentState) -> AgentState:
     """非规划任务直答节点：让 LLM 直接回答用户输入。失败时写入固定 fallback 文案。"""
     user_input = state.get("user_input", "")
@@ -160,8 +267,8 @@ def plan_candidate_node(state: AgentState) -> AgentState:
 
 
 def candidate_planning_node(state: AgentState) -> AgentState:
-    """新架构候选计划节点骨架：使用 LLM 生成 3 个结构化候选计划。"""
-    print("[Candidate Planning Node] 生成 3 个候选计划骨架...")
+    """新架构候选计划节点：程序先选真实 activity/restaurant，LLM 只补 reasoning。"""
+    print("[Candidate Planning Node] 程序选实体，LLM 只补 reasoning...")
     try:
         constraint_build = state.get("constraint_build")
         if not isinstance(constraint_build, dict):
@@ -176,44 +283,64 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         hard_constraints = constraint_build.get("hard_constraints") or {}
         soft_preferences = constraint_build.get("soft_preferences") or {}
         query_constraints = constraint_build.get("query_constraints") or {}
+        activities = fact_gathering_result.get("activities")
+        if not isinstance(activities, list):
+            activities = []
+        restaurants = fact_gathering_result.get("restaurants")
+        if not isinstance(restaurants, list):
+            restaurants = []
 
-        prompt = f"""
-你是本地生活行程规划助手。
-请根据给定的结构化约束和事实数据，生成 3 个候选计划。
+        def _safe_item(items: list, index: int) -> dict:
+            if index < len(items) and isinstance(items[index], dict):
+                return dict(items[index])
+            return {}
 
+        daypart = hard_constraints.get("daypart") if isinstance(hard_constraints, dict) else ""
+        date_label = hard_constraints.get("date_label") if isinstance(hard_constraints, dict) else ""
+        time_phrase = f"{date_label}{daypart}" if date_label and daypart else (date_label or daypart or "待确认时间")
+
+        candidate_blueprints = [
+            {
+                "id": "plan_1",
+                "title": "主推荐方案",
+                "activity": _safe_item(activities, 0),
+                "restaurant": _safe_item(restaurants, 0),
+            },
+            {
+                "id": "plan_2",
+                "title": "备选近场方案",
+                "activity": _safe_item(activities, 1) or _safe_item(activities, 0),
+                "restaurant": _safe_item(restaurants, 1) or _safe_item(restaurants, 0),
+            },
+            {
+                "id": "plan_3",
+                "title": "备选轻量方案",
+                "activity": _safe_item(activities, 2) or _safe_item(activities, 0),
+                "restaurant": _safe_item(restaurants, 2) or _safe_item(restaurants, 0),
+            },
+        ]
+
+        def _build_timeline(activity: dict, restaurant: dict) -> list[dict]:
+            activity_name = activity.get("name") or "待确认活动"
+            activity_type = activity.get("type") or "未知"
+            restaurant_name = restaurant.get("name") or "待确认餐厅"
+            return [
+                {"time": time_phrase, "item": activity_name, "type": activity_type},
+                {"time": "随后", "item": restaurant_name, "type": "restaurant"},
+            ]
+
+        normalized_candidates = []
+        for blueprint in candidate_blueprints:
+            activity = blueprint.get("activity") if isinstance(blueprint.get("activity"), dict) else {}
+            restaurant = blueprint.get("restaurant") if isinstance(blueprint.get("restaurant"), dict) else {}
+            reasoning = []
+            try:
+                prompt = f"""
+你是本地生活规划助手。请基于下面已经确定的真实活动和餐厅，补充 2-3 条简短 reasoning。
 要求：
-1. 只输出 JSON，不要输出任何额外解释。
-2. 输出字段必须是：
-{{
-  "candidates": [
-    {{
-      "id": "plan_1",
-      "title": "...",
-      "timeline": [],
-      "activity": {{}},
-      "restaurant": {{}},
-      "reasoning": []
-    }},
-    {{
-      "id": "plan_2",
-      "title": "...",
-      "timeline": [],
-      "activity": {{}},
-      "restaurant": {{}},
-      "reasoning": []
-    }},
-    {{
-      "id": "plan_3",
-      "title": "...",
-      "timeline": [],
-      "activity": {{}},
-      "restaurant": {{}},
-      "reasoning": []
-    }}
-  ]
-}}
-3. 必须只基于输入事实生成，不允许编造输入里不存在的事实。
-4. timeline/activity/restaurant 可以先保持最小骨架，但结构必须完整。
+1. 只输出 JSON。
+2. 格式必须是 {{"reasoning": ["...", "..."]}}
+3. 不要改动活动和餐厅，不要编造新的地点。
 
 输入：
 - request_type: {request_type}
@@ -221,37 +348,38 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 - hard_constraints: {hard_constraints}
 - soft_preferences: {soft_preferences}
 - query_constraints: {query_constraints}
-- fact_gathering_result: {fact_gathering_result}
+- activity: {activity}
+- restaurant: {restaurant}
 """
+                response = chat_model.invoke([HumanMessage(content=prompt)])
+                content = getattr(response, "content", "") or ""
 
-        response = chat_model.invoke([HumanMessage(content=prompt)])
-        content = getattr(response, "content", "") or ""
+                import json
+                import re
 
-        import json
-        import re
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                payload = json.loads(json_match.group() if json_match else content)
+                if isinstance(payload, dict) and isinstance(payload.get("reasoning"), list):
+                    reasoning = [item for item in payload.get("reasoning") if isinstance(item, str)]
+            except Exception:
+                reasoning = []
 
-        json_match = re.search(r"\{.*\}", content, re.DOTALL)
-        payload = json.loads(json_match.group() if json_match else content)
-        if not isinstance(payload, dict):
-            payload = {}
-
-        candidates = payload.get("candidates")
-        if not isinstance(candidates, list):
-            candidates = []
-
-        normalized_candidates = []
-        for index in range(3):
-            item = candidates[index] if index < len(candidates) and isinstance(candidates[index], dict) else {}
             normalized_candidates.append(
                 {
-                    "id": item.get("id") if isinstance(item.get("id"), str) and item.get("id") else f"plan_{index + 1}",
-                    "title": item.get("title") if isinstance(item.get("title"), str) else "",
-                    "timeline": item.get("timeline") if isinstance(item.get("timeline"), list) else [],
-                    "activity": item.get("activity") if isinstance(item.get("activity"), dict) else {},
-                    "restaurant": item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {},
-                    "reasoning": item.get("reasoning") if isinstance(item.get("reasoning"), list) else [],
+                    "id": blueprint["id"],
+                    "title": blueprint["title"],
+                    "timeline": _build_timeline(activity, restaurant),
+                    "activity": activity,
+                    "restaurant": restaurant,
+                    "reasoning": reasoning,
                 }
             )
+
+        print(
+            "[Candidate Planning Node] "
+            f"plan_1_activity={normalized_candidates[0].get('activity', {}).get('name')!r}, "
+            f"plan_1_restaurant={normalized_candidates[0].get('restaurant', {}).get('name')!r}"
+        )
 
         return {
             "candidate_plans": {
@@ -567,11 +695,19 @@ def final_plan_node(state: AgentState) -> AgentState:
         if not isinstance(scoring_result, dict):
             scoring_result = {}
 
+        rule_validation_result = state.get("rule_validation_result")
+        if not isinstance(rule_validation_result, dict):
+            rule_validation_result = {}
+
         scored_candidates = scoring_result.get("scored_candidates")
         if not isinstance(scored_candidates, list):
             scored_candidates = []
 
-        best_candidate = None
+        valid_plans = rule_validation_result.get("valid_plans")
+        if not isinstance(valid_plans, list):
+            valid_plans = []
+
+        best_candidate_score = None
         best_score = None
         for item in scored_candidates:
             if not isinstance(item, dict):
@@ -580,13 +716,34 @@ def final_plan_node(state: AgentState) -> AgentState:
             if not isinstance(score, (int, float)):
                 continue
             if best_score is None or score > best_score:
-                best_candidate = item
+                best_candidate_score = item
                 best_score = score
+
+        best_candidate = {}
+        best_candidate_id = ""
+        if isinstance(best_candidate_score, dict):
+            best_candidate_id = best_candidate_score.get("candidate_id") if isinstance(best_candidate_score.get("candidate_id"), str) else ""
+            for item in valid_plans:
+                if not isinstance(item, dict):
+                    continue
+                if item.get("id") == best_candidate_id:
+                    best_candidate = dict(item)
+                    break
+
+        if not best_candidate and isinstance(best_candidate_score, dict):
+            best_candidate = dict(best_candidate_score)
+
+        print(
+            f"[Final Plan Node] selected_candidate_id={best_candidate_id!r}, "
+            f"has_activity={isinstance(best_candidate.get('activity'), dict) and bool(best_candidate.get('activity'))}, "
+            f"has_restaurant={isinstance(best_candidate.get('restaurant'), dict) and bool(best_candidate.get('restaurant'))}, "
+            f"final_score={best_score if best_score is not None else 0}"
+        )
 
         return {
             "final_plan_result": {
                 "selected_candidate": best_candidate or {},
-                "selected_candidate_id": best_candidate.get("candidate_id") if isinstance(best_candidate, dict) else "",
+                "selected_candidate_id": best_candidate_id,
                 "final_score": best_score if best_score is not None else 0,
                 "all_scored_candidates": scored_candidates,
             }
@@ -654,6 +811,7 @@ def constraint_collect_node(state: AgentState) -> AgentState:
             state.get("replan_reason", ""),
             state.get("replan_reason_type", ""),
             state.get("runtime_origin_area", ""),
+            state.get("runtime_origin_coordinates", ""),
         )
         constraints = result.get("constraints") if isinstance(result, dict) else {}
         constraint_build = result.get("constraint_build") if isinstance(result, dict) else {}
@@ -848,7 +1006,11 @@ def weather_check_node(state: AgentState) -> AgentState:
             return update
 
         scenario_key = _derive_weather_scenario_key(constraints)
-        weather = MockToolAPI().get_weather(scenario_key)
+        weather = MockToolAPI().get_weather(
+            scenario_key,
+            origin_area=constraints.get("origin_area") or "",
+            runtime_origin_area=state.get("runtime_origin_area", "") or "",
+        )
         if not isinstance(weather, dict):
             weather = {}
         weather["scenario_key_used"] = scenario_key
@@ -856,6 +1018,10 @@ def weather_check_node(state: AgentState) -> AgentState:
         weather["daypart_used"] = constraints.get("daypart")
         print(
             f"[Weather Check Node] result scenario_key_used={scenario_key!r}, "
+            f"source={weather.get('source')!r}, provider={weather.get('provider')!r}, "
+            f"requested_city={weather.get('requested_city')!r}, "
+            f"resolved_city={weather.get('resolved_city')!r}, "
+            f"weather={weather.get('weather')!r}, "
             f"risk_level={weather.get('risk_level')!r}, advice={weather.get('advice')!r}"
         )
         return {"weather": weather}
@@ -881,7 +1047,12 @@ def activity_search_node(state: AgentState) -> AgentState:
         daypart = constraints.get("daypart")
         if not isinstance(daypart, str):
             daypart = ""
-        activities = MockToolAPI().search_activities(scenario)
+        activities = MockToolAPI().search_activities(
+            scenario,
+            origin_area=constraints.get("origin_area") or "",
+            runtime_origin_area=state.get("runtime_origin_area", "") or "",
+            runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
+        )
         if not isinstance(activities, list):
             activities = []
 
@@ -904,15 +1075,26 @@ def activity_search_node(state: AgentState) -> AgentState:
         ]
         if not matched:
             update = _append_error(state, f"Activity Search node found no activities for daypart [{daypart}]")
-            print(f"[Activity Search Node] no matched activities for daypart={daypart!r}")
+            print(
+                f"[Activity Search Node] no matched activities for daypart={daypart!r}, "
+                f"origin_area={constraints.get('origin_area')!r}, "
+                f"origin_coordinates={state.get('runtime_origin_coordinates', '')!r}"
+            )
             update["activities"] = []
             return update
 
         for item in matched:
             item["daypart_used"] = daypart
+        activity_source = matched[0].get("source") if matched else None
+        activity_provider = matched[0].get("provider") if matched else None
+        activity_requested_city = matched[0].get("requested_city") if matched else None
+        activity_search_mode = matched[0].get("search_mode") if matched else None
         print(
             f"[Activity Search Node] matched_ids={[item.get('id') for item in matched]}, "
-            f"daypart_used={daypart!r}"
+            f"daypart_used={daypart!r}, source={activity_source!r}, "
+            f"provider={activity_provider!r}, requested_city={activity_requested_city!r}, "
+            f"search_mode={activity_search_mode!r}, "
+            f"top_names={[item.get('name') for item in matched[:3]]}"
         )
         return {"activities": matched}
     except Exception as exc:
@@ -940,7 +1122,12 @@ def restaurant_search_node(state: AgentState) -> AgentState:
         daypart = constraints.get("daypart")
         if not isinstance(daypart, str):
             daypart = ""
-        restaurants = MockToolAPI().search_restaurants(diet_preference)
+        restaurants = MockToolAPI().search_restaurants(
+            diet_preference,
+            origin_area=constraints.get("origin_area") or "",
+            runtime_origin_area=state.get("runtime_origin_area", "") or "",
+            runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
+        )
         if not isinstance(restaurants, list):
             restaurants = []
 
@@ -955,7 +1142,11 @@ def restaurant_search_node(state: AgentState) -> AgentState:
         ]
         if not matched:
             update = _append_error(state, f"Restaurant Search node found no restaurants for daypart [{daypart}]")
-            print(f"[Restaurant Search Node] no matched restaurants for daypart={daypart!r}")
+            print(
+                f"[Restaurant Search Node] no matched restaurants for daypart={daypart!r}, "
+                f"origin_area={constraints.get('origin_area')!r}, "
+                f"origin_coordinates={state.get('runtime_origin_coordinates', '')!r}"
+            )
             update["restaurants"] = []
             return update
 
@@ -977,9 +1168,17 @@ def restaurant_search_node(state: AgentState) -> AgentState:
         matched.sort(key=_scenario_rank)
         for item in matched:
             item["daypart_used"] = daypart
+        restaurant_source = matched[0].get("source") if matched else None
+        restaurant_provider = matched[0].get("provider") if matched else None
+        restaurant_requested_city = matched[0].get("requested_city") if matched else None
+        restaurant_search_mode = matched[0].get("search_mode") if matched else None
         print(
             f"[Restaurant Search Node] matched_ids={[item.get('id') for item in matched]}, "
-            f"daypart_used={daypart!r}"
+            f"daypart_used={daypart!r}, source={restaurant_source!r}, "
+            f"provider={restaurant_provider!r}, requested_city={restaurant_requested_city!r}, "
+            f"search_mode={restaurant_search_mode!r}, "
+            f"keywords={diet_preference!r}, "
+            f"top_names={[item.get('name') for item in matched[:3]]}"
         )
         return {"restaurants": matched}
     except Exception as exc:

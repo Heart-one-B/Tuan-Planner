@@ -471,11 +471,11 @@ class PlanningAgent:
         )
 
         # 仿照 nodes.py 中并行节点的策略
-        weather = api.get_weather("default")
-        activities_list = api.search_activities(scenario)
+        weather = api.get_weather("default", origin_area=origin_area)
+        activities_list = api.search_activities(scenario, origin_area=origin_area)
         if not isinstance(activities_list, list):
             activities_list = []
-        restaurants_list = api.search_restaurants(diet_pref)
+        restaurants_list = api.search_restaurants(diet_pref, origin_area=origin_area)
         if not isinstance(restaurants_list, list):
             restaurants_list = []
 

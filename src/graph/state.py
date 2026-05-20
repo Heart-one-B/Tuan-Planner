@@ -10,6 +10,9 @@ class AgentState(TypedDict, total=False):
     conversation_turns: list[str]
     clarification_round: int
     runtime_origin_area: str
+    runtime_origin_coordinates: str
+    location_permission_granted: bool
+    location_lookup_result: dict[str, Any]
 
     # --- intent and routing ---
     intent: dict[str, Any]

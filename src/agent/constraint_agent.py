@@ -86,6 +86,7 @@ class ConstraintAgent:
         replan_reason: str = "",
         replan_reason_type: str = "",
         runtime_origin_area: str = "",
+        runtime_origin_coordinates: str = "",
     ) -> dict[str, Any]:
         intent = _safe_dict(intent)
         retrieval_context = _safe_dict(retrieval_context)
@@ -128,6 +129,16 @@ class ConstraintAgent:
         child_friendly_required = has_child or intent.get("child_friendly") is True
 
         diet_preference = _coerce_text_list(intent.get("diet_preference"))
+        raw_query = intent.get("raw_query")
+        raw_diet_keywords: list[str] = []
+        if isinstance(raw_query, str):
+            for token in ("烤肉", "烧烤", "火锅", "西餐", "日料", "韩餐", "川菜", "粤菜", "湘菜", "轻食", "自助"):
+                if token in raw_query and token not in raw_diet_keywords:
+                    raw_diet_keywords.append(token)
+        merged_diet_preference = diet_preference[:]
+        for token in raw_diet_keywords:
+            if token not in merged_diet_preference:
+                merged_diet_preference.append(token)
 
         location_info = _safe_dict(intent.get("location"))
         origin_area_hint = location_info.get("origin_area_hint")
@@ -140,7 +151,7 @@ class ConstraintAgent:
             origin_type = "current"
             location_source = "runtime_location"
         else:
-            origin_area = DEFAULT_POLICY["origin_area"]
+            origin_area = ""
             origin_type = DEFAULT_POLICY["origin_type"]
             location_source = DEFAULT_POLICY["location_source"]
 
@@ -178,9 +189,10 @@ class ConstraintAgent:
             "child_friendly_required": child_friendly_required,
             "child_age": child_age,
             "origin_area": origin_area,
+            "origin_coordinates": runtime_origin_coordinates.strip() if isinstance(runtime_origin_coordinates, str) else "",
             "origin_type": origin_type,
             "location_source": location_source,
-            "diet_preference": diet_preference,
+            "diet_preference": merged_diet_preference,
             "max_traffic_minutes": max_traffic,
             "max_queue_minutes": max_queue,
             "indoor_preferred": indoor_preferred,
@@ -197,7 +209,7 @@ class ConstraintAgent:
             request_type = "friends_social"
 
         plan_mode = "activity_plus_meal"
-        if not constraints["diet_preference"] and scenario == "friends":
+        if not merged_diet_preference and scenario == "friends":
             plan_mode = "light_social"
 
         hard_constraints: dict[str, Any] = {
@@ -207,6 +219,7 @@ class ConstraintAgent:
             "start_time": start_time,
             "duration_hours": duration_hours,
             "origin_area": origin_area,
+            "origin_coordinates": runtime_origin_coordinates.strip() if isinstance(runtime_origin_coordinates, str) else "",
             "origin_type": origin_type,
             "party_size": people_count,
             "child_friendly_required": child_friendly_required,
@@ -218,7 +231,7 @@ class ConstraintAgent:
         }
 
         soft_preferences: dict[str, Any] = {
-            "diet_preference": diet_preference,
+            "diet_preference": merged_diet_preference,
             "activity_style": [],
             "must_avoid": [],
             "budget_level": "default",
@@ -231,6 +244,7 @@ class ConstraintAgent:
 
         query_constraints: dict[str, Any] = {
             "origin_area": origin_area,
+            "origin_coordinates": runtime_origin_coordinates.strip() if isinstance(runtime_origin_coordinates, str) else "",
             "time_window": time_window,
             "party_size": people_count,
             "need_activity": True,
@@ -238,7 +252,7 @@ class ConstraintAgent:
             "search_radius_level": "near" if max_traffic <= 30 else "default",
             "indoor_preferred": bool(indoor_preferred),
             "keywords_activity": [],
-            "keywords_restaurant": diet_preference,
+            "keywords_restaurant": merged_diet_preference,
         }
 
         validation_profile: dict[str, Any] = {
@@ -273,6 +287,7 @@ class ConstraintAgent:
             "replan_reason_type": replan_reason_type if isinstance(replan_reason_type, str) else "",
             "defaults_applied": [],
             "location_source": location_source,
+            "origin_coordinates": runtime_origin_coordinates.strip() if isinstance(runtime_origin_coordinates, str) else "",
         }
 
         return {
