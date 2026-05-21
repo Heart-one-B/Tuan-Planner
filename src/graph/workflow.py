@@ -24,6 +24,7 @@ from src.graph.nodes import (
     rule_validation_node,
     route_after_confirmation,
     schedule_timing_node,
+    time_normalize_node,
     restaurant_search_node,
     traffic_eta_node,
     weather_check_node,
@@ -41,7 +42,10 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
         return "constraint_build"
     if intent.get("is_leisure_planning") is False:
         return "llm_answer"
-    if intent.get("clarification_needed") is True and "scenario" in (intent.get("missing_slots", {}) or {}).get("global", []):
+    missing_global = (intent.get("missing_slots", {}) or {}).get("global", [])
+    if intent.get("clarification_needed") is True and "scenario" in missing_global:
+        return "clarification"
+    if intent.get("clarification_needed") is True and any(slot in missing_global for slot in ("time_day", "time_window")):
         return "clarification"
     location = intent.get("location")
     origin_area_hint = ""
@@ -90,6 +94,7 @@ def build_workflow():
     graph = StateGraph(AgentState)
 
     graph.add_node("intent", intent_node)
+    graph.add_node("time_normalize", time_normalize_node)
     graph.add_node("clarification", clarification_node)
     graph.add_node("llm_answer", llm_answer_node)
     graph.add_node("location_permission", location_permission_node)
@@ -119,8 +124,9 @@ def build_workflow():
     graph.add_node("reject", reject_node)
 
     graph.set_entry_point("intent")
+    graph.add_edge("intent", "time_normalize")
     graph.add_conditional_edges(
-        "intent",
+        "time_normalize",
         route_after_intent_with_clarification,
         {
             "llm_answer": "llm_answer",

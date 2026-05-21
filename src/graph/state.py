@@ -13,6 +13,8 @@ class AgentState(TypedDict, total=False):
     runtime_origin_coordinates: str
     location_permission_granted: bool
     location_lookup_result: dict[str, Any]
+    normalized_time: dict[str, Any]
+    time_normalization_result: dict[str, Any]
 
     # --- intent and routing ---
     intent: dict[str, Any]

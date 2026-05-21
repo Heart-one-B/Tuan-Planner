@@ -58,6 +58,20 @@ class PresentationAgent:
         else:
             diet_pref_text = diet_pref or "无"
 
+        if isinstance(schedule_result, dict) and isinstance(schedule_result.get("timeline"), list) and schedule_result.get("timeline"):
+            timeline_text = self._format_timeline(schedule_result.get("timeline"), date_label)
+            return self._generate_direct_display(
+                intent=intent,
+                timeline_text=timeline_text,
+                activity_name=activity_name,
+                activity_type=activity_type,
+                restaurant_name=restaurant_name,
+                final_score=final_score,
+                selected_candidate_id=selected_candidate_id,
+                intervention_context=intervention_context,
+                time_phrase=time_phrase,
+            )
+
         prompt = f"""
         你是一个专业的本地生活规划助手。
         请根据以下最终计划数据，为用户生成一份可确认但不夸大执行状态的方案说明。
@@ -95,6 +109,33 @@ class PresentationAgent:
             return response.content
         except Exception as e:
             return self._generate_fallback_display(plan, intent, str(e))
+
+    def _generate_direct_display(
+        self,
+        *,
+        intent: dict,
+        timeline_text: str,
+        activity_name: str,
+        activity_type: str,
+        restaurant_name: str,
+        final_score,
+        selected_candidate_id,
+        intervention_context: str,
+        time_phrase: str,
+    ) -> str:
+        return f"""# 方案建议（{intent.get('scenario', 'family')} 场景）
+
+## 第一部分：行程安排
+{timeline_text}
+
+## 第二部分：方案说明
+- 当前方案已根据时间窗口和通勤时间生成。
+- 已结合用户场景、天气风险和餐厅可用性做初步匹配。
+- 自动调整信息：{intervention_context or '无'}
+
+## 第三部分：确认提示
+当前还是方案展示阶段，确认后才会继续执行预约或下单。
+"""
 
     def _generate_fallback_display(self, plan: dict, intent: dict, error: str) -> str:
         activities = plan.get("activities") or [{}]

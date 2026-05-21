@@ -42,6 +42,66 @@ def intent_node(state: AgentState) -> AgentState:
         return _append_error(state, f"Intent node failed: {exc}")
 
 
+def time_normalize_node(state: AgentState) -> AgentState:
+    """统一时间规范器：把今天过时的计划顺延到明天，并输出统一时间字段。"""
+    print("[Time Normalize Node] 规范时间语义...")
+    try:
+        intent = state.get("intent")
+        if not isinstance(intent, dict):
+            intent = {}
+
+        time_info = intent.get("time")
+        if not isinstance(time_info, dict):
+            time_info = {}
+
+        date_label = time_info.get("date_label") if isinstance(time_info.get("date_label"), str) else ""
+        daypart = time_info.get("daypart") if isinstance(time_info.get("daypart"), str) else ""
+        time_phrase = time_info.get("time_phrase") if isinstance(time_info.get("time_phrase"), str) else ""
+
+        normalized_date_label = date_label
+        normalized_daypart = daypart
+        normalized_time_phrase = time_phrase or (f"{date_label}{daypart}" if date_label and daypart else "")
+
+        now = datetime.now()
+        now_minutes = now.hour * 60 + now.minute
+        cutoff_minutes = 18 * 60 if normalized_daypart in {"下午", "上午", "全天"} else 21 * 60
+        if normalized_date_label == "今天" and now_minutes > cutoff_minutes:
+            normalized_date_label = "明天"
+            if normalized_time_phrase:
+                normalized_time_phrase = normalized_time_phrase.replace("今天", "明天", 1)
+
+        if normalized_daypart == "上午":
+            base_start_minutes = 9 * 60 + 30
+        elif normalized_daypart == "晚上":
+            base_start_minutes = 18 * 60 + 30
+        elif normalized_daypart == "全天":
+            base_start_minutes = 9 * 60 + 30
+        else:
+            base_start_minutes = 14 * 60
+        if normalized_date_label == "今天" and normalized_daypart in {"下午", "晚上"} and now_minutes + 15 > cutoff_minutes:
+            normalized_date_label = "明天"
+
+        normalized_time = {
+            "normalized_date_label": normalized_date_label,
+            "normalized_daypart": normalized_daypart,
+            "normalized_time_phrase": normalized_time_phrase,
+            "base_start_minutes": base_start_minutes,
+            "current_minutes": now_minutes,
+            "current_time": now.strftime("%H:%M"),
+        }
+        print(
+            f"[Time Normalize Node] date_label={date_label!r}, daypart={daypart!r}, "
+            f"normalized_date_label={normalized_date_label!r}, base_start_minutes={base_start_minutes}"
+        )
+        return {
+            "normalized_time": normalized_time,
+            "time_normalization_result": normalized_time,
+        }
+    except Exception as exc:
+        print(f"[Time Normalize Node][WARN] 节点异常，记录错误: {exc}")
+        return _append_error(state, f"Time Normalize node failed: {exc}")
+
+
 def location_permission_node(state: AgentState) -> AgentState:
     """定位权限节点：当用户未明确地点时，先询问是否允许自动定位。"""
     print("[Location Permission Node] 用户未明确地点，准备请求定位授权...")
@@ -816,6 +876,18 @@ def constraint_collect_node(state: AgentState) -> AgentState:
         )
         constraints = result.get("constraints") if isinstance(result, dict) else {}
         constraint_build = result.get("constraint_build") if isinstance(result, dict) else {}
+        normalized_time = state.get("normalized_time") if isinstance(state.get("normalized_time"), dict) else {}
+        if normalized_time:
+            constraints["date_label"] = normalized_time.get("normalized_date_label", constraints.get("date_label", ""))
+            constraints["daypart"] = normalized_time.get("normalized_daypart", constraints.get("daypart", ""))
+            constraints["time_phrase"] = normalized_time.get("normalized_time_phrase", constraints.get("time_phrase", ""))
+            constraint_build = dict(constraint_build) if isinstance(constraint_build, dict) else {}
+            hard_constraints = constraint_build.get("hard_constraints") if isinstance(constraint_build.get("hard_constraints"), dict) else {}
+            hard_constraints["date_label"] = constraints["date_label"]
+            hard_constraints["daypart"] = constraints["daypart"]
+            hard_constraints["time_phrase"] = constraints["time_phrase"]
+            hard_constraints["base_start_minutes"] = normalized_time.get("base_start_minutes")
+            constraint_build["hard_constraints"] = hard_constraints
         print(
             f"[Constraint Collect Node][OK] scenario={constraints.get('scenario')}, "
             f"party={constraints.get('party')}, "
@@ -944,9 +1016,22 @@ def _derive_traffic_depart_context(constraints: dict) -> str:
 
 
 def _activity_matches_daypart(activity: dict, daypart: str) -> bool:
+    open_time = activity.get("open_time")
+    opentime2 = activity.get("opentime2")
+    open_window = f"{open_time or ''} {opentime2 or ''}".strip()
+    if open_window:
+        if daypart == "全天":
+            return True
+        if daypart == "上午":
+            return any(token in open_window for token in ("06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "全天", "周一至周日"))
+        if daypart == "下午":
+            return any(token in open_window for token in ("12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "全天", "周一至周日"))
+        if daypart == "晚上":
+            return any(token in open_window for token in ("18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "全天", "周一至周日"))
+
     peak_hours = activity.get("peak_hours")
     if not isinstance(peak_hours, list) or not peak_hours:
-        return False
+        return daypart == "全天"
 
     for slot in peak_hours:
         if not isinstance(slot, str) or "-" not in slot:
@@ -958,17 +1043,34 @@ def _activity_matches_daypart(activity: dict, daypart: str) -> bool:
         except (TypeError, ValueError):
             continue
 
+        if daypart == "上午" and start_hour < 12:
+            return True
         if daypart == "下午" and start_hour < 18:
             return True
         if daypart == "晚上" and end_hour >= 18:
+            return True
+        if daypart == "全天":
             return True
     return False
 
 
 def _restaurant_matches_daypart(restaurant: dict, daypart: str) -> bool:
+    open_time = restaurant.get("open_time")
+    opentime2 = restaurant.get("opentime2")
+    open_window = f"{open_time or ''} {opentime2 or ''}".strip()
+    if open_window:
+        if daypart == "全天":
+            return True
+        if daypart == "上午":
+            return any(token in open_window for token in ("06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "全天", "周一至周日"))
+        if daypart == "下午":
+            return any(token in open_window for token in ("12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "全天", "周一至周日"))
+        if daypart == "晚上":
+            return any(token in open_window for token in ("18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "全天", "周一至周日"))
+
     peak_hours = restaurant.get("peak_hours")
     if not isinstance(peak_hours, list) or not peak_hours:
-        return False
+        return daypart == "全天"
 
     for slot in peak_hours:
         if not isinstance(slot, str) or "-" not in slot:
@@ -980,9 +1082,13 @@ def _restaurant_matches_daypart(restaurant: dict, daypart: str) -> bool:
         except (TypeError, ValueError):
             continue
 
+        if daypart == "上午" and start_hour < 14:
+            return True
         if daypart == "下午" and start_hour < 18:
             return True
         if daypart == "晚上" and end_hour >= 18:
+            return True
+        if daypart == "全天":
             return True
     return False
 
@@ -1286,6 +1392,7 @@ def schedule_timing_node(state: AgentState) -> AgentState:
         date_label = constraints.get("date_label") if isinstance(constraints.get("date_label"), str) else ""
         daypart = constraints.get("daypart") if isinstance(constraints.get("daypart"), str) else ""
         time_phrase = constraints.get("time_phrase") if isinstance(constraints.get("time_phrase"), str) else ""
+        raw_query = state.get("intent", {}).get("raw_query") if isinstance(state.get("intent"), dict) else ""
         origin_coordinates = state.get("runtime_origin_coordinates", "") or ""
         normalized_date_label = date_label
         now = datetime.now()
@@ -1343,8 +1450,12 @@ def schedule_timing_node(state: AgentState) -> AgentState:
             return f"{hour:02d}:{minute:02d}"
 
         def _default_activity_start_minutes(daypart_value: str) -> int:
+            if daypart_value == "上午":
+                return 9 * 60 + 30
             if daypart_value == "晚上":
                 return 18 * 60 + 30
+            if daypart_value == "全天":
+                return 9 * 60 + 30
             return 14 * 60
 
         timeline = []
@@ -1354,12 +1465,41 @@ def schedule_timing_node(state: AgentState) -> AgentState:
         chain_eta_minutes = segment_eta.get("activity_to_restaurant_minutes") if isinstance(segment_eta.get("activity_to_restaurant_minutes"), int) else 0
         activity_duration_minutes = 90
         buffer_minutes = 15
+        meal_floor_minutes = 0
+        if isinstance(raw_query, str):
+            if "晚餐" in raw_query or "晚饭" in raw_query:
+                meal_floor_minutes = 18 * 60
+            elif "午餐" in raw_query:
+                meal_floor_minutes = 12 * 60
 
-        if normalized_date_label == "今天":
-            depart_minutes = now_minutes + buffer_minutes
-            activity_start_minutes = depart_minutes + start_eta_minutes
+        if daypart == "全天":
+            morning_start_minutes = max(9 * 60 + 30, now_minutes + buffer_minutes + start_eta_minutes) if normalized_date_label == "今天" else 9 * 60 + 30
+            depart_minutes = max(0, morning_start_minutes - start_eta_minutes - buffer_minutes)
+            morning_end_minutes = morning_start_minutes + activity_duration_minutes
+            lunch_minutes = max(12 * 60, morning_end_minutes + chain_eta_minutes + buffer_minutes)
+            afternoon_start_minutes = max(14 * 60, lunch_minutes + 90)
+            afternoon_end_minutes = afternoon_start_minutes + activity_duration_minutes
+            dinner_minutes = max(18 * 60, afternoon_end_minutes + chain_eta_minutes + buffer_minutes)
+
+            timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "从当前位置出发" if normalized_date_label == "今天" else "按计划出发", "type": "departure"})
+            timeline.append({"time": _minutes_to_hhmm(morning_start_minutes), "item": activity_name, "type": "activity_morning"})
+            timeline.append({"time": _minutes_to_hhmm(morning_end_minutes), "item": f"{activity_name}结束", "type": "activity_end_morning"})
+            timeline.append({"time": _minutes_to_hhmm(lunch_minutes), "item": f"{restaurant_name}（午餐）", "type": "lunch"})
+            timeline.append({"time": _minutes_to_hhmm(afternoon_start_minutes), "item": f"{activity_name}（下午场）", "type": "activity_afternoon"})
+            timeline.append({"time": _minutes_to_hhmm(afternoon_end_minutes), "item": f"{activity_name}（下午场）结束", "type": "activity_end_afternoon"})
+            timeline.append({"time": _minutes_to_hhmm(dinner_minutes), "item": f"{restaurant_name}（晚餐）", "type": "restaurant"})
+        elif normalized_date_label == "今天":
+            target_start_minutes = _default_activity_start_minutes(daypart)
+            earliest_start_minutes = now_minutes + buffer_minutes + start_eta_minutes
+            activity_start_minutes = max(target_start_minutes, earliest_start_minutes)
+            if daypart in {"下午", "晚上"} and activity_start_minutes > cutoff_minutes:
+                normalized_date_label = "明天"
+                if isinstance(time_phrase, str) and time_phrase:
+                    time_phrase = time_phrase.replace("今天", "明天", 1)
+                activity_start_minutes = _default_activity_start_minutes(daypart)
+            depart_minutes = max(now_minutes + buffer_minutes, activity_start_minutes - start_eta_minutes - buffer_minutes)
             activity_end_minutes = activity_start_minutes + activity_duration_minutes
-            restaurant_arrive_minutes = activity_end_minutes + chain_eta_minutes + buffer_minutes
+            restaurant_arrive_minutes = max(activity_end_minutes + chain_eta_minutes + buffer_minutes, meal_floor_minutes)
 
             timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "从当前位置出发", "type": "departure"})
             timeline.append({"time": _minutes_to_hhmm(activity_start_minutes), "item": activity_name, "type": "activity"})
@@ -1369,7 +1509,7 @@ def schedule_timing_node(state: AgentState) -> AgentState:
             activity_start_minutes = _default_activity_start_minutes(daypart)
             depart_minutes = max(0, activity_start_minutes - start_eta_minutes - buffer_minutes)
             activity_end_minutes = activity_start_minutes + activity_duration_minutes
-            restaurant_arrive_minutes = activity_end_minutes + chain_eta_minutes + buffer_minutes
+            restaurant_arrive_minutes = max(activity_end_minutes + chain_eta_minutes + buffer_minutes, meal_floor_minutes)
 
             timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "按计划出发", "type": "departure"})
             timeline.append({"time": _minutes_to_hhmm(activity_start_minutes), "item": activity_name, "type": "activity"})

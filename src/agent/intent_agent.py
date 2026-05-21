@@ -31,7 +31,7 @@ _FRIENDS_KEYWORDS = ("朋友", "同学", "同事", "聚会")
 _CUISINE_KEYWORDS = ("烤肉", "烧烤", "火锅", "西餐", "日料", "韩餐", "川菜", "粤菜", "湘菜", "轻食", "自助")
 _LOCATION_HINTS = ("国贸", "望京", "朝阳", "海淀", "家附近", "公司附近")
 _WEEKDAY_TOKENS = ("周一", "周二", "周三", "周四", "周五", "周六", "周日", "周天")
-_VALID_DAYPARTS = {"下午", "晚上"}
+_VALID_DAYPARTS = {"上午", "下午", "晚上", "全天"}
 
 
 def _heuristic_is_leisure(user_input: str) -> bool:
@@ -60,6 +60,10 @@ def _extract_time_semantics(text: str) -> tuple[str | None, str | None]:
     daypart = None
     if "晚上" in raw or "今晚" in raw:
         daypart = "晚上"
+    elif "全天" in raw or "一整天" in raw or "整天" in raw:
+        daypart = "全天"
+    elif "上午" in raw or "早上" in raw:
+        daypart = "上午"
     elif "下午" in raw:
         daypart = "下午"
     elif "中午" in raw or "白天" in raw:
@@ -82,6 +86,8 @@ def _normalize_daypart(value) -> str | None:
     value = value.strip()
     if value in _VALID_DAYPARTS:
         return value
+    if value in {"早上", "中午", "白天"}:
+        return "上午" if value == "早上" else ("下午" if value != "白天" else "上午")
     if value in {"中午", "白天"}:
         return "下午"
     if "晚" in value:

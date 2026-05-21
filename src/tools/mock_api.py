@@ -163,6 +163,31 @@ class MockToolAPI:
 
         return normalized
 
+    def _enrich_poi_details(self, items: list[dict]) -> list[dict]:
+        amap = self._get_amap()
+        if amap is None or not isinstance(items, list):
+            return items if isinstance(items, list) else []
+        enriched = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            item_copy = dict(item)
+            poi_id = item_copy.get("id")
+            if not isinstance(poi_id, str) or not poi_id:
+                enriched.append(item_copy)
+                continue
+            try:
+                detail = amap.maps_search_detail(poi_id)
+                if isinstance(detail, dict):
+                    for key in ("open_time", "opentime2", "location", "address", "city", "business_area", "type", "alias", "rating"):
+                        if detail.get(key) and not item_copy.get(key):
+                            item_copy[key] = detail.get(key)
+                    item_copy["detail_loaded"] = True
+            except Exception:
+                pass
+            enriched.append(item_copy)
+        return enriched
+
     @staticmethod
     def _build_activity_keywords(scenario: str) -> str:
         if scenario == "family":
@@ -226,7 +251,7 @@ class MockToolAPI:
                     for item in normalized:
                         item["requested_city"] = requested_city
                         item["search_mode"] = search_mode
-                    return normalized
+                    return self._enrich_poi_details(normalized)
             except Exception:
                 pass
         return self.db["activities"].get(scenario, self.db["activities"]["family"])
@@ -263,7 +288,7 @@ class MockToolAPI:
                     for item in normalized:
                         item["requested_city"] = requested_city
                         item["search_mode"] = search_mode
-                    return normalized
+                    return self._enrich_poi_details(normalized)
             except Exception:
                 pass
         if isinstance(diet_preference, list):
