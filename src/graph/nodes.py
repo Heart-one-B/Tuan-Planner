@@ -1,4 +1,5 @@
 ﻿from datetime import datetime
+import json
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
@@ -22,8 +23,7 @@ _LLM_ANSWER_FALLBACK = (
 class CandidatePlanDraftItem(BaseModel):
     id: str = Field(..., description="candidate id such as plan_1")
     title: str = Field(..., description="short plan title")
-    activity_id: str | None = Field(default=None, description="selected activity id")
-    restaurant_ids: list[str] = Field(default_factory=list, description="selected restaurant ids in order")
+    slots: list[dict] = Field(default_factory=list, description="time-slot based plan items")
     reasoning: list[str] = Field(default_factory=list, description="2-3 short reasons")
 
 
@@ -387,14 +387,172 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         date_label = hard_constraints.get("date_label") if isinstance(hard_constraints, dict) else ""
         time_phrase = f"{date_label}{daypart}" if date_label and daypart else (date_label or daypart or "待确认时间")
 
-        def _build_timeline(activity: dict, restaurant: dict) -> list[dict]:
-            activity_name = activity.get("name") or "待确认活动"
-            activity_type = activity.get("type") or "未知"
-            restaurant_name = restaurant.get("name") or "待确认餐厅"
+        def _timeline_item(
+            *,
+            time_label: str,
+            item_name: str,
+            item_type: str,
+            ref_type: str,
+            ref_id: str,
+        ) -> dict:
+            return {
+                "time": time_label,
+                "item": item_name,
+                "type": item_type,
+                "ref_type": ref_type,
+                "ref_id": ref_id,
+            }
+
+        def _slot_aliases_for_current_plan() -> list[tuple[str, str, str]]:
+            if plan_mode == "meal_only":
+                return [("lunch", "restaurant", "lunch"), ("dinner", "restaurant", "dinner")]
+            if daypart == "全天":
+                return [
+                    ("morning_activity", "activity", "activity_morning"),
+                    ("lunch", "restaurant", "lunch"),
+                    ("afternoon_activity", "activity", "activity_afternoon"),
+                    ("dinner", "restaurant", "dinner"),
+                ]
             return [
-                {"time": time_phrase, "item": activity_name, "type": activity_type},
-                {"time": "随后", "item": restaurant_name, "type": "restaurant"},
+                ("main_activity", "activity", "activity"),
+                ("meal", "restaurant", "restaurant"),
             ]
+
+        def _time_label_for_slot(slot_name: str, item_type: str) -> str:
+            if slot_name == "morning_activity":
+                return "上午"
+            if slot_name == "afternoon_activity":
+                return "下午"
+            if slot_name == "lunch":
+                return "午餐"
+            if slot_name == "dinner":
+                return "晚餐"
+            if item_type == "activity":
+                return time_phrase
+            if item_type == "restaurant":
+                return "用餐"
+            return time_phrase
+
+        def _fallback_slots(
+            fallback_activity_ids: list[str],
+            fallback_restaurant_ids: list[str],
+        ) -> list[list[dict]]:
+            if daypart == "全天":
+                activity_a = fallback_activity_ids[0] if fallback_activity_ids else ""
+                activity_b = fallback_activity_ids[1] if len(fallback_activity_ids) > 1 else activity_a
+                lunch_id = fallback_restaurant_ids[0] if fallback_restaurant_ids else ""
+                dinner_id = fallback_restaurant_ids[1] if len(fallback_restaurant_ids) > 1 else ""
+                return [
+                    [
+                        {"slot": "morning_activity", "poi_type": "activity", "poi_id": activity_a},
+                        {"slot": "lunch", "poi_type": "restaurant", "poi_id": lunch_id},
+                        {"slot": "afternoon_activity", "poi_type": "activity", "poi_id": activity_b},
+                        {"slot": "dinner", "poi_type": "restaurant", "poi_id": dinner_id},
+                    ],
+                    [
+                        {"slot": "morning_activity", "poi_type": "activity", "poi_id": activity_b or activity_a},
+                        {"slot": "lunch", "poi_type": "restaurant", "poi_id": dinner_id or lunch_id},
+                        {"slot": "afternoon_activity", "poi_type": "activity", "poi_id": activity_a},
+                        {"slot": "dinner", "poi_type": "restaurant", "poi_id": lunch_id},
+                    ],
+                    [
+                        {"slot": "morning_activity", "poi_type": "activity", "poi_id": activity_a},
+                        {"slot": "lunch", "poi_type": "restaurant", "poi_id": lunch_id},
+                        {"slot": "afternoon_activity", "poi_type": "activity", "poi_id": ""},
+                        {"slot": "dinner", "poi_type": "restaurant", "poi_id": dinner_id},
+                    ],
+                ]
+            activity_id = fallback_activity_ids[0] if fallback_activity_ids else ""
+            restaurant_id = fallback_restaurant_ids[0] if fallback_restaurant_ids else ""
+            return [
+                [
+                    {"slot": "main_activity", "poi_type": "activity", "poi_id": activity_id},
+                    {"slot": "meal", "poi_type": "restaurant", "poi_id": restaurant_id},
+                ],
+                [
+                    {"slot": "main_activity", "poi_type": "activity", "poi_id": fallback_activity_ids[1] if len(fallback_activity_ids) > 1 else activity_id},
+                    {"slot": "meal", "poi_type": "restaurant", "poi_id": fallback_restaurant_ids[1] if len(fallback_restaurant_ids) > 1 else restaurant_id},
+                ],
+                [
+                    {"slot": "main_activity", "poi_type": "activity", "poi_id": activity_id},
+                    {"slot": "meal", "poi_type": "restaurant", "poi_id": restaurant_id},
+                ],
+            ]
+
+        def _normalize_slots(raw_slots: list[dict]) -> list[dict]:
+            normalized_slots: list[dict] = []
+            allowed_slots = _slot_aliases_for_current_plan()
+            used_slot_names: set[str] = set()
+            for fallback_slot_name, fallback_type, _ in allowed_slots:
+                slot_match = None
+                for slot_item in raw_slots:
+                    if not isinstance(slot_item, dict):
+                        continue
+                    slot_name = slot_item.get("slot")
+                    slot_type = slot_item.get("poi_type")
+                    if slot_name == fallback_slot_name and slot_type == fallback_type and slot_name not in used_slot_names:
+                        slot_match = slot_item
+                        break
+                if slot_match is None:
+                    normalized_slots.append({"slot": fallback_slot_name, "poi_type": fallback_type, "poi_id": ""})
+                    continue
+                normalized_slots.append(
+                    {
+                        "slot": fallback_slot_name,
+                        "poi_type": fallback_type,
+                        "poi_id": slot_match.get("poi_id") if isinstance(slot_match.get("poi_id"), str) else "",
+                    }
+                )
+                used_slot_names.add(fallback_slot_name)
+            return normalized_slots
+
+        def _build_candidate_from_slots(candidate_id: str, title: str, raw_slots: list[dict], reasoning: list[str]) -> dict:
+            normalized_slots = _normalize_slots(raw_slots)
+            timeline: list[dict] = []
+            activities_in_order: list[dict] = []
+            restaurants_in_order: list[dict] = []
+
+            for slot_name, poi_type, default_item_type in _slot_aliases_for_current_plan():
+                slot_payload = next((item for item in normalized_slots if item.get("slot") == slot_name and item.get("poi_type") == poi_type), None)
+                if not isinstance(slot_payload, dict):
+                    continue
+                poi_id = slot_payload.get("poi_id") if isinstance(slot_payload.get("poi_id"), str) else ""
+                if poi_type == "activity":
+                    target = activities_by_id.get(poi_id, {})
+                    if target:
+                        activities_in_order.append(target)
+                else:
+                    target = restaurants_by_id.get(poi_id, {})
+                    if target:
+                        restaurants_in_order.append(target)
+
+                target_name = target.get("name") if isinstance(target, dict) else ""
+                timeline.append(
+                    _timeline_item(
+                        time_label=_time_label_for_slot(slot_name, poi_type),
+                        item_name=target_name or "待确认",
+                        item_type=default_item_type,
+                        ref_type=poi_type,
+                        ref_id=poi_id,
+                    )
+                )
+
+            primary_activity = activities_in_order[0] if activities_in_order else {}
+            primary_restaurant = restaurants_in_order[0] if restaurants_in_order else {}
+            secondary_activity = activities_in_order[1] if len(activities_in_order) > 1 else {}
+            candidate = {
+                "id": candidate_id,
+                "title": title,
+                "slots": normalized_slots,
+                "timeline": timeline,
+                "activity": primary_activity,
+                "secondary_activity": secondary_activity,
+                "activities": activities_in_order,
+                "restaurant": primary_restaurant,
+                "restaurants": restaurants_in_order,
+                "reasoning": [item for item in reasoning if isinstance(item, str)][:3],
+            }
+            return candidate
 
         activities_by_id = {
             item.get("id"): dict(item)
@@ -418,15 +576,21 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     {{
       "id": "plan_1",
       "title": "...",
-      "activity_id": "...",
-      "restaurant_ids": ["...", "..."],
+      "slots": [
+        {{"slot": "morning_activity", "poi_type": "activity", "poi_id": "..."}},
+        {{"slot": "lunch", "poi_type": "restaurant", "poi_id": "..."}},
+        {{"slot": "afternoon_activity", "poi_type": "activity", "poi_id": "..."}},
+        {{"slot": "dinner", "poi_type": "restaurant", "poi_id": "..."}}
+      ],
       "reasoning": ["...", "..."]
     }}
   ]
 }}
 4. 如果用户明确提到了某个时段的餐饮偏好，例如“晚上吃火锅”，应优先把该类型安排在更合适的餐次。
 5. 如果要安排多餐，餐饮类型尽量不要完全重复。
-6. reasoning 只要 2-3 条简短理由。
+6. 如果是全天活动，优先让 morning_activity 和 afternoon_activity 选择不同 activity_id；午餐和晚餐也优先不同 restaurant_id。
+7. slot / poi_type 必须匹配，不能省略 slots。
+8. reasoning 只要 2-3 条简短理由。
 
 输入：
 - request_type: {request_type}
@@ -453,49 +617,36 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         if not drafts:
             fallback_activity_ids = list(activities_by_id.keys())
             fallback_restaurant_ids = list(restaurants_by_id.keys())
+            fallback_slot_groups = _fallback_slots(fallback_activity_ids, fallback_restaurant_ids)
             drafts = [
                 CandidatePlanDraftItem(
                     id="plan_1",
                     title="主推荐方案",
-                    activity_id=fallback_activity_ids[0] if fallback_activity_ids else None,
-                    restaurant_ids=fallback_restaurant_ids[:2] if fallback_restaurant_ids else [],
+                    slots=fallback_slot_groups[0],
                     reasoning=["优先使用当前候选池中的高相关项"],
                 ),
                 CandidatePlanDraftItem(
                     id="plan_2",
                     title="备选近场方案",
-                    activity_id=fallback_activity_ids[1] if len(fallback_activity_ids) > 1 else (fallback_activity_ids[0] if fallback_activity_ids else None),
-                    restaurant_ids=fallback_restaurant_ids[1:3] if len(fallback_restaurant_ids) > 1 else fallback_restaurant_ids[:2],
+                    slots=fallback_slot_groups[1],
                     reasoning=["保留近场与低切换成本作为备选"],
                 ),
                 CandidatePlanDraftItem(
                     id="plan_3",
                     title="备选轻量方案",
-                    activity_id=fallback_activity_ids[2] if len(fallback_activity_ids) > 2 else (fallback_activity_ids[0] if fallback_activity_ids else None),
-                    restaurant_ids=fallback_restaurant_ids[:1] if fallback_restaurant_ids else [],
+                    slots=fallback_slot_groups[2],
                     reasoning=["保留更轻量的候选结构"],
                 ),
             ]
 
         for index, draft in enumerate(drafts[:3], start=1):
-            activity = activities_by_id.get(draft.activity_id or "", {})
-            selected_restaurants = [
-                restaurants_by_id[rid]
-                for rid in draft.restaurant_ids
-                if isinstance(rid, str) and rid in restaurants_by_id
-            ]
-            restaurant = selected_restaurants[-1] if selected_restaurants else {}
-            timeline = _build_timeline(activity, restaurant)
             normalized_candidates.append(
-                {
-                    "id": draft.id if isinstance(draft.id, str) and draft.id else f"plan_{index}",
-                    "title": draft.title if isinstance(draft.title, str) and draft.title else f"候选方案{index}",
-                    "timeline": timeline,
-                    "activity": activity,
-                    "restaurant": restaurant,
-                    "restaurants": selected_restaurants,
-                    "reasoning": [item for item in draft.reasoning if isinstance(item, str)][:3],
-                }
+                _build_candidate_from_slots(
+                    draft.id if isinstance(draft.id, str) and draft.id else f"plan_{index}",
+                    draft.title if isinstance(draft.title, str) and draft.title else f"候选方案{index}",
+                    draft.slots if isinstance(draft.slots, list) else [],
+                    draft.reasoning if isinstance(draft.reasoning, list) else [],
+                )
             )
 
         while len(normalized_candidates) < 3:
@@ -503,8 +654,11 @@ def candidate_planning_node(state: AgentState) -> AgentState:
                 {
                     "id": f"plan_{len(normalized_candidates) + 1}",
                     "title": "",
+                    "slots": [],
                     "timeline": [],
                     "activity": {},
+                    "secondary_activity": {},
+                    "activities": [],
                     "restaurant": {},
                     "restaurants": [],
                     "reasoning": [],
@@ -1716,7 +1870,7 @@ def traffic_eta_node(state: AgentState) -> AgentState:
 
 
 def schedule_timing_node(state: AgentState) -> AgentState:
-    """基于已选候选计划，生成顺序通勤时间和时刻表。"""
+    """基于已选候选计划，为现有 timeline 补充具体时刻，不重写结构。"""
     print("[Schedule Timing Node] 计算计划链顺序通勤时间与时刻表...")
     try:
         final_plan_result = state.get("final_plan_result")
@@ -1728,17 +1882,24 @@ def schedule_timing_node(state: AgentState) -> AgentState:
 
         activity = selected_candidate.get("activity") if isinstance(selected_candidate.get("activity"), dict) else {}
         restaurant = selected_candidate.get("restaurant") if isinstance(selected_candidate.get("restaurant"), dict) else {}
+        restaurants = selected_candidate.get("restaurants")
+        if not isinstance(restaurants, list):
+            restaurants = []
+        raw_timeline = selected_candidate.get("timeline")
+        if not isinstance(raw_timeline, list):
+            raw_timeline = []
         constraints = state.get("constraints") if isinstance(state.get("constraints"), dict) else {}
+        normalized_time = state.get("normalized_time") if isinstance(state.get("normalized_time"), dict) else {}
         date_label = constraints.get("date_label") if isinstance(constraints.get("date_label"), str) else ""
         daypart = constraints.get("daypart") if isinstance(constraints.get("daypart"), str) else ""
         time_phrase = constraints.get("time_phrase") if isinstance(constraints.get("time_phrase"), str) else ""
         raw_query = state.get("intent", {}).get("raw_query") if isinstance(state.get("intent"), dict) else ""
         origin_coordinates = state.get("runtime_origin_coordinates", "") or ""
-        normalized_date_label = date_label
+        normalized_date_label = normalized_time.get("normalized_date_label") if isinstance(normalized_time.get("normalized_date_label"), str) else date_label
         now = datetime.now()
         now_minutes = now.hour * 60 + now.minute
-        cutoff_minutes = 18 * 60 if daypart == "下午" else 21 * 60
-        if date_label == "今天" and now_minutes > cutoff_minutes:
+        cutoff_minutes = 18 * 60 if daypart in {"上午", "下午", "全天"} else 21 * 60
+        if normalized_date_label == "今天" and now_minutes > cutoff_minutes:
             normalized_date_label = "明天"
             if isinstance(time_phrase, str) and time_phrase:
                 time_phrase = time_phrase.replace("今天", "明天", 1)
@@ -1756,9 +1917,18 @@ def schedule_timing_node(state: AgentState) -> AgentState:
                 return item.get("coordinates") if isinstance(item.get("coordinates"), str) else ""
             return ""
 
-        activity_location = _detail_location(activity) if activity else ""
-        restaurant_location = _detail_location(restaurant) if restaurant else ""
-        segment_eta = {}
+        activity_by_id = {}
+        if isinstance(activity.get("id"), str) and activity.get("id"):
+            activity_by_id[activity["id"]] = activity
+        restaurants_by_id = {
+            item.get("id"): item
+            for item in restaurants
+            if isinstance(item, dict) and isinstance(item.get("id"), str) and item.get("id")
+        }
+        if isinstance(restaurant.get("id"), str) and restaurant.get("id") and restaurant["id"] not in restaurants_by_id:
+            restaurants_by_id[restaurant["id"]] = restaurant
+
+        segment_eta: dict[str, int] = {}
         amap = MockToolAPI()._get_amap()
 
         def _distance_minutes(origin: str, destination: str) -> int | None:
@@ -1776,13 +1946,6 @@ def schedule_timing_node(state: AgentState) -> AgentState:
             except Exception:
                 return None
 
-        start_eta = _distance_minutes(origin_coordinates, activity_location)
-        chain_eta = _distance_minutes(activity_location, restaurant_location)
-        if start_eta is not None:
-            segment_eta["origin_to_activity_minutes"] = start_eta
-        if chain_eta is not None:
-            segment_eta["activity_to_restaurant_minutes"] = chain_eta
-
         def _minutes_to_hhmm(total_minutes: int) -> str:
             total_minutes = max(0, int(total_minutes))
             hour = total_minutes // 60
@@ -1798,12 +1961,8 @@ def schedule_timing_node(state: AgentState) -> AgentState:
                 return 9 * 60 + 30
             return 14 * 60
 
-        timeline = []
-        activity_name = activity.get("name") or "待确认活动"
-        restaurant_name = restaurant.get("name") or "待确认餐厅"
-        start_eta_minutes = segment_eta.get("origin_to_activity_minutes") if isinstance(segment_eta.get("origin_to_activity_minutes"), int) else 0
-        chain_eta_minutes = segment_eta.get("activity_to_restaurant_minutes") if isinstance(segment_eta.get("activity_to_restaurant_minutes"), int) else 0
         activity_duration_minutes = 90
+        meal_duration_minutes = 75
         buffer_minutes = 15
         meal_floor_minutes = 0
         if isinstance(raw_query, str):
@@ -1812,56 +1971,119 @@ def schedule_timing_node(state: AgentState) -> AgentState:
             elif "午餐" in raw_query:
                 meal_floor_minutes = 12 * 60
 
-        if daypart == "全天":
-            morning_start_minutes = max(9 * 60 + 30, now_minutes + buffer_minutes + start_eta_minutes) if normalized_date_label == "今天" else 9 * 60 + 30
-            depart_minutes = max(0, morning_start_minutes - start_eta_minutes - buffer_minutes)
-            morning_end_minutes = morning_start_minutes + activity_duration_minutes
-            lunch_minutes = max(12 * 60, morning_end_minutes + chain_eta_minutes + buffer_minutes)
-            afternoon_start_minutes = max(14 * 60, lunch_minutes + 90)
-            afternoon_end_minutes = afternoon_start_minutes + activity_duration_minutes
-            dinner_minutes = max(18 * 60, afternoon_end_minutes + chain_eta_minutes + buffer_minutes)
+        def _item_floor_minutes(item_type: str) -> int:
+            if item_type == "activity_morning":
+                return 9 * 60 + 30
+            if item_type == "activity_afternoon":
+                return 14 * 60
+            if item_type == "lunch":
+                return max(12 * 60, meal_floor_minutes)
+            if item_type == "dinner":
+                return max(18 * 60, meal_floor_minutes)
+            if item_type in {"restaurant", "meal"}:
+                return meal_floor_minutes
+            return _default_activity_start_minutes(daypart)
 
-            timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "从当前位置出发" if normalized_date_label == "今天" else "按计划出发", "type": "departure"})
-            timeline.append({"time": _minutes_to_hhmm(morning_start_minutes), "item": activity_name, "type": "activity_morning"})
-            timeline.append({"time": _minutes_to_hhmm(morning_end_minutes), "item": f"{activity_name}结束", "type": "activity_end_morning"})
-            timeline.append({"time": _minutes_to_hhmm(lunch_minutes), "item": f"{restaurant_name}（午餐）", "type": "lunch"})
-            timeline.append({"time": _minutes_to_hhmm(afternoon_start_minutes), "item": f"{activity_name}（下午场）", "type": "activity_afternoon"})
-            timeline.append({"time": _minutes_to_hhmm(afternoon_end_minutes), "item": f"{activity_name}（下午场）结束", "type": "activity_end_afternoon"})
-            timeline.append({"time": _minutes_to_hhmm(dinner_minutes), "item": f"{restaurant_name}（晚餐）", "type": "restaurant"})
-        elif normalized_date_label == "今天":
-            target_start_minutes = _default_activity_start_minutes(daypart)
-            earliest_start_minutes = now_minutes + buffer_minutes + start_eta_minutes
-            activity_start_minutes = max(target_start_minutes, earliest_start_minutes)
-            if daypart in {"下午", "晚上"} and activity_start_minutes > cutoff_minutes:
+        def _item_duration_minutes(item_type: str) -> int:
+            if item_type in {"activity", "activity_morning", "activity_afternoon", "indoor", "outdoor"}:
+                return activity_duration_minutes
+            if item_type in {"restaurant", "meal", "lunch", "dinner"}:
+                return meal_duration_minutes
+            return 60
+
+        def _resolve_timeline_target(item: dict) -> dict:
+            ref_type = item.get("ref_type")
+            ref_id = item.get("ref_id")
+            if ref_type == "activity" and isinstance(ref_id, str):
+                return activity_by_id.get(ref_id, activity)
+            if ref_type == "restaurant" and isinstance(ref_id, str):
+                return restaurants_by_id.get(ref_id, restaurant)
+            item_type = item.get("type")
+            if isinstance(item_type, str) and item_type.startswith("activity"):
+                return activity
+            return restaurant
+
+        def _resolve_item_location(item: dict) -> str:
+            target = _resolve_timeline_target(item)
+            return _detail_location(target) if target else ""
+
+        if not raw_timeline:
+            fallback_timeline = []
+            activity_name = activity.get("name") or "待确认活动"
+            restaurant_name = restaurant.get("name") or "待确认餐厅"
+            if activity:
+                fallback_timeline.append(
+                    {
+                        "time": time_phrase or "活动",
+                        "item": activity_name,
+                        "type": "activity",
+                        "ref_type": "activity",
+                        "ref_id": activity.get("id", ""),
+                    }
+                )
+            if restaurant:
+                fallback_timeline.append(
+                    {
+                        "time": "用餐",
+                        "item": restaurant_name,
+                        "type": "restaurant",
+                        "ref_type": "restaurant",
+                        "ref_id": restaurant.get("id", ""),
+                    }
+                )
+            raw_timeline = fallback_timeline
+
+        first_location = _resolve_item_location(raw_timeline[0]) if raw_timeline else ""
+        first_eta_minutes = _distance_minutes(origin_coordinates, first_location) if first_location else None
+        if first_eta_minutes is not None:
+            segment_eta["origin_to_first_stop_minutes"] = first_eta_minutes
+
+        base_start_minutes = _item_floor_minutes(raw_timeline[0].get("type", "")) if raw_timeline else _default_activity_start_minutes(daypart)
+        if normalized_date_label == "今天":
+            earliest_start_minutes = now_minutes + buffer_minutes + (first_eta_minutes or 0)
+            base_start_minutes = max(base_start_minutes, earliest_start_minutes)
+            if daypart in {"下午", "晚上"} and base_start_minutes > cutoff_minutes:
                 normalized_date_label = "明天"
                 if isinstance(time_phrase, str) and time_phrase:
                     time_phrase = time_phrase.replace("今天", "明天", 1)
-                activity_start_minutes = _default_activity_start_minutes(daypart)
-            depart_minutes = max(now_minutes + buffer_minutes, activity_start_minutes - start_eta_minutes - buffer_minutes)
-            activity_end_minutes = activity_start_minutes + activity_duration_minutes
-            restaurant_arrive_minutes = max(activity_end_minutes + chain_eta_minutes + buffer_minutes, meal_floor_minutes)
+                base_start_minutes = _item_floor_minutes(raw_timeline[0].get("type", "")) if raw_timeline else _default_activity_start_minutes(daypart)
 
-            timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "从当前位置出发", "type": "departure"})
-            timeline.append({"time": _minutes_to_hhmm(activity_start_minutes), "item": activity_name, "type": "activity"})
-            timeline.append({"time": _minutes_to_hhmm(activity_end_minutes), "item": f"{activity_name}结束", "type": "activity_end"})
-            timeline.append({"time": _minutes_to_hhmm(restaurant_arrive_minutes), "item": restaurant_name, "type": "restaurant"})
-        else:
-            activity_start_minutes = _default_activity_start_minutes(daypart)
-            depart_minutes = max(0, activity_start_minutes - start_eta_minutes - buffer_minutes)
-            activity_end_minutes = activity_start_minutes + activity_duration_minutes
-            restaurant_arrive_minutes = max(activity_end_minutes + chain_eta_minutes + buffer_minutes, meal_floor_minutes)
+        timeline = []
+        cursor_minutes = base_start_minutes
+        previous_location = ""
+        previous_type = ""
 
-            timeline.append({"time": _minutes_to_hhmm(depart_minutes), "item": "按计划出发", "type": "departure"})
-            timeline.append({"time": _minutes_to_hhmm(activity_start_minutes), "item": activity_name, "type": "activity"})
-            timeline.append({"time": _minutes_to_hhmm(activity_end_minutes), "item": f"{activity_name}结束", "type": "activity_end"})
-            timeline.append({"time": _minutes_to_hhmm(restaurant_arrive_minutes), "item": restaurant_name, "type": "restaurant"})
+        for index, raw_item in enumerate(raw_timeline):
+            if not isinstance(raw_item, dict):
+                continue
+
+            item_copy = dict(raw_item)
+            item_type = item_copy.get("type") if isinstance(item_copy.get("type"), str) else ""
+            item_location = _resolve_item_location(item_copy)
+            if index == 0:
+                item_start_minutes = cursor_minutes
+            else:
+                travel_minutes = _distance_minutes(previous_location, item_location) if previous_location and item_location else None
+                if travel_minutes is not None:
+                    segment_eta[f"leg_{index}_minutes"] = travel_minutes
+                item_start_minutes = cursor_minutes + (travel_minutes or 0) + buffer_minutes
+                item_start_minutes = max(item_start_minutes, _item_floor_minutes(item_type))
+                if previous_type in {"lunch", "dinner", "restaurant", "meal"} and item_type == "activity_afternoon":
+                    item_start_minutes = max(item_start_minutes, 14 * 60)
+
+            item_copy["time"] = _minutes_to_hhmm(item_start_minutes)
+            timeline.append(item_copy)
+
+            cursor_minutes = item_start_minutes + _item_duration_minutes(item_type)
+            previous_location = item_location
+            previous_type = item_type
 
         selected_candidate["timeline"] = timeline
         final_plan_result["selected_candidate"] = selected_candidate
         print(
             f"[Schedule Timing Node] date_label={date_label!r}, normalized_date_label={normalized_date_label!r}, "
-            f"origin_to_activity_minutes={segment_eta.get('origin_to_activity_minutes')!r}, "
-            f"activity_to_restaurant_minutes={segment_eta.get('activity_to_restaurant_minutes')!r}"
+            f"origin_to_first_stop_minutes={segment_eta.get('origin_to_first_stop_minutes')!r}, "
+            f"timeline_items={len(timeline)}"
         )
         return {
             "final_plan_result": final_plan_result,
@@ -2276,6 +2498,20 @@ def presentation_node(state: AgentState) -> AgentState:
             if not isinstance(selected_candidate, dict):
                 selected_candidate = {}
             plan = dict(selected_candidate)
+            activities = plan.get("activities")
+            if isinstance(activities, list):
+                plan["activities"] = [item for item in activities if isinstance(item, dict)]
+            else:
+                activity = plan.get("activity")
+                if isinstance(activity, dict) and activity:
+                    plan["activities"] = [activity]
+                else:
+                    plan["activities"] = []
+            if not isinstance(plan.get("restaurant"), dict):
+                plan["restaurant"] = {}
+            schedule_timing_result = state.get("schedule_timing_result")
+            if isinstance(schedule_timing_result, dict) and schedule_timing_result:
+                plan["schedule_timing_result"] = schedule_timing_result
             plan["selected_candidate_id"] = final_plan_result.get("selected_candidate_id", "")
             plan["final_score"] = final_plan_result.get("final_score", 0)
             plan["all_scored_candidates"] = final_plan_result.get("all_scored_candidates", [])
