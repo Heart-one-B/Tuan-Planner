@@ -222,6 +222,7 @@ class MockToolAPI:
     def search_activities(
         self,
         scenario: str,
+        activity_keywords=None,
         origin_area: str = "",
         runtime_origin_area: str = "",
         runtime_origin_coordinates: str = "",
@@ -230,7 +231,13 @@ class MockToolAPI:
         amap = self._get_amap()
         if amap is not None:
             try:
-                keywords = self._build_activity_keywords(scenario)
+                keywords = ""
+                if isinstance(activity_keywords, list):
+                    keywords = " ".join(str(item).strip() for item in activity_keywords if str(item).strip())
+                elif isinstance(activity_keywords, str):
+                    keywords = activity_keywords.strip()
+                if not keywords:
+                    keywords = self._build_activity_keywords(scenario)
                 normalized = []
                 search_mode = ""
                 if isinstance(runtime_origin_coordinates, str) and runtime_origin_coordinates.strip():

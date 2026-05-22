@@ -241,6 +241,25 @@ def _build_activity_candidates(user_input: str, scenario: str) -> tuple[list[str
     return _dedupe_keep_order(keywords)[:5], _dedupe_keep_order(explicit)[:3]
 
 
+def _adapt_activity_search_keywords(activity_keywords: list[str]) -> list[str]:
+    mapping = {
+        "逛街": ["商场", "购物中心", "步行街"],
+        "散步": ["公园", "绿道", "步道"],
+        "展览": ["展览", "美术馆", "博物馆"],
+        "看展": ["展览", "美术馆", "博物馆"],
+        "拍照": ["商场", "艺术中心", "景观"],
+        "休闲": ["商场", "公园", "步行街"],
+        "亲子": ["亲子乐园", "儿童乐园", "商场"],
+    }
+    search_keywords: list[str] = []
+    for keyword in activity_keywords:
+        if keyword in mapping:
+            search_keywords.extend(mapping[keyword])
+        else:
+            search_keywords.append(keyword)
+    return _dedupe_keep_order(search_keywords)[:6]
+
+
 def _infer_missing_slots(user_input: str, intent: dict, runtime_origin_area: str = "") -> tuple[bool, dict[str, list[str]], str]:
     text = user_input or ""
     missing: dict[str, list[str]] = {"global": []}
@@ -368,6 +387,7 @@ def _normalize_intent(user_input: str, intent: dict) -> dict:
     normalized["diet_preference"] = diet_preferences
     normalized["restaurant_keywords"] = _dedupe_keep_order(restaurant_keywords)[:5]
     normalized["activity_keywords"] = _dedupe_keep_order(activity_keywords)[:5]
+    normalized["activity_search_keywords"] = _adapt_activity_search_keywords(normalized["activity_keywords"])
     normalized["restaurant_explicit_types"] = _dedupe_keep_order(restaurant_explicit_types)[:3]
     normalized["activity_explicit_types"] = _dedupe_keep_order(activity_explicit_types)[:3]
     normalized["raw_query"] = user_input
@@ -393,13 +413,14 @@ class IntentAgent:
 - missing_slots: object
 - follow_up_message: string
 - location: {origin_area_hint, location_text}
-- restaurant_keywords: 餐厅关键词候选列表，尽量至少 3 类，可直接用于本地生活搜索，不要生成“菜系”这种词，这种词放到高德中是搜不出来结果的
-- activity_keywords: 活动关键词候选列表，尽量至少 3 类，可直接用于本地生活搜索
+- restaurant_keywords: 餐厅关键词候选列表，尽量至少 3 类，可直接用于本地生活搜索，不要生成“菜系”，“不辣餐厅”这种词，这种词放到高德中是搜不出来结果的
+- activity_keywords: 活动关键词候选列表，尽量至少 3 类，可直接作为关键词用于api搜索，因此“逛街”、“散步”这类是不行的，因为调用API搜不出来东西，需要直接说“商场”、“公园”这种
 - restaurant_explicit_types: 用户明确提到的餐厅类型列表；没有就空列表
 - activity_explicit_types: 用户明确提到的活动类型列表；没有就空列表
 - raw_query: 原样返回用户输入
 
 关键词生成要求：
+- 当用户历史偏好与最新要求矛盾时，优先考虑最新要求，能同时满足历史偏好最好，比如“历史偏好火锅，但朋友不能吃辣”，这个时候就可以尝试鸳鸯锅
 - 如果用户明确提到了某种餐厅或活动类型，必须保留到对应 explicit_types 中。
 - 如果用户明确提到了某种餐厅或活动类型，也应保留到对应 keywords 列表中。
 - 除了用户明确提到的类型，还应额外补充 1 到 2 个互补类型，避免候选池只有单一类型。

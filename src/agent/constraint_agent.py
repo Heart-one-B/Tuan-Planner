@@ -236,12 +236,15 @@ class ConstraintAgent:
 
         restaurant_keywords = _coerce_text_list(intent.get("restaurant_keywords"))
         activity_keywords = _coerce_text_list(intent.get("activity_keywords"))
+        activity_search_keywords = _coerce_text_list(intent.get("activity_search_keywords"))
         restaurant_explicit_types = _coerce_text_list(intent.get("restaurant_explicit_types"))
         activity_explicit_types = _coerce_text_list(intent.get("activity_explicit_types"))
         if not restaurant_keywords:
             restaurant_keywords = _coerce_text_list(preferences.get("restaurant_keywords"))
         if not activity_keywords:
             activity_keywords = _coerce_text_list(preferences.get("activity_keywords"))
+        if not activity_search_keywords:
+            activity_search_keywords = _coerce_text_list(preferences.get("activity_search_keywords"))
         if not restaurant_explicit_types:
             restaurant_explicit_types = _coerce_text_list(preferences.get("restaurant_explicit_types"))
         if not activity_explicit_types:
@@ -249,6 +252,7 @@ class ConstraintAgent:
 
         restaurant_keywords = _dedupe_keep_order(restaurant_keywords)
         activity_keywords = _dedupe_keep_order(activity_keywords)
+        activity_search_keywords = _dedupe_keep_order(activity_search_keywords)
         restaurant_explicit_types = _dedupe_keep_order(restaurant_explicit_types)
         activity_explicit_types = _dedupe_keep_order(activity_explicit_types)
 
@@ -258,6 +262,8 @@ class ConstraintAgent:
             restaurant_keywords.extend(["简餐", "聚餐", "特色餐厅"])
         if not activity_keywords:
             activity_keywords = ["室内", "户外", "休闲"]
+        if not activity_search_keywords:
+            activity_search_keywords = activity_keywords[:]
         if "室内" not in activity_keywords:
             activity_keywords.insert(0, "室内")
         if "户外" not in activity_keywords:
@@ -292,6 +298,7 @@ class ConstraintAgent:
             "diet_preference": merged_diet_preference,
             "restaurant_keywords": restaurant_keywords,
             "activity_keywords": activity_keywords,
+            "activity_search_keywords": activity_search_keywords,
             "restaurant_explicit_types": restaurant_explicit_types,
             "activity_explicit_types": activity_explicit_types,
             "max_traffic_minutes": max_traffic,
@@ -365,6 +372,7 @@ class ConstraintAgent:
             "child_friendly_preferred": child_friendly_required,
             "budget_level": DEFAULT_POLICY["budget_level"],
             "keywords_activity": mapped_activity_keywords,
+            "activity_search_keywords": activity_search_keywords,
             "keywords_restaurant": mapped_restaurant_keywords or merged_diet_preference,
             "preferred_cuisines": mapped_restaurant_keywords,
             "preferred_activity_tags": preferred_activity_tags,

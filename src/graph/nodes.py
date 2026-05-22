@@ -1,5 +1,6 @@
 ﻿from datetime import datetime
 from langchain_core.messages import HumanMessage
+from pydantic import BaseModel, Field
 
 from src.agent.constraint_agent import ConstraintAgent
 from src.agent.execution_agent import ExecutionAgent
@@ -16,6 +17,37 @@ from src.tools.mock_api import MockToolAPI
 _LLM_ANSWER_FALLBACK = (
     "该问题不属于本地生活规划范畴，建议直接咨询通用助手或搜索引擎。"
 )
+
+
+class CandidatePlanDraftItem(BaseModel):
+    id: str = Field(..., description="candidate id such as plan_1")
+    title: str = Field(..., description="short plan title")
+    activity_id: str | None = Field(default=None, description="selected activity id")
+    restaurant_ids: list[str] = Field(default_factory=list, description="selected restaurant ids in order")
+    reasoning: list[str] = Field(default_factory=list, description="2-3 short reasons")
+
+
+class CandidatePlanDraftEnvelope(BaseModel):
+    candidates: list[CandidatePlanDraftItem] = Field(default_factory=list)
+
+
+def _extract_json_object(raw_text: str) -> str | None:
+    text = (raw_text or "").strip()
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+
+    start_index = text.find("{")
+    end_index = text.rfind("}")
+    if start_index == -1 or end_index == -1 or end_index <= start_index:
+        return None
+    return text[start_index : end_index + 1]
 
 
 def _append_error(state: AgentState, error: str) -> AgentState:
@@ -328,8 +360,8 @@ def plan_candidate_node(state: AgentState) -> AgentState:
 
 
 def candidate_planning_node(state: AgentState) -> AgentState:
-    """新架构候选计划节点：程序先选真实 activity/restaurant，LLM 只补 reasoning。"""
-    print("[Candidate Planning Node] 程序选实体，LLM 只补 reasoning...")
+    """新架构候选计划节点：LLM 在真实候选池中选择并组织 3 个结构化候选计划。"""
+    print("[Candidate Planning Node] 基于真实候选池生成 3 个结构化候选方案...")
     try:
         constraint_build = state.get("constraint_build")
         if not isinstance(constraint_build, dict):
@@ -351,35 +383,9 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         if not isinstance(restaurants, list):
             restaurants = []
 
-        def _safe_item(items: list, index: int) -> dict:
-            if index < len(items) and isinstance(items[index], dict):
-                return dict(items[index])
-            return {}
-
         daypart = hard_constraints.get("daypart") if isinstance(hard_constraints, dict) else ""
         date_label = hard_constraints.get("date_label") if isinstance(hard_constraints, dict) else ""
         time_phrase = f"{date_label}{daypart}" if date_label and daypart else (date_label or daypart or "待确认时间")
-
-        candidate_blueprints = [
-            {
-                "id": "plan_1",
-                "title": "主推荐方案",
-                "activity": _safe_item(activities, 0),
-                "restaurant": _safe_item(restaurants, 0),
-            },
-            {
-                "id": "plan_2",
-                "title": "备选近场方案",
-                "activity": _safe_item(activities, 1) or _safe_item(activities, 0),
-                "restaurant": _safe_item(restaurants, 1) or _safe_item(restaurants, 0),
-            },
-            {
-                "id": "plan_3",
-                "title": "备选轻量方案",
-                "activity": _safe_item(activities, 2) or _safe_item(activities, 0),
-                "restaurant": _safe_item(restaurants, 2) or _safe_item(restaurants, 0),
-            },
-        ]
 
         def _build_timeline(activity: dict, restaurant: dict) -> list[dict]:
             activity_name = activity.get("name") or "待确认活动"
@@ -390,18 +396,37 @@ def candidate_planning_node(state: AgentState) -> AgentState:
                 {"time": "随后", "item": restaurant_name, "type": "restaurant"},
             ]
 
-        normalized_candidates = []
-        for blueprint in candidate_blueprints:
-            activity = blueprint.get("activity") if isinstance(blueprint.get("activity"), dict) else {}
-            restaurant = blueprint.get("restaurant") if isinstance(blueprint.get("restaurant"), dict) else {}
-            reasoning = []
-            try:
-                prompt = f"""
-你是本地生活规划助手。请基于下面已经确定的真实活动和餐厅，补充 2-3 条简短 reasoning。
+        activities_by_id = {
+            item.get("id"): dict(item)
+            for item in activities
+            if isinstance(item, dict) and isinstance(item.get("id"), str) and item.get("id")
+        }
+        restaurants_by_id = {
+            item.get("id"): dict(item)
+            for item in restaurants
+            if isinstance(item, dict) and isinstance(item.get("id"), str) and item.get("id")
+        }
+
+        prompt = f"""
+你是本地生活规划助手。请基于真实候选池生成 3 个候选方案。
 要求：
-1. 只输出 JSON。
-2. 格式必须是 {{"reasoning": ["...", "..."]}}
-3. 不要改动活动和餐厅，不要编造新的地点。
+1. 只能从提供的 activity_id 和 restaurant_id 中选择，不能编造新地点。
+2. 只输出 JSON。
+3. 格式必须是:
+{{
+  "candidates": [
+    {{
+      "id": "plan_1",
+      "title": "...",
+      "activity_id": "...",
+      "restaurant_ids": ["...", "..."],
+      "reasoning": ["...", "..."]
+    }}
+  ]
+}}
+4. 如果用户明确提到了某个时段的餐饮偏好，例如“晚上吃火锅”，应优先把该类型安排在更合适的餐次。
+5. 如果要安排多餐，餐饮类型尽量不要完全重复。
+6. reasoning 只要 2-3 条简短理由。
 
 输入：
 - request_type: {request_type}
@@ -409,37 +434,88 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 - hard_constraints: {hard_constraints}
 - soft_preferences: {soft_preferences}
 - query_constraints: {query_constraints}
-- activity: {activity}
-- restaurant: {restaurant}
+- raw_query: {state.get("intent", {}).get("raw_query", "") if isinstance(state.get("intent"), dict) else ""}
+- activity_candidates: {list(activities_by_id.values())}
+- restaurant_candidates: {list(restaurants_by_id.values())}
 """
-                response = chat_model.invoke([HumanMessage(content=prompt)])
-                content = getattr(response, "content", "") or ""
 
-                import json
-                import re
+        normalized_candidates = []
+        try:
+            response = chat_model.invoke([HumanMessage(content=prompt)])
+            content = getattr(response, "content", "") or ""
+            json_text = _extract_json_object(content)
+            payload = json.loads(json_text) if json_text else {}
+            envelope = CandidatePlanDraftEnvelope.model_validate(payload)
+            drafts = envelope.candidates
+        except Exception:
+            drafts = []
 
-                json_match = re.search(r"\{.*\}", content, re.DOTALL)
-                payload = json.loads(json_match.group() if json_match else content)
-                if isinstance(payload, dict) and isinstance(payload.get("reasoning"), list):
-                    reasoning = [item for item in payload.get("reasoning") if isinstance(item, str)]
-            except Exception:
-                reasoning = []
+        if not drafts:
+            fallback_activity_ids = list(activities_by_id.keys())
+            fallback_restaurant_ids = list(restaurants_by_id.keys())
+            drafts = [
+                CandidatePlanDraftItem(
+                    id="plan_1",
+                    title="主推荐方案",
+                    activity_id=fallback_activity_ids[0] if fallback_activity_ids else None,
+                    restaurant_ids=fallback_restaurant_ids[:2] if fallback_restaurant_ids else [],
+                    reasoning=["优先使用当前候选池中的高相关项"],
+                ),
+                CandidatePlanDraftItem(
+                    id="plan_2",
+                    title="备选近场方案",
+                    activity_id=fallback_activity_ids[1] if len(fallback_activity_ids) > 1 else (fallback_activity_ids[0] if fallback_activity_ids else None),
+                    restaurant_ids=fallback_restaurant_ids[1:3] if len(fallback_restaurant_ids) > 1 else fallback_restaurant_ids[:2],
+                    reasoning=["保留近场与低切换成本作为备选"],
+                ),
+                CandidatePlanDraftItem(
+                    id="plan_3",
+                    title="备选轻量方案",
+                    activity_id=fallback_activity_ids[2] if len(fallback_activity_ids) > 2 else (fallback_activity_ids[0] if fallback_activity_ids else None),
+                    restaurant_ids=fallback_restaurant_ids[:1] if fallback_restaurant_ids else [],
+                    reasoning=["保留更轻量的候选结构"],
+                ),
+            ]
 
+        for index, draft in enumerate(drafts[:3], start=1):
+            activity = activities_by_id.get(draft.activity_id or "", {})
+            selected_restaurants = [
+                restaurants_by_id[rid]
+                for rid in draft.restaurant_ids
+                if isinstance(rid, str) and rid in restaurants_by_id
+            ]
+            restaurant = selected_restaurants[-1] if selected_restaurants else {}
+            timeline = _build_timeline(activity, restaurant)
             normalized_candidates.append(
                 {
-                    "id": blueprint["id"],
-                    "title": blueprint["title"],
-                    "timeline": _build_timeline(activity, restaurant),
+                    "id": draft.id if isinstance(draft.id, str) and draft.id else f"plan_{index}",
+                    "title": draft.title if isinstance(draft.title, str) and draft.title else f"候选方案{index}",
+                    "timeline": timeline,
                     "activity": activity,
                     "restaurant": restaurant,
-                    "reasoning": reasoning,
+                    "restaurants": selected_restaurants,
+                    "reasoning": [item for item in draft.reasoning if isinstance(item, str)][:3],
+                }
+            )
+
+        while len(normalized_candidates) < 3:
+            normalized_candidates.append(
+                {
+                    "id": f"plan_{len(normalized_candidates) + 1}",
+                    "title": "",
+                    "timeline": [],
+                    "activity": {},
+                    "restaurant": {},
+                    "restaurants": [],
+                    "reasoning": [],
                 }
             )
 
         print(
             "[Candidate Planning Node] "
             f"plan_1_activity={normalized_candidates[0].get('activity', {}).get('name')!r}, "
-            f"plan_1_restaurant={normalized_candidates[0].get('restaurant', {}).get('name')!r}"
+            f"plan_1_restaurant={normalized_candidates[0].get('restaurant', {}).get('name')!r}, "
+            f"plan_1_restaurants_n={len(normalized_candidates[0].get('restaurants', []))}"
         )
 
         return {
@@ -1162,6 +1238,122 @@ def _contains_excluded_keywords(item: dict, exclude_keywords: list[str]) -> bool
     return any(keyword in haystack for keyword in normalized)
 
 
+def _activity_bucket_key_from_name(name: str) -> str:
+    text = (name or "").lower()
+    if any(token in text for token in ("商场", "购物中心", "步行街", "广场", "mall")):
+        return "shopping"
+    if any(token in text for token in ("公园", "绿道", "步道")):
+        return "park_walk"
+    if any(token in text for token in ("展览", "美术馆", "博物馆", "艺术馆")):
+        return "exhibition"
+    if any(token in text for token in ("亲子", "儿童", "乐园")):
+        return "parent_child"
+    if any(token in text for token in ("ktv", "剧本杀", "桌游", "轰趴")):
+        return "indoor_entertainment"
+    return "other"
+
+
+def _rating_value(item: dict) -> float:
+    value = item.get("rating")
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value.strip())
+        except ValueError:
+            return -1.0
+    return -1.0
+
+
+def _dedupe_activities_by_identity(items: list[dict]) -> list[dict]:
+    seen: set[tuple[str, str]] = set()
+    out: list[dict] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name") if isinstance(item.get("name"), str) else ""
+        item_id = item.get("id") if isinstance(item.get("id"), str) else ""
+        key = (name.strip().lower(), item_id.strip().lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
+def _shortlist_activities(items: list[dict], per_bucket_limit: int = 2) -> list[dict]:
+    deduped = _dedupe_activities_by_identity(items)
+    buckets: dict[str, list[dict]] = {}
+    for item in deduped:
+        bucket = _activity_bucket_key_from_name(item.get("name") if isinstance(item.get("name"), str) else "")
+        buckets.setdefault(bucket, []).append(item)
+
+    shortlisted: list[dict] = []
+    for bucket_items in buckets.values():
+        ranked = sorted(
+            bucket_items,
+            key=lambda item: (_rating_value(item), len((item.get("name") or ""))),
+            reverse=True,
+        )
+        shortlisted.extend(ranked[:per_bucket_limit])
+
+    return shortlisted
+
+
+def _restaurant_bucket_key_from_name(name: str) -> str:
+    text = (name or "").lower()
+    if any(token in text for token in ("火锅", "串串", "hotpot")):
+        return "hotpot"
+    if any(token in text for token in ("轻食", "沙拉", "健康")):
+        return "light_meal"
+    if any(token in text for token in ("咖啡", "cafe", "coffee")):
+        return "cafe"
+    if any(token in text for token in ("烧烤", "烤肉", "bbq")):
+        return "bbq"
+    if any(token in text for token in ("日料", "寿司", "居酒屋")):
+        return "japanese"
+    if any(token in text for token in ("西餐", "牛排", "意面")):
+        return "western"
+    if any(token in text for token in ("简餐", "餐厅", "饭")):
+        return "simple_meal"
+    return "other"
+
+
+def _dedupe_restaurants_by_identity(items: list[dict]) -> list[dict]:
+    seen: set[tuple[str, str]] = set()
+    out: list[dict] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name") if isinstance(item.get("name"), str) else ""
+        item_id = item.get("id") if isinstance(item.get("id"), str) else ""
+        key = (name.strip().lower(), item_id.strip().lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
+def _shortlist_restaurants(items: list[dict], per_bucket_limit: int = 2) -> list[dict]:
+    deduped = _dedupe_restaurants_by_identity(items)
+    buckets: dict[str, list[dict]] = {}
+    for item in deduped:
+        bucket = _restaurant_bucket_key_from_name(item.get("name") if isinstance(item.get("name"), str) else "")
+        buckets.setdefault(bucket, []).append(item)
+
+    shortlisted: list[dict] = []
+    for bucket_items in buckets.values():
+        ranked = sorted(
+            bucket_items,
+            key=lambda item: (_rating_value(item), len((item.get("name") or ""))),
+            reverse=True,
+        )
+        shortlisted.extend(ranked[:per_bucket_limit])
+
+    return shortlisted
+
+
 def weather_check_node(state: AgentState) -> AgentState:
     """并行节点 1：查询天气，写 ``state.weather``。"""
     print("[Weather Check Node] 查询天气...")
@@ -1228,9 +1420,11 @@ def activity_search_node(state: AgentState) -> AgentState:
         if not isinstance(daypart, str):
             daypart = ""
         keywords_activity = _normalize_text_list(constraints.get("keywords_activity"))
+        activity_search_keywords = _normalize_text_list(constraints.get("activity_search_keywords"))
         preferred_activity_tags = _normalize_text_list(constraints.get("preferred_activity_tags"))
         activities = MockToolAPI().search_activities(
             scenario,
+            activity_keywords=activity_search_keywords or keywords_activity,
             origin_area=constraints.get("origin_area") or "",
             runtime_origin_area=state.get("runtime_origin_area", "") or "",
             runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
@@ -1259,6 +1453,13 @@ def activity_search_node(state: AgentState) -> AgentState:
             ]
             if keyword_matched:
                 normalized_activities = keyword_matched
+            elif activity_search_keywords:
+                search_keyword_matched = [
+                    item for item in normalized_activities if _matches_keywords(item, activity_search_keywords)
+                ]
+                normalized_activities = search_keyword_matched
+            else:
+                normalized_activities = []
 
         if preferred_activity_tags:
             tag_matched = [
@@ -1280,6 +1481,8 @@ def activity_search_node(state: AgentState) -> AgentState:
             update["activities"] = []
             return update
 
+        matched = _shortlist_activities(matched, per_bucket_limit=2)
+
         for item in matched:
             item["daypart_used"] = daypart
         activity_source = matched[0].get("source") if matched else None
@@ -1291,8 +1494,8 @@ def activity_search_node(state: AgentState) -> AgentState:
             f"daypart_used={daypart!r}, source={activity_source!r}, "
             f"provider={activity_provider!r}, requested_city={activity_requested_city!r}, "
             f"search_mode={activity_search_mode!r}, "
-            f"keywords={keywords_activity!r}, preferred_tags={preferred_activity_tags!r}, "
-            f"top_names={[item.get('name') for item in matched[:3]]}"
+            f"keywords={keywords_activity!r}, search_keywords={activity_search_keywords!r}, preferred_tags={preferred_activity_tags!r}, "
+            f"shortlisted_n={len(matched)}, top_names={[item.get('name') for item in matched[:3]]}"
         )
         return {"activities": matched}
     except Exception as exc:
@@ -1318,7 +1521,6 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             return {"restaurants": []}
 
         query_keywords = _normalize_text_list(constraints.get("keywords_restaurant"))
-        preferred_cuisines = _normalize_text_list(constraints.get("preferred_cuisines"))
         exclude_keywords = _normalize_text_list(constraints.get("exclude_keywords_restaurant"))
         diet_preference = query_keywords or constraints.get("diet_preference") or ""
         scenario = constraints.get("scenario") or ""
@@ -1327,12 +1529,35 @@ def restaurant_search_node(state: AgentState) -> AgentState:
         daypart = constraints.get("daypart")
         if not isinstance(daypart, str):
             daypart = ""
-        restaurants = MockToolAPI().search_restaurants(
-            diet_preference,
-            origin_area=constraints.get("origin_area") or "",
-            runtime_origin_area=state.get("runtime_origin_area", "") or "",
-            runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
-        )
+        api = MockToolAPI()
+        if query_keywords:
+            restaurants = []
+            seen_ids: set[str] = set()
+            for keyword in query_keywords:
+                batch = api.search_restaurants(
+                    [keyword],
+                    origin_area=constraints.get("origin_area") or "",
+                    runtime_origin_area=state.get("runtime_origin_area", "") or "",
+                    runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
+                )
+                if not isinstance(batch, list):
+                    continue
+                for item in batch:
+                    if not isinstance(item, dict):
+                        continue
+                    item_id = item.get("id")
+                    if isinstance(item_id, str) and item_id in seen_ids:
+                        continue
+                    if isinstance(item_id, str):
+                        seen_ids.add(item_id)
+                    restaurants.append(item)
+        else:
+            restaurants = api.search_restaurants(
+                diet_preference,
+                origin_area=constraints.get("origin_area") or "",
+                runtime_origin_area=state.get("runtime_origin_area", "") or "",
+                runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
+            )
         if not isinstance(restaurants, list):
             restaurants = []
 
@@ -1348,13 +1573,6 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             ]
             if keyword_matched:
                 normalized_restaurants = keyword_matched
-
-        if preferred_cuisines:
-            cuisine_matched = [
-                item for item in normalized_restaurants if _matches_keywords(item, preferred_cuisines)
-            ]
-            if cuisine_matched:
-                normalized_restaurants = cuisine_matched
 
         if exclude_keywords:
             filtered = [
@@ -1376,6 +1594,8 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             )
             update["restaurants"] = []
             return update
+
+        matched = _shortlist_restaurants(matched, per_bucket_limit=2)
 
         def _scenario_rank(item: dict) -> int:
             tags = item.get("tags") or []
@@ -1405,7 +1625,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             f"provider={restaurant_provider!r}, requested_city={restaurant_requested_city!r}, "
             f"search_mode={restaurant_search_mode!r}, "
             f"keywords={query_keywords or diet_preference!r}, excludes={exclude_keywords!r}, "
-            f"top_names={[item.get('name') for item in matched[:3]]}"
+            f"shortlisted_n={len(matched)}, top_names={[item.get('name') for item in matched[:3]]}"
         )
         return {"restaurants": matched}
     except Exception as exc:
