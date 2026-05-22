@@ -10,3 +10,5 @@ config/tools.yml
 Agents.md
 
 docs
+
+tests

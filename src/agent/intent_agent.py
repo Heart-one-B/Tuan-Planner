@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import re
 
@@ -6,37 +8,47 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from src.model.factory import chat_model
 
 
-_LEISURE_KEYWORDS = (
-    "安排",
-    "规划",
-    "玩",
-    "吃",
-    "聚会",
-    "带孩子",
-    "遛",
-    "约",
-    "计划",
-    "出门",
-)
-_LOCATION_SENSITIVE_KEYWORDS = (
-    "离家近",
-    "附近",
-    "别跑太远",
-    "别离家太远",
-    "就在这边",
-    "近一点",
-)
+_LEISURE_KEYWORDS = ("安排", "规划", "玩", "聚会", "带娃", "约", "计划", "出门")
+_LOCATION_SENSITIVE_KEYWORDS = ("离家远", "附近", "别跑太远", "别离家太远", "就在这边", "近一点")
 _FAMILY_KEYWORDS = ("家人", "家庭", "亲子", "老婆", "孩子", "儿子", "女儿", "全家", "老公")
 _FRIENDS_KEYWORDS = ("朋友", "同学", "同事", "聚会")
-_CUISINE_KEYWORDS = ("烤肉", "烧烤", "火锅", "西餐", "日料", "韩餐", "川菜", "粤菜", "湘菜", "轻食", "自助")
+_CUISINE_KEYWORDS = ("烧肉", "烧烤", "火锅", "西餐", "日料", "韩餐", "川菜", "粤菜", "湘菜", "轻食", "自助")
 _LOCATION_HINTS = ("国贸", "望京", "朝阳", "海淀", "家附近", "公司附近")
 _WEEKDAY_TOKENS = ("周一", "周二", "周三", "周四", "周五", "周六", "周日", "周天")
 _VALID_DAYPARTS = {"上午", "下午", "晚上", "全天"}
+_RESTAURANT_HINTS = ("火锅", "烧烤", "烤肉", "轻食", "沙拉", "简餐", "中餐", "日料", "韩餐", "西餐", "川菜", "米饭", "自助", "健康", "养生")
+_ACTIVITY_HINTS = ("室内", "户外", "亲子", "拍照", "休闲", "逛街", "展览", "运动", "散步", "日落", "夜景")
 
 
 def _heuristic_is_leisure(user_input: str) -> bool:
     text = user_input or ""
     return any(kw in text for kw in _LEISURE_KEYWORDS)
+
+
+def _dedupe_keep_order(items: list[str]) -> list[str]:
+    out: list[str] = []
+    for item in items:
+        if not isinstance(item, str):
+            continue
+        text = item.strip()
+        if text and text not in out:
+            out.append(text)
+    return out
+
+
+def _coerce_text_list(value) -> list[str]:
+    if isinstance(value, str):
+        value = value.strip()
+        return [value] if value and value not in {"无", "none", "None"} else []
+    if isinstance(value, list):
+        out: list[str] = []
+        for item in value:
+            if isinstance(item, str):
+                text = item.strip()
+                if text and text not in {"无", "none", "None"} and text not in out:
+                    out.append(text)
+        return out
+    return []
 
 
 def _extract_time_semantics(text: str) -> tuple[str | None, str | None]:
@@ -58,15 +70,13 @@ def _extract_time_semantics(text: str) -> tuple[str | None, str | None]:
                 break
 
     daypart = None
-    if "晚上" in raw or "今晚" in raw:
+    if "晚上" in raw:
         daypart = "晚上"
     elif "全天" in raw or "一整天" in raw or "整天" in raw:
         daypart = "全天"
     elif "上午" in raw or "早上" in raw:
         daypart = "上午"
-    elif "下午" in raw:
-        daypart = "下午"
-    elif "中午" in raw or "白天" in raw:
+    elif "下午" in raw or "中午" in raw or "白天" in raw:
         daypart = "下午"
 
     return date_label, daypart
@@ -86,13 +96,13 @@ def _normalize_daypart(value) -> str | None:
     value = value.strip()
     if value in _VALID_DAYPARTS:
         return value
-    if value in {"早上", "中午", "白天"}:
-        return "上午" if value == "早上" else ("下午" if value != "白天" else "上午")
+    if value == "早上":
+        return "上午"
     if value in {"中午", "白天"}:
         return "下午"
-    if "晚" in value:
+    if "晚上" in value:
         return "晚上"
-    if "下" in value:
+    if "下午" in value:
         return "下午"
     return None
 
@@ -109,7 +119,6 @@ def _normalize_date_label(value) -> str | None:
 
 def _normalize_time_info(user_input: str, raw_time_info: dict) -> dict:
     time_info = dict(raw_time_info) if isinstance(raw_time_info, dict) else {}
-
     llm_date_label = _normalize_date_label(time_info.get("date_label"))
     llm_daypart = _normalize_daypart(time_info.get("daypart"))
 
@@ -132,29 +141,107 @@ def _normalize_time_info(user_input: str, raw_time_info: dict) -> dict:
         _, fallback_daypart = _extract_time_semantics(user_input)
         daypart = fallback_daypart
 
-    normalized_phrase = _build_time_phrase(date_label, daypart)
-    time_info["time_phrase"] = normalized_phrase
+    time_info["time_phrase"] = _build_time_phrase(date_label, daypart)
     time_info["date_label"] = date_label
     time_info["daypart"] = daypart
 
     start_time_hint = time_info.get("start_time_hint")
-    if not isinstance(start_time_hint, str) or not start_time_hint.strip():
-        time_info["start_time_hint"] = None
-    else:
-        time_info["start_time_hint"] = start_time_hint.strip()
-
+    time_info["start_time_hint"] = start_time_hint.strip() if isinstance(start_time_hint, str) and start_time_hint.strip() else None
     duration_hours_hint = time_info.get("duration_hours_hint")
     if isinstance(duration_hours_hint, bool) or not isinstance(duration_hours_hint, int) or duration_hours_hint <= 0:
         time_info["duration_hours_hint"] = None
-
     return time_info
 
 
-def _infer_missing_slots(
-    user_input: str,
-    intent: dict,
-    runtime_origin_area: str = "",
-) -> tuple[bool, dict[str, list[str]], str]:
+def _extract_location_info(user_input: str) -> dict:
+    text = user_input or ""
+    for hint in _LOCATION_HINTS:
+        if hint in text:
+            return {"origin_area_hint": hint, "location_text": hint}
+    return {"origin_area_hint": None, "location_text": None}
+
+
+def _build_restaurant_candidates(user_input: str, scenario: str, diet_preferences: list[str]) -> tuple[list[str], list[str]]:
+    text = user_input or ""
+    explicit = [token for token in _RESTAURANT_HINTS if token in text]
+    keywords: list[str] = []
+
+    if any(token in text for token in ("减脂", "减肥", "轻食", "健康")):
+        keywords.extend(["轻食", "健康餐", "沙拉"])
+    if any(token in text for token in ("火锅", "烧烤", "烤肉")):
+        keywords.extend(["火锅", "烧烤", "烤肉"])
+    if any(token in text for token in ("日料", "韩餐", "西餐", "川菜", "粤菜", "湘菜")):
+        keywords.extend([token for token in _CUISINE_KEYWORDS if token in text])
+    keywords.extend(explicit)
+    keywords.extend(diet_preferences)
+
+    if scenario == "family":
+        keywords.extend(["亲子餐厅", "简餐", "自助"])
+    elif scenario == "friends":
+        keywords.extend(["聚餐", "简餐", "特色餐厅"])
+    else:
+        keywords.extend(["简餐", "聚餐", "特色餐厅"])
+
+    if any(token in text for token in ("早餐", "早午餐", "早饭")):
+        keywords.extend(["早餐", "早午餐", "咖啡"])
+    if any(token in text for token in ("晚餐", "晚饭", "约饭")):
+        keywords.extend(["晚餐", "聚餐", "约饭"])
+
+    keywords = _dedupe_keep_order(keywords)
+    if len(keywords) < 3:
+        keywords.extend(["简餐", "聚餐", "特色餐厅"])
+
+    excludes: list[str] = []
+    if any(token in text for token in ("不吃烧烤", "不吃火锅", "不吃烤肉")):
+        excludes.extend(["烧烤", "火锅", "烤肉"])
+    if any(token in text for token in ("不要自助", "不想自助")):
+        excludes.extend(["自助"])
+    return _dedupe_keep_order(keywords)[:5], _dedupe_keep_order(excludes)[:3]
+
+
+def _build_activity_candidates(user_input: str, scenario: str) -> tuple[list[str], list[str]]:
+    text = user_input or ""
+    explicit = [token for token in _ACTIVITY_HINTS if token in text]
+    keywords: list[str] = []
+
+    if "室内" in text:
+        keywords.append("室内")
+    if "户外" in text:
+        keywords.append("户外")
+    if "亲子" in text:
+        keywords.append("亲子")
+    if "拍照" in text:
+        keywords.append("拍照")
+    if "休闲" in text:
+        keywords.append("休闲")
+
+    if scenario == "family":
+        keywords.extend(["室内", "户外", "亲子"])
+    elif scenario == "friends":
+        keywords.extend(["室内", "户外", "拍照"])
+    else:
+        keywords.extend(["室内", "户外", "休闲"])
+
+    if any(token in text for token in ("展览", "看展", "博物馆")):
+        keywords.extend(["展览", "看展"])
+    if any(token in text for token in ("逛街", "citywalk")):
+        keywords.extend(["逛街", "散步"])
+    if any(token in text for token in ("日落", "夜景")):
+        keywords.extend(["日落", "夜景", "户外"])
+    if any(token in text for token in ("运动", "亲子")):
+        keywords.extend(["运动", "亲子"])
+
+    keywords = _dedupe_keep_order(keywords)
+    if len(keywords) < 3:
+        keywords.extend(["室内", "户外", "休闲"])
+    if "室内" not in keywords:
+        keywords.insert(0, "室内")
+    if "户外" not in keywords:
+        keywords.insert(1 if keywords else 0, "户外")
+    return _dedupe_keep_order(keywords)[:5], _dedupe_keep_order(explicit)[:3]
+
+
+def _infer_missing_slots(user_input: str, intent: dict, runtime_origin_area: str = "") -> tuple[bool, dict[str, list[str]], str]:
     text = user_input or ""
     missing: dict[str, list[str]] = {"global": []}
 
@@ -189,24 +276,15 @@ def _infer_missing_slots(
 
     if not missing["global"]:
         return False, {}, ""
-
     if "scenario" in missing["global"]:
-        return True, missing, "这次是想和家人出门，还是和朋友一起安排？"
+        return True, missing, "这次是想和家人出去，还是和朋友一起安排？"
     if "time_day" in missing["global"]:
-        return True, missing, "你想安排在今天、明天、周五，还是周末？"
+        return True, missing, "你想安排在今天、明天、后天，还是周末？"
     if "time_window" in missing["global"]:
-        return True, missing, f"你想安排在{date_label}下午还是{date_label}晚上？"
+        return True, missing, "你想安排在上午、下午，还是晚上？"
     if "origin_area" in missing["global"]:
-        return True, missing, "你现在大概想从哪个区域出发？比如家附近、国贸、望京这类位置，我可以尽量帮你安排得更近一点。"
-    return True, missing, "你是想让我帮你安排一个本地半日活动吗？如果是，可以告诉我是和谁一起、什么时候出门。"
-
-
-def _extract_location_info(user_input: str) -> dict:
-    text = user_input or ""
-    for hint in _LOCATION_HINTS:
-        if hint in text:
-            return {"origin_area_hint": hint, "location_text": hint}
-    return {"origin_area_hint": None, "location_text": None}
+        return True, missing, "你大概想从哪个区域出发？比如家附近、国贸、望京这类位置。"
+    return True, missing, "你是想让我帮你安排一个本地半日活动吗？"
 
 
 def _normalize_intent(user_input: str, intent: dict) -> dict:
@@ -222,14 +300,9 @@ def _normalize_intent(user_input: str, intent: dict) -> dict:
     if isinstance(diet_preference, str):
         diet_preferences = [] if diet_preference in {"", "无", "none", "None"} else [diet_preference]
     elif isinstance(diet_preference, list):
-        diet_preferences = [
-            str(item).strip()
-            for item in diet_preference
-            if str(item).strip() and str(item).strip() not in {"无", "none", "None"}
-        ]
+        diet_preferences = [str(item).strip() for item in diet_preference if str(item).strip() and str(item).strip() not in {"无", "none", "None"}]
     else:
         diet_preferences = []
-
     for cuisine in _CUISINE_KEYWORDS:
         if cuisine in user_input and cuisine not in diet_preferences:
             diet_preferences.append(cuisine)
@@ -264,8 +337,39 @@ def _normalize_intent(user_input: str, intent: dict) -> dict:
     preferences["must_avoid"] = must_avoid if isinstance(must_avoid, list) else []
     normalized["preferences"] = preferences
 
+    llm_restaurant_keywords = _coerce_text_list(normalized.get("restaurant_keywords"))
+    llm_activity_keywords = _coerce_text_list(normalized.get("activity_keywords"))
+    llm_restaurant_explicit_types = _coerce_text_list(normalized.get("restaurant_explicit_types"))
+    llm_activity_explicit_types = _coerce_text_list(normalized.get("activity_explicit_types"))
+
+    fallback_restaurant_keywords, fallback_restaurant_explicit_types = _build_restaurant_candidates(user_input, scenario, diet_preferences)
+    fallback_activity_keywords, fallback_activity_explicit_types = _build_activity_candidates(user_input, scenario)
+
+    restaurant_keywords = llm_restaurant_keywords[:] if llm_restaurant_keywords else fallback_restaurant_keywords
+    activity_keywords = llm_activity_keywords[:] if llm_activity_keywords else fallback_activity_keywords
+    restaurant_explicit_types = llm_restaurant_explicit_types[:] if llm_restaurant_explicit_types else fallback_restaurant_explicit_types
+    activity_explicit_types = llm_activity_explicit_types[:] if llm_activity_explicit_types else fallback_activity_explicit_types
+
+    if len(restaurant_keywords) < 3:
+        for token in fallback_restaurant_keywords:
+            if token not in restaurant_keywords:
+                restaurant_keywords.append(token)
+            if len(restaurant_keywords) >= 3:
+                break
+
+    if len(activity_keywords) < 3:
+        for token in fallback_activity_keywords:
+            if token not in activity_keywords:
+                activity_keywords.append(token)
+            if len(activity_keywords) >= 3:
+                break
+
     normalized["child_friendly"] = child_friendly
     normalized["diet_preference"] = diet_preferences
+    normalized["restaurant_keywords"] = _dedupe_keep_order(restaurant_keywords)[:5]
+    normalized["activity_keywords"] = _dedupe_keep_order(activity_keywords)[:5]
+    normalized["restaurant_explicit_types"] = _dedupe_keep_order(restaurant_explicit_types)[:3]
+    normalized["activity_explicit_types"] = _dedupe_keep_order(activity_explicit_types)[:3]
     normalized["raw_query"] = user_input
     llm_leisure = normalized.get("is_leisure_planning")
     normalized["is_leisure_planning"] = heuristic_leisure if llm_leisure is not True else True
@@ -277,35 +381,30 @@ class IntentAgent:
     def parse(self, user_input: str, runtime_origin_area: str = "") -> dict:
         print("[Intent Agent] 正在解析用户自然语言意图...")
         system_prompt = """
-你是一个本地生活意图解析助手。请严格分析用户输入，并仅返回 JSON（不要包含任何其他文字，不要包裹 markdown 代码块）。
+你是一个本地生活意图解析助手。请严格分析用户输入，并仅返回 JSON。
 必须包含以下字段：
-- scenario: 字符串，"family"（家庭场景）/ "friends"（朋友场景）/ "unknown"（是规划任务但场景不明）/ "none"（与本地生活无关）。
-- child_friendly: bool，是否需要儿童友好的安排。
-- diet_preference: 字符串或字符串列表，例如 "减脂" / "无辣" / "素食" / "无"。
-- time: 对象，必须包含以下字段：
-  - date_label: 字符串或 null。用于表示日期/星期语义，例如 "今天"、"明天"、"周五"、"本周五"、"周末"。
-  - daypart: 字符串或 null。只允许返回 "下午" 或 "晚上"；如果用户没有明确说时段，就返回 null。
-  - time_phrase: 字符串或 null。尽量保留用户原始时间表达，例如 "周五"、"周五晚上"、"本周五下午"、"今天下午"、"周末"。
-  - start_time_hint: 字符串或 null。只有当用户明确给出具体出发时间时才填写，例如 "18:30"；否则为 null。
-  - duration_hours_hint: 数字或 null。只有当用户明确给出时长时才填写，例如 4；否则为 null。
-- is_leisure_planning: bool，用户是否在做"半日 / 一日休闲活动规划"，如吃喝玩乐、家庭出游、朋友聚餐、约会安排等。
-  判定指南：
-  * "帮我安排周日全家出游" / "想找一个适合带孩子的餐厅" / "下午想和朋友逛街吃饭" -> true。
-  * "今天天气怎么样" / "帮我写一段 Python 代码" / "翻译这段英文" / "科普一下什么是 RAG" / "Python 字典怎么排序" -> false。
-- need_retrieval: bool，是否需要补充语义检索信息。当用户提到具体偏好（特定菜系 / 口味 / 活动类型 / 小众需求 / 特定地点或活动类别）时设为 true，否则 false。
-- clarification_needed: bool，当前信息是否不足以继续后续规划。
-- missing_slots: 对象，形如 {"global": ["scenario"]}，若无需澄清则返回空对象 {}。
-- follow_up_message: 字符串，若 clarification_needed=true，给出一条最关键的追问；否则返回空字符串。
-- location: 对象，包含 origin_area_hint 和 location_text；若无位置线索可为 null / 空字符串。
-- raw_query: 字符串，原样回写用户输入。
+- scenario: "family" / "friends" / "unknown" / "none"
+- child_friendly: bool
+- diet_preference: string 或 string list
+- time: {date_label, daypart, time_phrase, start_time_hint, duration_hours_hint}
+- is_leisure_planning: bool
+- need_retrieval: bool
+- clarification_needed: bool
+- missing_slots: object
+- follow_up_message: string
+- location: {origin_area_hint, location_text}
+- restaurant_keywords: 餐厅关键词候选列表，尽量至少 3 类，可直接用于本地生活搜索，不要生成“菜系”这种词，这种词放到高德中是搜不出来结果的
+- activity_keywords: 活动关键词候选列表，尽量至少 3 类，可直接用于本地生活搜索
+- restaurant_explicit_types: 用户明确提到的餐厅类型列表；没有就空列表
+- activity_explicit_types: 用户明确提到的活动类型列表；没有就空列表
+- raw_query: 原样返回用户输入
 
-时间处理要求：
-- 日期/星期和时段都是硬约束，不能省略后默认补齐。
-- 如果用户只说了 "周五"，请返回 `date_label="周五"`、`daypart=null`、`time_phrase="周五"`。
-- 如果用户说了 "周五晚上"、"周六下午"，请返回对应的 `date_label`、`daypart` 和完整 `time_phrase`。
-- 不要因为缺少精确出发时间就把 `time_phrase` 设为 null。
-
-请基于用户输入推断字段，不要编造与用户输入无关的偏好。仅输出 JSON。
+关键词生成要求：
+- 如果用户明确提到了某种餐厅或活动类型，必须保留到对应 explicit_types 中。
+- 如果用户明确提到了某种餐厅或活动类型，也应保留到对应 keywords 列表中。
+- 除了用户明确提到的类型，还应额外补充 1 到 2 个互补类型，避免候选池只有单一类型。
+- 对于餐厅关键词，如果用户说“晚上吃火锅”，不要只返回火锅类关键词，应该补充 1 到 2 个适合作为其他餐次候选的类型。
+- 对于活动关键词，如果用户没有明确限制，也应保持多样性。尽量包含室内和户外两种类型的活动，不是直接把“室内”、“户外”放到关键词列表中去。
 """
 
         try:
@@ -319,30 +418,26 @@ class IntentAgent:
             json_str = re.search(r"\{.*\}", content, re.DOTALL)
             intent = json.loads(json_str.group() if json_str else content)
             intent = _normalize_intent(user_input, intent)
-            clarification_needed, missing_slots, follow_up_message = _infer_missing_slots(
-                user_input, intent, runtime_origin_area
-            )
+            clarification_needed, missing_slots, follow_up_message = _infer_missing_slots(user_input, intent, runtime_origin_area)
             intent["clarification_needed"] = clarification_needed
             intent["missing_slots"] = missing_slots
             intent["follow_up_message"] = follow_up_message
             print(f"[OK] 解析结果: {intent}")
             return intent
         except Exception as e:
-            print(f"[WARN] 解析失败，使用默认家庭意图 + 关键词启发式: {e}")
+            print(f"[WARN] 解析失败，使用规则 fallback: {e}")
             fallback_intent = _normalize_intent(
                 user_input,
                 {
                     "scenario": "family" if any(kw in user_input for kw in _FAMILY_KEYWORDS) else "unknown",
-                    "child_friendly": True if any(kw in user_input for kw in _FAMILY_KEYWORDS) else False,
+                    "child_friendly": any(kw in user_input for kw in _FAMILY_KEYWORDS),
                     "diet_preference": "减脂" if ("减脂" in user_input or "减肥" in user_input) else "无",
                     "is_leisure_planning": _heuristic_is_leisure(user_input),
                     "need_retrieval": False,
                     "raw_query": user_input,
                 },
             )
-            clarification_needed, missing_slots, follow_up_message = _infer_missing_slots(
-                user_input, fallback_intent, runtime_origin_area
-            )
+            clarification_needed, missing_slots, follow_up_message = _infer_missing_slots(user_input, fallback_intent, runtime_origin_area)
             fallback_intent["clarification_needed"] = clarification_needed
             fallback_intent["missing_slots"] = missing_slots
             fallback_intent["follow_up_message"] = follow_up_message

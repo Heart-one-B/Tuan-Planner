@@ -881,13 +881,32 @@ def constraint_collect_node(state: AgentState) -> AgentState:
             constraints["date_label"] = normalized_time.get("normalized_date_label", constraints.get("date_label", ""))
             constraints["daypart"] = normalized_time.get("normalized_daypart", constraints.get("daypart", ""))
             constraints["time_phrase"] = normalized_time.get("normalized_time_phrase", constraints.get("time_phrase", ""))
+            if not constraints.get("start_time") and normalized_time.get("base_start_minutes") is not None:
+                base_start_minutes = normalized_time.get("base_start_minutes")
+                if isinstance(base_start_minutes, int):
+                    constraints["base_start_minutes"] = base_start_minutes
             constraint_build = dict(constraint_build) if isinstance(constraint_build, dict) else {}
             hard_constraints = constraint_build.get("hard_constraints") if isinstance(constraint_build.get("hard_constraints"), dict) else {}
             hard_constraints["date_label"] = constraints["date_label"]
             hard_constraints["daypart"] = constraints["daypart"]
             hard_constraints["time_phrase"] = constraints["time_phrase"]
             hard_constraints["base_start_minutes"] = normalized_time.get("base_start_minutes")
+            if not hard_constraints.get("time_window") and constraints.get("time_window"):
+                hard_constraints["time_window"] = constraints.get("time_window")
             constraint_build["hard_constraints"] = hard_constraints
+            query_constraints = constraint_build.get("query_constraints") if isinstance(constraint_build.get("query_constraints"), dict) else {}
+            query_constraints["time_window"] = constraints.get("time_window", query_constraints.get("time_window", ""))
+            constraint_build["query_constraints"] = query_constraints
+            context_memory = constraint_build.get("context_memory") if isinstance(constraint_build.get("context_memory"), dict) else {}
+            defaults_applied = context_memory.get("defaults_applied")
+            if not isinstance(defaults_applied, list):
+                defaults_applied = []
+            if normalized_time.get("normalized_date_label") and normalized_time.get("normalized_date_label") != state.get("intent", {}).get("time", {}).get("date_label"):
+                marker = "date_label:normalized_by_time_node"
+                if marker not in defaults_applied:
+                    defaults_applied.append(marker)
+            context_memory["defaults_applied"] = defaults_applied
+            constraint_build["context_memory"] = context_memory
         print(
             f"[Constraint Collect Node][OK] scenario={constraints.get('scenario')}, "
             f"party={constraints.get('party')}, "
@@ -1093,6 +1112,56 @@ def _restaurant_matches_daypart(restaurant: dict, daypart: str) -> bool:
     return False
 
 
+def _normalize_text_list(value) -> list[str]:
+    if isinstance(value, str):
+        value = value.strip()
+        return [value] if value else []
+    if isinstance(value, list):
+        out: list[str] = []
+        for item in value:
+            if isinstance(item, str):
+                text = item.strip()
+                if text:
+                    out.append(text)
+        return out
+    return []
+
+
+def _poi_text(item: dict) -> str:
+    tags = item.get("tags") or []
+    tags_semantic = item.get("tags_semantic") or []
+    parts = [
+        item.get("name") or "",
+        item.get("description") or "",
+        item.get("location") or "",
+    ]
+    if isinstance(tags, list):
+        parts.extend(str(tag) for tag in tags)
+    if isinstance(tags_semantic, list):
+        parts.extend(str(tag) for tag in tags_semantic)
+    return " ".join(part for part in parts if isinstance(part, str)).lower()
+
+
+def _matches_keywords(item: dict, keywords: list[str], *, require_all: bool = False) -> bool:
+    if not keywords:
+        return True
+    haystack = _poi_text(item)
+    normalized = [keyword.strip().lower() for keyword in keywords if isinstance(keyword, str) and keyword.strip()]
+    if not normalized:
+        return True
+    if require_all:
+        return all(keyword in haystack for keyword in normalized)
+    return any(keyword in haystack for keyword in normalized)
+
+
+def _contains_excluded_keywords(item: dict, exclude_keywords: list[str]) -> bool:
+    if not exclude_keywords:
+        return False
+    haystack = _poi_text(item)
+    normalized = [keyword.strip().lower() for keyword in exclude_keywords if isinstance(keyword, str) and keyword.strip()]
+    return any(keyword in haystack for keyword in normalized)
+
+
 def weather_check_node(state: AgentState) -> AgentState:
     """并行节点 1：查询天气，写 ``state.weather``。"""
     print("[Weather Check Node] 查询天气...")
@@ -1150,10 +1219,16 @@ def activity_search_node(state: AgentState) -> AgentState:
             update["activities"] = []
             return update
 
+        if constraints.get("need_activity") is False:
+            print("[Activity Search Node] skipped, query_constraints.need_activity=False")
+            return {"activities": []}
+
         scenario = constraints.get("scenario") or "family"
         daypart = constraints.get("daypart")
         if not isinstance(daypart, str):
             daypart = ""
+        keywords_activity = _normalize_text_list(constraints.get("keywords_activity"))
+        preferred_activity_tags = _normalize_text_list(constraints.get("preferred_activity_tags"))
         activities = MockToolAPI().search_activities(
             scenario,
             origin_area=constraints.get("origin_area") or "",
@@ -1164,18 +1239,33 @@ def activity_search_node(state: AgentState) -> AgentState:
             activities = []
 
         child_friendly_required = constraints.get("child_friendly_required") is True
+        child_friendly_preferred = constraints.get("child_friendly_preferred") is True
         normalized_activities: list[dict] = []
         for item in activities:
             if not isinstance(item, dict):
                 continue
             normalized_activities.append(dict(item))
 
-        if child_friendly_required:
+        if child_friendly_required or child_friendly_preferred:
             child_friendly_matches = [
                 item for item in normalized_activities if item.get("child_friendly") is True
             ]
             if child_friendly_matches:
                 normalized_activities = child_friendly_matches
+
+        if keywords_activity:
+            keyword_matched = [
+                item for item in normalized_activities if _matches_keywords(item, keywords_activity)
+            ]
+            if keyword_matched:
+                normalized_activities = keyword_matched
+
+        if preferred_activity_tags:
+            tag_matched = [
+                item for item in normalized_activities if _matches_keywords(item, preferred_activity_tags)
+            ]
+            if tag_matched:
+                normalized_activities = tag_matched
 
         matched = [
             item for item in normalized_activities if _activity_matches_daypart(item, daypart)
@@ -1201,6 +1291,7 @@ def activity_search_node(state: AgentState) -> AgentState:
             f"daypart_used={daypart!r}, source={activity_source!r}, "
             f"provider={activity_provider!r}, requested_city={activity_requested_city!r}, "
             f"search_mode={activity_search_mode!r}, "
+            f"keywords={keywords_activity!r}, preferred_tags={preferred_activity_tags!r}, "
             f"top_names={[item.get('name') for item in matched[:3]]}"
         )
         return {"activities": matched}
@@ -1222,7 +1313,14 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             update["restaurants"] = []
             return update
 
-        diet_preference = constraints.get("diet_preference") or ""
+        if constraints.get("need_restaurant") is False:
+            print("[Restaurant Search Node] skipped, query_constraints.need_restaurant=False")
+            return {"restaurants": []}
+
+        query_keywords = _normalize_text_list(constraints.get("keywords_restaurant"))
+        preferred_cuisines = _normalize_text_list(constraints.get("preferred_cuisines"))
+        exclude_keywords = _normalize_text_list(constraints.get("exclude_keywords_restaurant"))
+        diet_preference = query_keywords or constraints.get("diet_preference") or ""
         scenario = constraints.get("scenario") or ""
         if not isinstance(scenario, str):
             scenario = ""
@@ -1243,6 +1341,28 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             if not isinstance(item, dict):
                 continue
             normalized_restaurants.append(dict(item))
+
+        if query_keywords:
+            keyword_matched = [
+                item for item in normalized_restaurants if _matches_keywords(item, query_keywords)
+            ]
+            if keyword_matched:
+                normalized_restaurants = keyword_matched
+
+        if preferred_cuisines:
+            cuisine_matched = [
+                item for item in normalized_restaurants if _matches_keywords(item, preferred_cuisines)
+            ]
+            if cuisine_matched:
+                normalized_restaurants = cuisine_matched
+
+        if exclude_keywords:
+            filtered = [
+                item for item in normalized_restaurants
+                if not _contains_excluded_keywords(item, exclude_keywords)
+            ]
+            if filtered:
+                normalized_restaurants = filtered
 
         matched = [
             item for item in normalized_restaurants if _restaurant_matches_daypart(item, daypart)
@@ -1284,7 +1404,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             f"daypart_used={daypart!r}, source={restaurant_source!r}, "
             f"provider={restaurant_provider!r}, requested_city={restaurant_requested_city!r}, "
             f"search_mode={restaurant_search_mode!r}, "
-            f"keywords={diet_preference!r}, "
+            f"keywords={query_keywords or diet_preference!r}, excludes={exclude_keywords!r}, "
             f"top_names={[item.get('name') for item in matched[:3]]}"
         )
         return {"restaurants": matched}

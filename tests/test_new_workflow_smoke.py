@@ -22,9 +22,26 @@ def test_new_workflow_compiles_and_has_core_nodes():
 def test_new_route_from_intent_goes_to_new_architecture():
     assert route_after_intent_with_clarification(
         {"intent": {"is_leisure_planning": True, "clarification_needed": False, "need_retrieval": False}}
+    ) == "location_permission"
+    assert route_after_intent_with_clarification(
+        {
+            "intent": {
+                "is_leisure_planning": True,
+                "clarification_needed": False,
+                "need_retrieval": False,
+                "location": {"origin_area_hint": "望京"},
+            }
+        }
     ) == "constraint_build"
     assert route_after_intent_with_clarification(
-        {"intent": {"is_leisure_planning": True, "clarification_needed": True, "need_retrieval": False}}
+        {
+            "intent": {
+                "is_leisure_planning": True,
+                "clarification_needed": True,
+                "need_retrieval": False,
+                "missing_slots": {"global": ["scenario"]},
+            }
+        }
     ) == "clarification"
     assert route_after_intent_with_clarification(
         {"intent": {"is_leisure_planning": False, "clarification_needed": False, "need_retrieval": False}}
