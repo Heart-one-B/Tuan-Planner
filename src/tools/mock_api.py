@@ -328,6 +328,55 @@ class MockToolAPI:
         return "休闲 娱乐 活动"
 
     @staticmethod
+    def _normalize_activity_keyword_list(activity_keywords, scenario: str) -> list[str]:
+        if isinstance(activity_keywords, list):
+            candidates = [str(item).strip() for item in activity_keywords if str(item).strip()]
+        elif isinstance(activity_keywords, str):
+            candidates = [item.strip() for item in activity_keywords.split() if item.strip()]
+        else:
+            candidates = []
+        if not candidates:
+            candidates = [item.strip() for item in MockToolAPI._build_activity_keywords(scenario).split() if item.strip()]
+
+        deduped: list[str] = []
+        for keyword in candidates:
+            if keyword and keyword not in deduped:
+                deduped.append(keyword)
+        return deduped
+
+    @staticmethod
+    def _merge_keyword_activity_results(existing_items: list[dict], new_items: list[dict], keyword: str, per_keyword_limit: int) -> None:
+        for item in new_items[:per_keyword_limit]:
+            if not isinstance(item, dict):
+                continue
+            item_copy = dict(item)
+            item_copy["keyword_source"] = keyword
+            sources = item_copy.get("search_keyword_sources")
+            if not isinstance(sources, list):
+                sources = []
+            if keyword not in sources:
+                sources.append(keyword)
+            item_copy["search_keyword_sources"] = sources
+
+            item_id = item_copy.get("id") if isinstance(item_copy.get("id"), str) else ""
+            item_name = item_copy.get("name") if isinstance(item_copy.get("name"), str) else ""
+            for existing in existing_items:
+                existing_id = existing.get("id") if isinstance(existing.get("id"), str) else ""
+                existing_name = existing.get("name") if isinstance(existing.get("name"), str) else ""
+                if (item_id and existing_id == item_id) or (item_name and existing_name == item_name):
+                    existing_sources = existing.get("search_keyword_sources")
+                    if not isinstance(existing_sources, list):
+                        existing_sources = []
+                    if keyword not in existing_sources:
+                        existing_sources.append(keyword)
+                    existing["search_keyword_sources"] = existing_sources
+                    if not existing.get("keyword_source"):
+                        existing["keyword_source"] = keyword
+                    break
+            else:
+                existing_items.append(item_copy)
+
+    @staticmethod
     def _build_restaurant_keywords(diet_preference) -> str:
         if isinstance(diet_preference, list):
             diet_text = " ".join(str(item).strip() for item in diet_preference if str(item).strip())
@@ -363,33 +412,44 @@ class MockToolAPI:
         amap = self._get_amap()
         if amap is not None:
             try:
-                keywords = ""
-                if isinstance(activity_keywords, list):
-                    keywords = " ".join(str(item).strip() for item in activity_keywords if str(item).strip())
-                elif isinstance(activity_keywords, str):
-                    keywords = activity_keywords.strip()
-                if not keywords:
-                    keywords = self._build_activity_keywords(scenario)
+                keyword_list = self._normalize_activity_keyword_list(activity_keywords, scenario)
                 normalized = []
-                search_mode = ""
-                if isinstance(runtime_origin_coordinates, str) and runtime_origin_coordinates.strip():
-                    payload = amap.maps_around_search(
-                        keywords,
-                        location=runtime_origin_coordinates.strip(),
-                        radius="10000",
-                    )
-                    normalized = self._normalize_amap_pois(payload, kind="activity")
-                    if normalized:
-                        search_mode = "around"
-                if not normalized:
-                    payload = amap.maps_text_search(keywords, city=requested_city)
-                    normalized = self._normalize_amap_pois(payload, kind="activity")
-                    if normalized:
-                        search_mode = "text"
+                search_modes: list[str] = []
+                per_keyword_limit = 5
+                for keyword in keyword_list:
+                    keyword_results = []
+                    keyword_search_mode = ""
+                    if isinstance(runtime_origin_coordinates, str) and runtime_origin_coordinates.strip():
+                        payload = amap.maps_around_search(
+                            keyword,
+                            location=runtime_origin_coordinates.strip(),
+                            radius="10000",
+                        )
+                        keyword_results = self._normalize_amap_pois(payload, kind="activity")
+                        if keyword_results:
+                            keyword_search_mode = "around"
+                    if not keyword_results:
+                        payload = amap.maps_text_search(keyword, city=requested_city)
+                        keyword_results = self._normalize_amap_pois(payload, kind="activity")
+                        if keyword_results:
+                            keyword_search_mode = "text"
+                    if keyword_results:
+                        if keyword_search_mode and keyword_search_mode not in search_modes:
+                            search_modes.append(keyword_search_mode)
+                        for item in keyword_results:
+                            item["search_keyword"] = keyword
+                            item["requested_city"] = requested_city
+                            item["search_mode"] = keyword_search_mode
+                        self._merge_keyword_activity_results(
+                            normalized,
+                            keyword_results,
+                            keyword,
+                            per_keyword_limit,
+                        )
                 if normalized:
                     for item in normalized:
                         item["requested_city"] = requested_city
-                        item["search_mode"] = search_mode
+                        item["search_mode"] = "+".join(search_modes) if search_modes else item.get("search_mode", "")
                         poi_id = item.get("id")
                         if isinstance(poi_id, str) and poi_id:
                             self._assign_cached_rating(item, poi_id)
