@@ -42,6 +42,10 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
         return "constraint_build"
     if intent.get("is_leisure_planning") is False:
         return "llm_answer"
+    # 对本地生活规划请求，定位询问必须先发生一次；后续若已询问过
+    # （无论用户授权与否），则不再重复打断主链路。
+    if "location_permission_granted" not in state:
+        return "location_permission"
     missing_global = (intent.get("missing_slots", {}) or {}).get("global", [])
     if intent.get("clarification_needed") is True and "scenario" in missing_global:
         return "clarification"
@@ -83,6 +87,18 @@ def route_after_rule_validation(state: AgentState) -> str:
 
 
 def route_after_repair_loop_new(state: AgentState) -> str:
+    repair_loop_result = state.get("repair_loop_result")
+    if not isinstance(repair_loop_result, dict):
+        repair_loop_result = {}
+    next_constraint_build = repair_loop_result.get("next_constraint_build")
+    if not isinstance(next_constraint_build, dict):
+        next_constraint_build = {}
+    context_memory = next_constraint_build.get("context_memory")
+    if not isinstance(context_memory, dict):
+        context_memory = {}
+    repair_round = context_memory.get("repair_round")
+    if isinstance(repair_round, int) and repair_round >= 2:
+        return "final_plan"
     return "constraint_build"
 
 

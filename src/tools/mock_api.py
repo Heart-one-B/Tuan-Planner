@@ -1,9 +1,17 @@
 import json
+import random
 import time
+from datetime import datetime, timedelta
 
 from src.utils.path_tool import get_abs_path
 from src.tools.amap_mcp_client import AmapMCPClient
 from src.utils.config_handler import tools_conf
+
+
+_POI_DETAIL_CACHE_FILE = get_abs_path("data/poi_detail_cache.json")
+_POI_DETAIL_CACHE_TTL_DAYS = 7
+_MEMORY_POI_DETAIL_CACHE: dict[str, dict | None] = {}
+_FILE_POI_DETAIL_CACHE: dict[str, dict] | None = None
 
 
 class MockToolAPI:
@@ -12,6 +20,7 @@ class MockToolAPI:
         with open(db_path, "r", encoding="utf-8") as f:
             self.db = json.load(f)
         self._amap = None
+        self._poi_detail_cache = _MEMORY_POI_DETAIL_CACHE
 
     def _get_amap(self):
         if self._amap is None:
@@ -20,6 +29,91 @@ class MockToolAPI:
             except Exception:
                 self._amap = False
         return self._amap if self._amap is not False else None
+
+    @staticmethod
+    def _now_iso() -> str:
+        return datetime.utcnow().replace(microsecond=0).isoformat()
+
+    @staticmethod
+    def _is_cache_fresh(updated_at: str) -> bool:
+        if not isinstance(updated_at, str) or not updated_at.strip():
+            return False
+        try:
+            updated = datetime.fromisoformat(updated_at.strip())
+        except ValueError:
+            return False
+        return datetime.utcnow() - updated <= timedelta(days=_POI_DETAIL_CACHE_TTL_DAYS)
+
+    @staticmethod
+    def _synthetic_rating_for_poi(poi_id: str) -> float:
+        seed = sum(ord(ch) for ch in poi_id)
+        rng = random.Random(seed)
+        return round(rng.uniform(3.8, 4.9), 1)
+
+    def _load_file_poi_detail_cache(self) -> dict[str, dict]:
+        global _FILE_POI_DETAIL_CACHE
+        if isinstance(_FILE_POI_DETAIL_CACHE, dict):
+            return _FILE_POI_DETAIL_CACHE
+        try:
+            with open(_POI_DETAIL_CACHE_FILE, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+            if isinstance(payload, dict):
+                _FILE_POI_DETAIL_CACHE = payload
+            else:
+                _FILE_POI_DETAIL_CACHE = {}
+        except Exception:
+            _FILE_POI_DETAIL_CACHE = {}
+        return _FILE_POI_DETAIL_CACHE
+
+    def _save_file_poi_detail_cache(self) -> None:
+        cache = self._load_file_poi_detail_cache()
+        with open(_POI_DETAIL_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+
+    def _build_cached_detail_payload(self, poi_id: str, detail: dict | None, *, rating: float | None = None, rating_source: str = "") -> dict:
+        payload: dict = {
+            "updated_at": self._now_iso(),
+            "detail": detail if isinstance(detail, dict) else None,
+        }
+        if isinstance(rating, (int, float)) and not isinstance(rating, bool):
+            payload["rating"] = float(rating)
+        if isinstance(rating_source, str) and rating_source:
+            payload["rating_source"] = rating_source
+        return payload
+
+    def _resolve_cached_detail_payload(self, poi_id: str) -> dict | None:
+        memory_payload = self._poi_detail_cache.get(poi_id)
+        if isinstance(memory_payload, dict):
+            return memory_payload
+        file_cache = self._load_file_poi_detail_cache()
+        file_payload = file_cache.get(poi_id)
+        if isinstance(file_payload, dict):
+            self._poi_detail_cache[poi_id] = dict(file_payload)
+            return file_payload
+        return None
+
+    def _assign_cached_rating(self, item: dict, poi_id: str) -> None:
+        cached_payload = self._resolve_cached_detail_payload(poi_id)
+        if isinstance(cached_payload, dict):
+            rating = cached_payload.get("rating")
+            if isinstance(rating, (int, float)) and not isinstance(rating, bool):
+                item["rating"] = float(rating)
+                item["rating_source"] = cached_payload.get("rating_source") or "cache"
+                return
+
+        synthetic_rating = self._synthetic_rating_for_poi(poi_id)
+        item["rating"] = synthetic_rating
+        item["rating_source"] = "synthetic"
+        payload = self._build_cached_detail_payload(
+            poi_id,
+            cached_payload.get("detail") if isinstance(cached_payload, dict) else None,
+            rating=synthetic_rating,
+            rating_source="synthetic",
+        )
+        self._poi_detail_cache[poi_id] = payload
+        file_cache = self._load_file_poi_detail_cache()
+        file_cache[poi_id] = payload
+        self._save_file_poi_detail_cache()
 
     @staticmethod
     def _resolve_weather_city(origin_area=None, runtime_origin_area=None):
@@ -165,7 +259,7 @@ class MockToolAPI:
 
     def _enrich_poi_details(self, items: list[dict]) -> list[dict]:
         amap = self._get_amap()
-        if amap is None or not isinstance(items, list):
+        if not isinstance(items, list):
             return items if isinstance(items, list) else []
         enriched = []
         for item in items:
@@ -176,15 +270,52 @@ class MockToolAPI:
             if not isinstance(poi_id, str) or not poi_id:
                 enriched.append(item_copy)
                 continue
-            try:
-                detail = amap.maps_search_detail(poi_id)
-                if isinstance(detail, dict):
-                    for key in ("open_time", "opentime2", "location", "address", "city", "business_area", "type", "alias", "rating"):
-                        if detail.get(key) and not item_copy.get(key):
-                            item_copy[key] = detail.get(key)
-                    item_copy["detail_loaded"] = True
-            except Exception:
-                pass
+            if item_copy.get("detail_loaded") is True:
+                if not item_copy.get("rating"):
+                    self._assign_cached_rating(item_copy, poi_id)
+                enriched.append(item_copy)
+                continue
+            cached_payload = self._resolve_cached_detail_payload(poi_id)
+            cached_detail = cached_payload.get("detail") if isinstance(cached_payload, dict) else None
+            if isinstance(cached_detail, dict) and self._is_cache_fresh(cached_payload.get("updated_at", "")):
+                for key in ("open_time", "opentime2", "location", "address", "city", "business_area", "type", "alias"):
+                    if cached_detail.get(key) and not item_copy.get(key):
+                        item_copy[key] = cached_detail.get(key)
+                item_copy["detail_loaded"] = True
+                self._assign_cached_rating(item_copy, poi_id)
+                enriched.append(item_copy)
+                continue
+            detail = None
+            if amap is not None:
+                try:
+                    detail = amap.maps_search_detail(poi_id)
+                except Exception:
+                    detail = None
+            if isinstance(detail, dict):
+                for key in ("open_time", "opentime2", "location", "address", "city", "business_area", "type", "alias"):
+                    if detail.get(key) and not item_copy.get(key):
+                        item_copy[key] = detail.get(key)
+                item_copy["detail_loaded"] = True
+
+            cached_rating = None
+            cached_rating_source = ""
+            if isinstance(cached_payload, dict):
+                rating_value = cached_payload.get("rating")
+                if isinstance(rating_value, (int, float)) and not isinstance(rating_value, bool):
+                    cached_rating = float(rating_value)
+                    cached_rating_source = cached_payload.get("rating_source") or "cache"
+            payload = self._build_cached_detail_payload(
+                poi_id,
+                detail if isinstance(detail, dict) else cached_detail,
+                rating=cached_rating,
+                rating_source=cached_rating_source,
+            )
+            self._poi_detail_cache[poi_id] = payload
+            file_cache = self._load_file_poi_detail_cache()
+            file_cache[poi_id] = payload
+            self._assign_cached_rating(item_copy, poi_id)
+            file_cache[poi_id] = self._poi_detail_cache.get(poi_id) or payload
+            self._save_file_poi_detail_cache()
             enriched.append(item_copy)
         return enriched
 
@@ -226,6 +357,7 @@ class MockToolAPI:
         origin_area: str = "",
         runtime_origin_area: str = "",
         runtime_origin_coordinates: str = "",
+        enrich_details: bool = True,
     ):
         requested_city = self._resolve_weather_city(origin_area, runtime_origin_area)
         amap = self._get_amap()
@@ -258,10 +390,22 @@ class MockToolAPI:
                     for item in normalized:
                         item["requested_city"] = requested_city
                         item["search_mode"] = search_mode
-                    return self._enrich_poi_details(normalized)
+                        poi_id = item.get("id")
+                        if isinstance(poi_id, str) and poi_id:
+                            self._assign_cached_rating(item, poi_id)
+                    return self._enrich_poi_details(normalized) if enrich_details else normalized
             except Exception:
                 pass
-        return self.db["activities"].get(scenario, self.db["activities"]["family"])
+        fallback_items = [
+            dict(item)
+            for item in self.db["activities"].get(scenario, self.db["activities"]["family"])
+            if isinstance(item, dict)
+        ]
+        for item in fallback_items:
+            poi_id = item.get("id")
+            if isinstance(poi_id, str) and poi_id:
+                self._assign_cached_rating(item, poi_id)
+        return fallback_items
 
     def search_restaurants(
         self,
@@ -269,6 +413,7 @@ class MockToolAPI:
         origin_area: str = "",
         runtime_origin_area: str = "",
         runtime_origin_coordinates: str = "",
+        enrich_details: bool = True,
     ):
         requested_city = self._resolve_weather_city(origin_area, runtime_origin_area)
         amap = self._get_amap()
@@ -295,7 +440,10 @@ class MockToolAPI:
                     for item in normalized:
                         item["requested_city"] = requested_city
                         item["search_mode"] = search_mode
-                    return self._enrich_poi_details(normalized)
+                        poi_id = item.get("id")
+                        if isinstance(poi_id, str) and poi_id:
+                            self._assign_cached_rating(item, poi_id)
+                    return self._enrich_poi_details(normalized) if enrich_details else normalized
             except Exception:
                 pass
         if isinstance(diet_preference, list):
@@ -303,9 +451,17 @@ class MockToolAPI:
             diet_text = " ".join(diet_tokens)
         else:
             diet_text = str(diet_preference or "")
-        if "减脂" in diet_text or "减肥" in diet_text:
-            return [r for r in self.db["restaurants"] if "减脂" in r["tags"]]
-        return [r for r in self.db["restaurants"] if "减脂" not in r["tags"]]
+        if "??" in diet_text or "??" in diet_text:
+            fallback_items = [dict(r) for r in self.db["restaurants"] if any("?" in str(tag) for tag in r.get("tags", []))]
+        else:
+            fallback_items = [dict(r) for r in self.db["restaurants"] if not any("?" in str(tag) for tag in r.get("tags", []))]
+        for item in fallback_items:
+            poi_id = item.get("id")
+            if isinstance(poi_id, str) and poi_id:
+                self._assign_cached_rating(item, poi_id)
+        return fallback_items
+    def enrich_poi_details(self, items: list[dict]) -> list[dict]:
+        return self._enrich_poi_details(items)
 
     def check_availability(self, venue_id: str, time_slot: str):
         if venue_id == "R1":

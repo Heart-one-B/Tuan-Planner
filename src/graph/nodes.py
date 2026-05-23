@@ -1,5 +1,6 @@
 ﻿from datetime import datetime
 import json
+import re
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
@@ -845,7 +846,10 @@ def repair_loop_node(state: AgentState) -> AgentState:
                 if isinstance(current_queue, int) and current_queue > 10:
                     next_hard_constraints["max_queue_minutes"] = current_queue - 10
 
-        next_context_memory["repair_round"] = state.get("replan_count", 0)
+        previous_repair_round = context_memory.get("repair_round", 0)
+        if not isinstance(previous_repair_round, int) or isinstance(previous_repair_round, bool):
+            previous_repair_round = 0
+        next_context_memory["repair_round"] = previous_repair_round + 1
         next_context_memory["repair_targets"] = repair_targets
         next_context_memory["repair_violations"] = merged_violations
 
@@ -1264,82 +1268,85 @@ def _derive_traffic_depart_context(constraints: dict) -> str:
     return f"{date_label}:{daypart}"
 
 
-def _activity_matches_daypart(activity: dict, daypart: str) -> bool:
-    open_time = activity.get("open_time")
-    opentime2 = activity.get("opentime2")
+def _parse_hhmm_to_minutes(text: str) -> int | None:
+    if not isinstance(text, str) or ":" not in text:
+        return None
+    try:
+        hour_text, minute_text = text.strip().split(":", 1)
+        hour = int(hour_text)
+        minute = int(minute_text)
+    except (TypeError, ValueError):
+        return None
+    if hour < 0 or hour > 24 or minute < 0 or minute >= 60:
+        return None
+    return hour * 60 + minute
+
+
+def _extract_time_ranges(text: str) -> list[tuple[int, int]]:
+    if not isinstance(text, str) or not text.strip():
+        return []
+    ranges: list[tuple[int, int]] = []
+    pattern = re.compile(r"(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})")
+    for start_text, end_text in pattern.findall(text):
+        start_minutes = _parse_hhmm_to_minutes(start_text)
+        end_minutes = _parse_hhmm_to_minutes(end_text)
+        if start_minutes is None or end_minutes is None:
+            continue
+        if end_minutes <= start_minutes:
+            end_minutes += 24 * 60
+        ranges.append((start_minutes, end_minutes))
+    return ranges
+
+
+def _daypart_window(daypart: str) -> tuple[int, int] | None:
+    if daypart == "上午":
+        return (9 * 60, 12 * 60)
+    if daypart == "下午":
+        return (12 * 60, 18 * 60)
+    if daypart == "晚上":
+        return (18 * 60, 22 * 60)
+    if daypart == "全天":
+        return (0, 24 * 60)
+    return None
+
+
+def _ranges_overlap(a_start: int, a_end: int, b_start: int, b_end: int) -> bool:
+    return max(a_start, b_start) < min(a_end, b_end)
+
+
+def _matches_daypart_by_time_windows(item: dict, daypart: str) -> bool:
+    if daypart == "全天":
+        return True
+
+    window = _daypart_window(daypart)
+    if window is None:
+        return False
+    window_start, window_end = window
+
+    open_time = item.get("open_time")
+    opentime2 = item.get("opentime2")
     open_window = f"{open_time or ''} {opentime2 or ''}".strip()
-    if open_window:
-        if daypart == "全天":
+    time_ranges = _extract_time_ranges(open_window)
+    for start_minutes, end_minutes in time_ranges:
+        if _ranges_overlap(start_minutes, end_minutes, window_start, window_end):
             return True
-        if daypart == "上午":
-            return any(token in open_window for token in ("06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "全天", "周一至周日"))
-        if daypart == "下午":
-            return any(token in open_window for token in ("12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "全天", "周一至周日"))
-        if daypart == "晚上":
-            return any(token in open_window for token in ("18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "全天", "周一至周日"))
 
-    peak_hours = activity.get("peak_hours")
+    peak_hours = item.get("peak_hours")
     if not isinstance(peak_hours, list) or not peak_hours:
-        return daypart == "全天"
-
+        return False
     for slot in peak_hours:
-        if not isinstance(slot, str) or "-" not in slot:
-            continue
-        start_text, end_text = slot.split("-", 1)
-        try:
-            start_hour = int(start_text.split(":")[0])
-            end_hour = int(end_text.split(":")[0])
-        except (TypeError, ValueError):
-            continue
-
-        if daypart == "上午" and start_hour < 12:
-            return True
-        if daypart == "下午" and start_hour < 18:
-            return True
-        if daypart == "晚上" and end_hour >= 18:
-            return True
-        if daypart == "全天":
-            return True
+        for start_minutes, end_minutes in _extract_time_ranges(slot):
+            if _ranges_overlap(start_minutes, end_minutes, window_start, window_end):
+                return True
     return False
+
+
+def _activity_matches_daypart(activity: dict, daypart: str) -> bool:
+    return _matches_daypart_by_time_windows(activity, daypart)
 
 
 def _restaurant_matches_daypart(restaurant: dict, daypart: str) -> bool:
-    open_time = restaurant.get("open_time")
-    opentime2 = restaurant.get("opentime2")
-    open_window = f"{open_time or ''} {opentime2 or ''}".strip()
-    if open_window:
-        if daypart == "全天":
-            return True
-        if daypart == "上午":
-            return any(token in open_window for token in ("06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "全天", "周一至周日"))
-        if daypart == "下午":
-            return any(token in open_window for token in ("12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "全天", "周一至周日"))
-        if daypart == "晚上":
-            return any(token in open_window for token in ("18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "全天", "周一至周日"))
-
-    peak_hours = restaurant.get("peak_hours")
-    if not isinstance(peak_hours, list) or not peak_hours:
-        return daypart == "全天"
-
-    for slot in peak_hours:
-        if not isinstance(slot, str) or "-" not in slot:
-            continue
-        start_text, end_text = slot.split("-", 1)
-        try:
-            start_hour = int(start_text.split(":")[0])
-            end_hour = int(end_text.split(":")[0])
-        except (TypeError, ValueError):
-            continue
-
-        if daypart == "上午" and start_hour < 14:
-            return True
-        if daypart == "下午" and start_hour < 18:
-            return True
-        if daypart == "晚上" and end_hour >= 18:
-            return True
-        if daypart == "全天":
-            return True
-    return False
+    return _matches_daypart_by_time_windows(restaurant, daypart)
 
 
 def _normalize_text_list(value) -> list[str]:
@@ -1450,6 +1457,57 @@ def _shortlist_activities(items: list[dict], per_bucket_limit: int = 2) -> list[
             reverse=True,
         )
         shortlisted.extend(ranked[:per_bucket_limit])
+
+    return shortlisted
+
+
+def _has_open_time_fields(item: dict) -> bool:
+    if not isinstance(item, dict):
+        return False
+    open_time = item.get("open_time")
+    opentime2 = item.get("opentime2")
+    return (
+        isinstance(open_time, str) and open_time.strip()
+    ) or (
+        isinstance(opentime2, str) and opentime2.strip()
+    )
+
+
+def _shortlist_with_detail_gate(
+    items: list[dict],
+    *,
+    bucket_key_fn,
+    api: MockToolAPI,
+    daypart: str,
+    daypart_match_fn,
+    per_bucket_limit: int = 2,
+    max_scan_per_bucket: int = 10,
+) -> list[dict]:
+    buckets: dict[str, list[dict]] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        bucket = bucket_key_fn(item.get("name") if isinstance(item.get("name"), str) else "")
+        buckets.setdefault(bucket, []).append(dict(item))
+
+    shortlisted: list[dict] = []
+    for bucket_items in buckets.values():
+        ranked = sorted(
+            bucket_items,
+            key=lambda item: (_rating_value(item), len((item.get("name") or ""))),
+            reverse=True,
+        )
+        accepted: list[dict] = []
+        scanned = 0
+        for candidate in ranked:
+            if scanned >= max_scan_per_bucket or len(accepted) >= per_bucket_limit:
+                break
+            scanned += 1
+            enriched_batch = api.enrich_poi_details([candidate])
+            enriched = enriched_batch[0] if isinstance(enriched_batch, list) and enriched_batch else candidate
+            if _has_open_time_fields(enriched) and daypart_match_fn(enriched, daypart):
+                accepted.append(enriched)
+        shortlisted.extend(accepted)
 
     return shortlisted
 
@@ -1582,6 +1640,7 @@ def activity_search_node(state: AgentState) -> AgentState:
             origin_area=constraints.get("origin_area") or "",
             runtime_origin_area=state.get("runtime_origin_area", "") or "",
             runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
+            enrich_details=False,
         )
         if not isinstance(activities, list):
             activities = []
@@ -1622,20 +1681,24 @@ def activity_search_node(state: AgentState) -> AgentState:
             if tag_matched:
                 normalized_activities = tag_matched
 
-        matched = [
-            item for item in normalized_activities if _activity_matches_daypart(item, daypart)
-        ]
+        matched = _shortlist_with_detail_gate(
+            _dedupe_activities_by_identity(normalized_activities),
+            bucket_key_fn=_activity_bucket_key_from_name,
+            api=MockToolAPI(),
+            daypart=daypart,
+            daypart_match_fn=_activity_matches_daypart,
+            per_bucket_limit=2,
+            max_scan_per_bucket=10,
+        )
         if not matched:
-            update = _append_error(state, f"Activity Search node found no activities for daypart [{daypart}]")
+            update = _append_error(state, f"Activity Search node found no activities with open_time/opentime2 for daypart [{daypart}] after detail enrichment")
             print(
-                f"[Activity Search Node] no matched activities for daypart={daypart!r}, "
+                f"[Activity Search Node] no shortlisted activities with open_time/opentime2 for daypart={daypart!r} after detail enrichment, "
                 f"origin_area={constraints.get('origin_area')!r}, "
                 f"origin_coordinates={state.get('runtime_origin_coordinates', '')!r}"
             )
             update["activities"] = []
             return update
-
-        matched = _shortlist_activities(matched, per_bucket_limit=2)
 
         for item in matched:
             item["daypart_used"] = daypart
@@ -1649,7 +1712,7 @@ def activity_search_node(state: AgentState) -> AgentState:
             f"provider={activity_provider!r}, requested_city={activity_requested_city!r}, "
             f"search_mode={activity_search_mode!r}, "
             f"keywords={keywords_activity!r}, search_keywords={activity_search_keywords!r}, preferred_tags={preferred_activity_tags!r}, "
-            f"shortlisted_n={len(matched)}, top_names={[item.get('name') for item in matched[:3]]}"
+            f"shortlisted_n={len(matched)}, matched_names={[item.get('name') for item in matched]}"
         )
         return {"activities": matched}
     except Exception as exc:
@@ -1693,6 +1756,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
                     origin_area=constraints.get("origin_area") or "",
                     runtime_origin_area=state.get("runtime_origin_area", "") or "",
                     runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
+                    enrich_details=False,
                 )
                 if not isinstance(batch, list):
                     continue
@@ -1711,6 +1775,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
                 origin_area=constraints.get("origin_area") or "",
                 runtime_origin_area=state.get("runtime_origin_area", "") or "",
                 runtime_origin_coordinates=state.get("runtime_origin_coordinates", "") or "",
+                enrich_details=False,
             )
         if not isinstance(restaurants, list):
             restaurants = []
@@ -1736,20 +1801,24 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             if filtered:
                 normalized_restaurants = filtered
 
-        matched = [
-            item for item in normalized_restaurants if _restaurant_matches_daypart(item, daypart)
-        ]
+        matched = _shortlist_with_detail_gate(
+            _dedupe_restaurants_by_identity(normalized_restaurants),
+            bucket_key_fn=_restaurant_bucket_key_from_name,
+            api=api,
+            daypart=daypart,
+            daypart_match_fn=_restaurant_matches_daypart,
+            per_bucket_limit=2,
+            max_scan_per_bucket=10,
+        )
         if not matched:
-            update = _append_error(state, f"Restaurant Search node found no restaurants for daypart [{daypart}]")
+            update = _append_error(state, f"Restaurant Search node found no restaurants with open_time/opentime2 for daypart [{daypart}] after detail enrichment")
             print(
-                f"[Restaurant Search Node] no matched restaurants for daypart={daypart!r}, "
+                f"[Restaurant Search Node] no shortlisted restaurants with open_time/opentime2 for daypart={daypart!r} after detail enrichment, "
                 f"origin_area={constraints.get('origin_area')!r}, "
                 f"origin_coordinates={state.get('runtime_origin_coordinates', '')!r}"
             )
             update["restaurants"] = []
             return update
-
-        matched = _shortlist_restaurants(matched, per_bucket_limit=2)
 
         def _scenario_rank(item: dict) -> int:
             tags = item.get("tags") or []
@@ -1779,7 +1848,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             f"provider={restaurant_provider!r}, requested_city={restaurant_requested_city!r}, "
             f"search_mode={restaurant_search_mode!r}, "
             f"keywords={query_keywords or diet_preference!r}, excludes={exclude_keywords!r}, "
-            f"shortlisted_n={len(matched)}, top_names={[item.get('name') for item in matched[:3]]}"
+            f"shortlisted_n={len(matched)}, matched_names={[item.get('name') for item in matched]}"
         )
         return {"restaurants": matched}
     except Exception as exc:
@@ -1904,17 +1973,33 @@ def schedule_timing_node(state: AgentState) -> AgentState:
             if isinstance(time_phrase, str) and time_phrase:
                 time_phrase = time_phrase.replace("今天", "明天", 1)
 
+        api = MockToolAPI()
+
         def _detail_location(item: dict) -> str:
+            coordinates = item.get("coordinates") if isinstance(item.get("coordinates"), str) else ""
+            if coordinates.strip():
+                return coordinates.strip()
+            location = item.get("location") if isinstance(item.get("location"), str) else ""
+            if location.strip():
+                return location.strip()
             item_id = item.get("id")
             source = item.get("source")
             if not isinstance(item_id, str) or source != "mcp":
-                return item.get("coordinates") if isinstance(item.get("coordinates"), str) else ""
+                return ""
+            if item.get("detail_loaded") is True:
+                return ""
             try:
-                detail = MockToolAPI()._get_amap().maps_search_detail(item_id)
-                if isinstance(detail, dict) and isinstance(detail.get("location"), str):
-                    return detail.get("location")
+                detail_item = api.enrich_poi_details([item])
+                if isinstance(detail_item, list) and detail_item and isinstance(detail_item[0], dict):
+                    detail = detail_item[0]
+                    detail_location = detail.get("coordinates") if isinstance(detail.get("coordinates"), str) else ""
+                    if detail_location.strip():
+                        return detail_location.strip()
+                    detail_location = detail.get("location") if isinstance(detail.get("location"), str) else ""
+                    if detail_location.strip():
+                        return detail_location.strip()
             except Exception:
-                return item.get("coordinates") if isinstance(item.get("coordinates"), str) else ""
+                return ""
             return ""
 
         activity_by_id = {}
@@ -1929,7 +2014,7 @@ def schedule_timing_node(state: AgentState) -> AgentState:
             restaurants_by_id[restaurant["id"]] = restaurant
 
         segment_eta: dict[str, int] = {}
-        amap = MockToolAPI()._get_amap()
+        amap = api._get_amap()
 
         def _distance_minutes(origin: str, destination: str) -> int | None:
             if not amap or not origin or not destination:
