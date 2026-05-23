@@ -199,6 +199,20 @@ def _build_restaurant_candidates(user_input: str, scenario: str, diet_preference
     return _dedupe_keep_order(keywords)[:5], _dedupe_keep_order(excludes)[:3]
 
 
+def _required_restaurant_keywords(user_input: str, diet_preferences: list[str]) -> list[str]:
+    text = " ".join([user_input or "", *[str(item) for item in diet_preferences]])
+    required: list[str] = []
+
+    if any(token in text for token in ("减脂", "减肥", "低卡", "轻食", "健康")):
+        required.append("轻食")
+
+    for cuisine in _CUISINE_KEYWORDS:
+        if cuisine in text:
+            required.append(cuisine)
+
+    return _dedupe_keep_order(required)
+
+
 def _build_activity_candidates(user_input: str, scenario: str) -> tuple[list[str], list[str]]:
     text = user_input or ""
     explicit = [token for token in _ACTIVITY_HINTS if token in text]
@@ -364,9 +378,14 @@ def _normalize_intent(user_input: str, intent: dict) -> dict:
     fallback_restaurant_keywords, fallback_restaurant_explicit_types = _build_restaurant_candidates(user_input, scenario, diet_preferences)
     fallback_activity_keywords, fallback_activity_explicit_types = _build_activity_candidates(user_input, scenario)
 
-    restaurant_keywords = llm_restaurant_keywords[:] if llm_restaurant_keywords else fallback_restaurant_keywords
+    required_restaurant_keywords = _required_restaurant_keywords(user_input, diet_preferences)
+    restaurant_keywords = _dedupe_keep_order(
+        required_restaurant_keywords + llm_restaurant_keywords + fallback_restaurant_keywords
+    )
     activity_keywords = llm_activity_keywords[:] if llm_activity_keywords else fallback_activity_keywords
-    restaurant_explicit_types = llm_restaurant_explicit_types[:] if llm_restaurant_explicit_types else fallback_restaurant_explicit_types
+    restaurant_explicit_types = _dedupe_keep_order(
+        llm_restaurant_explicit_types + fallback_restaurant_explicit_types
+    )
     activity_explicit_types = llm_activity_explicit_types[:] if llm_activity_explicit_types else fallback_activity_explicit_types
 
     if len(restaurant_keywords) < 3:

@@ -1894,12 +1894,29 @@ def restaurant_search_node(state: AgentState) -> AgentState:
                 for item in batch:
                     if not isinstance(item, dict):
                         continue
+                    item_copy = dict(item)
+                    item_copy["keyword_source"] = keyword
+                    sources = item_copy.get("search_keyword_sources")
+                    if not isinstance(sources, list):
+                        sources = []
+                    if keyword not in sources:
+                        sources.append(keyword)
+                    item_copy["search_keyword_sources"] = sources
                     item_id = item.get("id")
                     if isinstance(item_id, str) and item_id in seen_ids:
+                        for existing in restaurants:
+                            if isinstance(existing, dict) and existing.get("id") == item_id:
+                                existing_sources = existing.get("search_keyword_sources")
+                                if not isinstance(existing_sources, list):
+                                    existing_sources = []
+                                if keyword not in existing_sources:
+                                    existing_sources.append(keyword)
+                                existing["search_keyword_sources"] = existing_sources
+                                break
                         continue
                     if isinstance(item_id, str):
                         seen_ids.add(item_id)
-                    restaurants.append(item)
+                    restaurants.append(item_copy)
         else:
             restaurants = api.search_restaurants(
                 diet_preference,
@@ -1932,6 +1949,17 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             if filtered:
                 normalized_restaurants = filtered
 
+        def _restaurant_search_keyword_bucket(item: dict) -> str:
+            sources = item.get("search_keyword_sources")
+            if isinstance(sources, list):
+                for source in sources:
+                    if isinstance(source, str) and source in query_keywords:
+                        return source
+            source = item.get("keyword_source")
+            if isinstance(source, str) and source:
+                return source
+            return _restaurant_bucket_key_from_name(item.get("name") if isinstance(item.get("name"), str) else "")
+
         matched = _shortlist_with_detail_gate(
             _dedupe_restaurants_by_identity(normalized_restaurants),
             bucket_key_fn=_restaurant_bucket_key_from_name,
@@ -1940,6 +1968,10 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             daypart_match_fn=_restaurant_matches_daypart,
             per_bucket_limit=2,
             max_scan_per_bucket=10,
+            bucket_order=query_keywords,
+            bucket_key_from_item_fn=_restaurant_search_keyword_bucket if query_keywords else None,
+            allow_unverified_fallback=bool(query_keywords),
+            total_limit=5 if query_keywords else None,
         )
         if not matched:
             update = _append_error(state, f"Restaurant Search node found no restaurants with open_time/opentime2 for daypart [{daypart}] after detail enrichment")
@@ -1979,7 +2011,8 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             f"provider={restaurant_provider!r}, requested_city={restaurant_requested_city!r}, "
             f"search_mode={restaurant_search_mode!r}, "
             f"keywords={query_keywords or diet_preference!r}, excludes={exclude_keywords!r}, "
-            f"shortlisted_n={len(matched)}, matched_names={[item.get('name') for item in matched]}"
+            f"shortlisted_n={len(matched)}, matched_names={[item.get('name') for item in matched]}, "
+            f"keyword_sources={[item.get('search_keyword_sources') or item.get('keyword_source') for item in matched]}"
         )
         return {"restaurants": matched}
     except Exception as exc:

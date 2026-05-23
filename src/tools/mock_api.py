@@ -423,7 +423,7 @@ class MockToolAPI:
                         payload = amap.maps_around_search(
                             keyword,
                             location=runtime_origin_coordinates.strip(),
-                            radius="10000",
+                            radius="2000",
                         )
                         keyword_results = self._normalize_amap_pois(payload, kind="activity")
                         if keyword_results:
@@ -486,7 +486,7 @@ class MockToolAPI:
                     payload = amap.maps_around_search(
                         keywords,
                         location=runtime_origin_coordinates.strip(),
-                        radius="10000",
+                        radius="2000",
                     )
                     normalized = self._normalize_amap_pois(payload, kind="restaurant")
                     if normalized:
