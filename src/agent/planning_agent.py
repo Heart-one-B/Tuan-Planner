@@ -111,6 +111,18 @@ def _weather_high(weather):
     return isinstance(level, str) and level in _WEATHER_HIGH
 
 
+def _activity_environment(activity):
+    if not isinstance(activity, dict):
+        return "unknown"
+    value = activity.get("activity_environment")
+    if isinstance(value, str) and value in {"indoor", "outdoor", "mixed", "unknown"}:
+        return value
+    legacy_type = activity.get("type")
+    if isinstance(legacy_type, str) and legacy_type in {"indoor", "outdoor", "mixed"}:
+        return legacy_type
+    return "unknown"
+
+
 def _eta_minutes(traffic, target_id):
     record = _safe_dict(traffic.get("eta_by_target")).get(target_id)
     if not isinstance(record, dict):
@@ -231,7 +243,7 @@ def _select_activities(*, activities, constraints, weather, traffic, crowd):
     # 仅当确实切换且原列表存在被过滤掉的非 indoor 项时，记一笔天气切换说明
     if indoor_required:
         had_outdoor = any(
-            isinstance(a, dict) and a.get("type") != "indoor" for a in activities
+            isinstance(a, dict) and _activity_environment(a) != "indoor" for a in activities
         )
         if had_outdoor:
             flags.append("因天气切换 indoor")
@@ -240,7 +252,7 @@ def _select_activities(*, activities, constraints, weather, traffic, crowd):
     for act in activities:
         if not isinstance(act, dict):
             continue
-        if indoor_required and act.get("type") != "indoor":
+        if indoor_required and _activity_environment(act) != "indoor":
             continue
         indoor_filtered.append(act)
 

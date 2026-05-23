@@ -208,7 +208,10 @@ def build_workflow():
     graph.add_conditional_edges(
         "repair_loop",
         route_after_repair_loop_new,
-        {"constraint_build": "constraint_build"},
+        {
+            "constraint_build": "constraint_build",
+            "final_plan": "final_plan",
+        },
     )
     graph.add_conditional_edges(
         "scoring",

@@ -261,13 +261,9 @@ class ConstraintAgent:
         if len(restaurant_keywords) < 3:
             restaurant_keywords.extend(["简餐", "聚餐", "特色餐厅"])
         if not activity_keywords:
-            activity_keywords = ["室内", "户外", "休闲"]
+            activity_keywords = ["科技馆", "博物馆", "儿童乐园", "公园", "商场"]
         if not activity_search_keywords:
             activity_search_keywords = activity_keywords[:]
-        if "室内" not in activity_keywords:
-            activity_keywords.insert(0, "室内")
-        if "户外" not in activity_keywords:
-            activity_keywords.insert(1 if activity_keywords else 0, "户外")
 
         exclude_keywords_restaurant: list[str] = []
         if any(token in must_avoid for token in ("火锅", "烧烤", "烤肉", "自助")):

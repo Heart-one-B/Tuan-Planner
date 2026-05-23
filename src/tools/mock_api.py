@@ -13,6 +13,62 @@ _POI_DETAIL_CACHE_TTL_DAYS = 7
 _MEMORY_POI_DETAIL_CACHE: dict[str, dict | None] = {}
 _FILE_POI_DETAIL_CACHE: dict[str, dict] | None = None
 
+_ACTIVITY_ENV_VALUES = {"indoor", "outdoor", "mixed", "unknown"}
+_STRONG_INDOOR_TOKENS = (
+    "科技馆",
+    "博物馆",
+    "美术馆",
+    "艺术馆",
+    "水族馆",
+    "海洋馆",
+    "影像馆",
+    "展览馆",
+    "文化馆",
+    "图书馆",
+    "纪念馆",
+)
+_OUTDOOR_TOKENS = (
+    "公园",
+    "森林",
+    "湿地",
+    "绿道",
+    "步道",
+    "广场",
+    "露营",
+    "营地",
+    "江滩",
+    "河滨",
+    "湖",
+    "山",
+    "农场",
+    "草坪",
+    "户外",
+    "室外",
+)
+_INDOOR_TOKENS = (
+    "商场",
+    "购物中心",
+    "mall",
+    "博物馆",
+    "科技馆",
+    "美术馆",
+    "艺术馆",
+    "水族馆",
+    "海洋馆",
+    "展览",
+    "影院",
+    "电影院",
+    "剧场",
+    "剧院",
+    "儿童乐园",
+    "亲子乐园",
+    "游乐中心",
+    "室内",
+    "馆",
+    "中心",
+)
+_MIXED_TOKENS = ("动物园", "植物园", "游乐园", "景区", "度假区")
+
 
 class MockToolAPI:
     def __init__(self):
@@ -114,6 +170,56 @@ class MockToolAPI:
         file_cache = self._load_file_poi_detail_cache()
         file_cache[poi_id] = payload
         self._save_file_poi_detail_cache()
+
+    @staticmethod
+    def _append_text_parts(parts: list[str], value) -> None:
+        if isinstance(value, str):
+            if value.strip():
+                parts.append(value.strip())
+            return
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, str) and item.strip():
+                    parts.append(item.strip())
+
+    @classmethod
+    def _infer_activity_environment(cls, item: dict, *, respect_existing: bool = True) -> str:
+        if not isinstance(item, dict):
+            return "unknown"
+
+        explicit = item.get("activity_environment")
+        if respect_existing and isinstance(explicit, str) and explicit in _ACTIVITY_ENV_VALUES:
+            return explicit
+
+        legacy_type = item.get("type")
+        if isinstance(legacy_type, str) and legacy_type in {"indoor", "outdoor", "mixed"}:
+            return legacy_type
+
+        parts: list[str] = []
+        for key in ("name", "type", "address", "location", "description", "alias"):
+            cls._append_text_parts(parts, item.get(key))
+        cls._append_text_parts(parts, item.get("tags"))
+        cls._append_text_parts(parts, item.get("tags_semantic"))
+        raw_poi = item.get("raw_poi")
+        if isinstance(raw_poi, dict):
+            for key in ("name", "type", "address"):
+                cls._append_text_parts(parts, raw_poi.get(key))
+
+        text = " ".join(parts).lower()
+        if any(token.lower() in text for token in _STRONG_INDOOR_TOKENS):
+            return "indoor"
+        if any(token.lower() in text for token in _MIXED_TOKENS):
+            return "mixed"
+        if any(token.lower() in text for token in _OUTDOOR_TOKENS):
+            return "outdoor"
+        if any(token.lower() in text for token in _INDOOR_TOKENS):
+            return "indoor"
+        return "unknown"
+
+    @classmethod
+    def _attach_activity_environment(cls, item: dict, *, refresh: bool = False) -> None:
+        if isinstance(item, dict):
+            item["activity_environment"] = cls._infer_activity_environment(item, respect_existing=not refresh)
 
     @staticmethod
     def _resolve_weather_city(origin_area=None, runtime_origin_area=None):
@@ -232,7 +338,7 @@ class MockToolAPI:
             item = {
                 "id": poi_id,
                 "name": name,
-                "type": "indoor" if kind == "activity" else "restaurant",
+                "type": type_name,
                 "location": address,
                 "coordinates": location,
                 "address": address,
@@ -248,6 +354,7 @@ class MockToolAPI:
                 item["peak_hours"] = ["13:00-17:00", "18:00-21:00"]
                 item["child_friendly"] = True
                 item["description"] = address or name
+                MockToolAPI._attach_activity_environment(item)
             else:
                 item["available_dayparts"] = ["下午", "晚上"]
                 item["peak_hours"] = ["11:00-14:00", "17:00-21:00"]
@@ -282,6 +389,8 @@ class MockToolAPI:
                     if cached_detail.get(key) and not item_copy.get(key):
                         item_copy[key] = cached_detail.get(key)
                 item_copy["detail_loaded"] = True
+                if item_copy.get("child_friendly") is True:
+                    self._attach_activity_environment(item_copy, refresh=True)
                 self._assign_cached_rating(item_copy, poi_id)
                 enriched.append(item_copy)
                 continue
@@ -296,6 +405,8 @@ class MockToolAPI:
                     if detail.get(key) and not item_copy.get(key):
                         item_copy[key] = detail.get(key)
                 item_copy["detail_loaded"] = True
+            if item_copy.get("child_friendly") is True:
+                self._attach_activity_environment(item_copy, refresh=True)
 
             cached_rating = None
             cached_rating_source = ""
@@ -463,6 +574,7 @@ class MockToolAPI:
         ]
         for item in fallback_items:
             poi_id = item.get("id")
+            self._attach_activity_environment(item)
             if isinstance(poi_id, str) and poi_id:
                 self._assign_cached_rating(item, poi_id)
         return fallback_items

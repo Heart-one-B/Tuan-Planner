@@ -404,6 +404,12 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         restaurants = fact_gathering_result.get("restaurants")
         if not isinstance(restaurants, list):
             restaurants = []
+        weather = fact_gathering_result.get("weather") if isinstance(fact_gathering_result.get("weather"), dict) else {}
+        weather_risk = weather.get("risk_level") or weather.get("risk") or ""
+        weather_planning_instruction = (
+            "当前天气风险为 High。所有 activity step 必须优先选择 activity_environment=\"indoor\" 的活动；"
+            "不要选择 activity_environment 为 outdoor、mixed 或 unknown 的活动，除非没有任何 indoor 候选。"
+        ) if _weather_requires_indoor(weather_risk) else "当前天气风险不高，可正常按用户偏好选择活动。"
 
         daypart = hard_constraints.get("daypart") if isinstance(hard_constraints, dict) else ""
         date_label = hard_constraints.get("date_label") if isinstance(hard_constraints, dict) else ""
@@ -619,6 +625,21 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         if not isinstance(conversation_turns, list):
             conversation_turns = []
 
+        activity_candidates_for_prompt = [
+            {
+                "id": item.get("id"),
+                "name": item.get("name"),
+                "activity_environment": _activity_environment(item),
+                "type": item.get("type"),
+                "address": item.get("address") or item.get("location"),
+                "tags": item.get("tags") or item.get("tags_semantic") or [],
+                "rating": item.get("rating"),
+                "keyword_source": item.get("search_keyword_sources") or item.get("keyword_source"),
+            }
+            for item in activities_by_id.values()
+            if isinstance(item, dict)
+        ]
+
         prompt = f"""
 你是本地生活规划助手。请基于真实候选池生成 3 个候选方案。
 要求：
@@ -640,21 +661,24 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 }}
 4. steps 必须按真实顺序输出，不要编造没有给出的 poi_id。
 5. 如果用户明确提到了某个时段的餐饮偏好，例如“晚上吃火锅”，应优先把该类型安排在更合适的 phase。
-6. 如果要安排多餐，餐饮类型尽量不要完全重复；如果要安排多个活动，也尽量不要完全重复。
+6. 如果要安排多餐，餐饮类型一定不要重复；如果要安排多个活动，也一定不要重复。
 7. phase 可以使用 morning / noon / afternoon / evening / lunch / dinner / flex。
 8. reasoning 只要 2-3 条简短理由。
 9. 当 hard_constraints.daypart 为“全天”时，每个候选的 steps 必须包含 morning 活动、lunch 餐饮、afternoon 活动、dinner 餐饮；餐厅不足时晚餐可以复用午餐餐厅。
+10. 天气约束：{weather_planning_instruction}
 
 输入：
 - request_type: {request_type}
 - plan_mode: {plan_mode}
+- weather: {weather}
+- weather_risk: {weather_risk}
 - hard_constraints: {hard_constraints}
 - soft_preferences: {soft_preferences}
 - query_constraints: {query_constraints}
 - user_input: {user_input}
 - conversation_turns: {conversation_turns}
 - raw_query: {state.get("intent", {}).get("raw_query", "") if isinstance(state.get("intent"), dict) else ""}
-- activity_candidates: {list(activities_by_id.values())}
+- activity_candidates: {activity_candidates_for_prompt}
 - restaurant_candidates: {list(restaurants_by_id.values())}
 """
 
@@ -735,6 +759,43 @@ def candidate_planning_node(state: AgentState) -> AgentState:
             f"plan_1_restaurant={normalized_candidates[0].get('restaurant', {}).get('name')!r}, "
             f"plan_1_restaurants_n={len(normalized_candidates[0].get('restaurants', []))}"
         )
+        print(
+            "[Candidate Planning Node] "
+            f"weather_risk={weather_risk!r}, "
+            f"activity_candidate_environments="
+            f"{[(item.get('name'), item.get('activity_environment')) for item in activity_candidates_for_prompt]!r}"
+        )
+        print("[Candidate Planning Node] 候选计划明细:")
+        for candidate in normalized_candidates[:3]:
+            if not isinstance(candidate, dict):
+                continue
+            timeline_summary = [
+                {
+                    "time": item.get("time"),
+                    "item": item.get("item"),
+                    "type": item.get("type"),
+                }
+                for item in candidate.get("timeline", [])
+                if isinstance(item, dict)
+            ]
+            step_summary = [
+                {
+                    "phase": item.get("phase"),
+                    "poi_type": item.get("poi_type"),
+                    "poi_id": item.get("poi_id"),
+                    "label": item.get("label"),
+                }
+                for item in candidate.get("steps", [])
+                if isinstance(item, dict)
+            ]
+            print(
+                f"  - id={candidate.get('id')!r}, title={candidate.get('title')!r}, "
+                f"activity={candidate.get('activity', {}).get('name')!r}, "
+                f"secondary_activity={candidate.get('secondary_activity', {}).get('name')!r}, "
+                f"restaurant={candidate.get('restaurant', {}).get('name')!r}, "
+                f"restaurants={[item.get('name') for item in candidate.get('restaurants', []) if isinstance(item, dict)]!r}, "
+                f"steps={step_summary!r}, timeline={timeline_summary!r}"
+            )
 
         return {
             "candidate_plans": {
@@ -799,6 +860,7 @@ def rule_validation_node(state: AgentState) -> AgentState:
             candidate_id = item.get("id") if isinstance(item.get("id"), str) else "unknown_plan"
             activity = item.get("activity") if isinstance(item.get("activity"), dict) else {}
             restaurant = item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {}
+            candidate_activities = _candidate_activities(item)
 
             violations = []
             repair_instructions = []
@@ -811,10 +873,29 @@ def rule_validation_node(state: AgentState) -> AgentState:
                 )
 
             if validation_profile.get("check_weather_compatibility") is True:
-                if weather_risk in {"High", "high"} and activity.get("type") == "outdoor":
+                weather_conflict_activities = [
+                    activity_item
+                    for activity_item in candidate_activities
+                    if _weather_requires_indoor(weather_risk)
+                    and _activity_environment(activity_item) in {"outdoor", "mixed", "unknown"}
+                ]
+                if weather_conflict_activities:
                     violations.append("weather_outdoor_conflict")
                     repair_instructions.append(
-                        {"type": "replace_activity", "constraint": "indoor_only"}
+                        {
+                            "type": "replace_activity",
+                            "constraint": "indoor_only",
+                            "poi_ids": [
+                                activity_item.get("id")
+                                for activity_item in weather_conflict_activities
+                                if isinstance(activity_item.get("id"), str)
+                            ],
+                            "poi_names": [
+                                activity_item.get("name")
+                                for activity_item in weather_conflict_activities
+                                if isinstance(activity_item.get("name"), str)
+                            ],
+                        }
                     )
 
             if validation_profile.get("check_party_fit") is True:
@@ -834,6 +915,13 @@ def rule_validation_node(state: AgentState) -> AgentState:
                 )
             else:
                 valid_plans.append(item)
+
+            print(
+                f"[Rule Validation Node] candidate_id={candidate_id!r}, "
+                f"weather_risk={weather_risk!r}, "
+                f"activities={[(activity_item.get('name'), _activity_environment(activity_item)) for activity_item in candidate_activities]!r}, "
+                f"violations={violations!r}"
+            )
 
         return {
             "rule_validation_result": {
@@ -902,6 +990,7 @@ def repair_loop_node(state: AgentState) -> AgentState:
 
         next_hard_constraints = dict(hard_constraints)
         next_soft_preferences = dict(soft_preferences)
+        next_query_constraints = dict(constraint_build.get("query_constraints") if isinstance(constraint_build.get("query_constraints"), dict) else {})
         next_context_memory = dict(context_memory)
 
         for instruction in merged_repair_instructions:
@@ -909,6 +998,8 @@ def repair_loop_node(state: AgentState) -> AgentState:
             constraint = instruction.get("constraint")
             if instruction_type == "replace_activity" and constraint == "indoor_only":
                 next_hard_constraints["indoor_only"] = True
+                next_query_constraints["indoor_preferred"] = True
+                next_query_constraints["weather_guard"] = "indoor_preferred"
             if instruction_type == "replace_restaurant" and constraint == "party_fit_required":
                 next_hard_constraints["restaurant_required"] = True
             if instruction_type == "reduce_eta":
@@ -927,21 +1018,29 @@ def repair_loop_node(state: AgentState) -> AgentState:
         next_context_memory["repair_targets"] = repair_targets
         next_context_memory["repair_violations"] = merged_violations
 
+        next_constraint_build = {
+            "request_type": constraint_build.get("request_type", "generic_local_plan"),
+            "plan_mode": constraint_build.get("plan_mode", "activity_plus_meal"),
+            "hard_constraints": next_hard_constraints,
+            "soft_preferences": next_soft_preferences,
+            "query_constraints": next_query_constraints,
+            "validation_profile": constraint_build.get("validation_profile", {}),
+            "scoring_profile": constraint_build.get("scoring_profile", {}),
+            "context_memory": next_context_memory,
+        }
+        retrieval_context = state.get("retrieval_context")
+        if not isinstance(retrieval_context, dict):
+            retrieval_context = {}
+        next_retrieval_context = dict(retrieval_context)
+        next_retrieval_context["next_constraint_build"] = next_constraint_build
+
         return {
+            "retrieval_context": next_retrieval_context,
             "repair_loop_result": {
                 "repair_targets": repair_targets,
                 "violations": merged_violations,
                 "repair_instructions": merged_repair_instructions,
-                "next_constraint_build": {
-                    "request_type": constraint_build.get("request_type", "generic_local_plan"),
-                    "plan_mode": constraint_build.get("plan_mode", "activity_plus_meal"),
-                    "hard_constraints": next_hard_constraints,
-                    "soft_preferences": next_soft_preferences,
-                    "query_constraints": constraint_build.get("query_constraints", {}),
-                    "validation_profile": constraint_build.get("validation_profile", {}),
-                    "scoring_profile": constraint_build.get("scoring_profile", {}),
-                    "context_memory": next_context_memory,
-                },
+                "next_constraint_build": next_constraint_build,
             }
         }
     except Exception as exc:
@@ -1002,10 +1101,16 @@ def scoring_node(state: AgentState) -> AgentState:
             candidate_id = item.get("id") if isinstance(item.get("id"), str) else "unknown_plan"
             activity = item.get("activity") if isinstance(item.get("activity"), dict) else {}
             restaurant = item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {}
+            candidate_activities = _candidate_activities(item)
 
             semantic_match = 8.0 if activity or restaurant else 3.0
             time_relaxation = 7.0
-            weather_fit = 9.0 if weather_risk not in {"High", "high"} or activity.get("type") == "indoor" else 4.0
+            weather_fit = (
+                9.0
+                if not _weather_requires_indoor(weather_risk)
+                or all(_activity_environment(activity_item) == "indoor" for activity_item in candidate_activities)
+                else 4.0
+            )
             distance_fit = 8.0
             queue_fit = 7.0
             review_quality = 7.0
@@ -1453,6 +1558,49 @@ def _poi_text(item: dict) -> str:
     return " ".join(part for part in parts if isinstance(part, str)).lower()
 
 
+def _activity_environment(item: dict) -> str:
+    if not isinstance(item, dict):
+        return "unknown"
+    value = item.get("activity_environment")
+    if isinstance(value, str) and value in {"indoor", "outdoor", "mixed", "unknown"}:
+        return value
+    legacy_type = item.get("type")
+    if isinstance(legacy_type, str) and legacy_type in {"indoor", "outdoor", "mixed"}:
+        return legacy_type
+    return "unknown"
+
+
+def _weather_requires_indoor(weather_risk: str) -> bool:
+    return weather_risk in {"High", "high"}
+
+
+def _candidate_activities(candidate: dict) -> list[dict]:
+    if not isinstance(candidate, dict):
+        return []
+
+    out: list[dict] = []
+    seen_ids: set[str] = set()
+
+    def add_activity(value) -> None:
+        if not isinstance(value, dict) or not value:
+            return
+        activity_id = value.get("id")
+        key = activity_id if isinstance(activity_id, str) and activity_id else value.get("name")
+        if isinstance(key, str) and key:
+            if key in seen_ids:
+                return
+            seen_ids.add(key)
+        out.append(value)
+
+    activities = candidate.get("activities")
+    if isinstance(activities, list):
+        for activity in activities:
+            add_activity(activity)
+    add_activity(candidate.get("activity"))
+    add_activity(candidate.get("secondary_activity"))
+    return out
+
+
 def _matches_keywords(item: dict, keywords: list[str], *, require_all: bool = False) -> bool:
     if not keywords:
         return True
@@ -1756,6 +1904,11 @@ def activity_search_node(state: AgentState) -> AgentState:
         if not isinstance(activities, list):
             activities = []
 
+        indoor_required = (
+            constraints.get("indoor_preferred") is True
+            or constraints.get("indoor_only") is True
+            or constraints.get("weather_guard") == "indoor_preferred"
+        )
         child_friendly_required = constraints.get("child_friendly_required") is True
         child_friendly_preferred = constraints.get("child_friendly_preferred") is True
         normalized_activities: list[dict] = []
@@ -1770,6 +1923,16 @@ def activity_search_node(state: AgentState) -> AgentState:
             ]
             if child_friendly_matches:
                 normalized_activities = child_friendly_matches
+
+        if indoor_required:
+            indoor_matches = [
+                item for item in normalized_activities if _activity_environment(item) == "indoor"
+            ]
+            normalized_activities = indoor_matches
+            print(
+                f"[Activity Search Node] indoor_required=True, "
+                f"indoor_matches_n={len(indoor_matches)}, kept_n={len(normalized_activities)}"
+            )
 
         has_keyword_sourced_results = any(
             isinstance(item, dict) and (item.get("search_keyword_sources") or item.get("keyword_source"))
@@ -1843,6 +2006,7 @@ def activity_search_node(state: AgentState) -> AgentState:
             f"search_mode={activity_search_mode!r}, "
             f"keywords={keywords_activity!r}, search_keywords={activity_search_keywords!r}, preferred_tags={preferred_activity_tags!r}, "
             f"shortlisted_n={len(matched)}, matched_names={[item.get('name') for item in matched]}, "
+            f"activity_environments={[item.get('activity_environment') for item in matched]}, "
             f"keyword_sources={[item.get('search_keyword_sources') or item.get('keyword_source') for item in matched]}"
         )
         return {"activities": matched}
@@ -2452,7 +2616,7 @@ def validate_plan_node(state: AgentState) -> AgentState:
            ≤ constraints.max_traffic_minutes
         2. 若 primary.restaurant 非空：queue.wait_by_restaurant[id].wait_minutes
            ≤ constraints.max_queue_minutes
-        3. weather.risk_level ∈ {"High","high"} 时 activity.type 必须为 "indoor"
+        3. weather.risk_level ∈ {"High","high"} 时 activity.activity_environment 必须为 "indoor"
         4. queue.wait_by_restaurant[id].party_acceptable 不能为 False
         * primary 为空 / 非 dict → 直接 passed=False，violations=["主方案为空"]
 
@@ -2503,10 +2667,10 @@ def validate_plan_node(state: AgentState) -> AgentState:
                 # 3) 天气 risk_level vs activity.type
                 risk_level = weather.get("risk_level")
                 if isinstance(risk_level, str) and risk_level in {"High", "high"}:
-                    act_type = activity.get("type")
-                    if act_type != "indoor":
+                    activity_env = _activity_environment(activity)
+                    if activity_env != "indoor":
                         violations.append(
-                            f"天气风险等级 {risk_level} 与首选活动类型 {act_type!r} 冲突，应为 indoor"
+                            f"天气风险等级 {risk_level} 与首选活动环境 {activity_env!r} 冲突，应为 indoor"
                         )
                         suggested_fixes.append("更换 indoor 类型活动或调整时间窗口")
 
