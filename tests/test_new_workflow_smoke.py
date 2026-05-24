@@ -1,6 +1,11 @@
 ﻿from __future__ import annotations
 
-from src.graph.workflow import build_workflow, route_after_clarification, route_after_intent_with_clarification
+from src.graph.workflow import (
+    build_workflow,
+    route_after_clarification,
+    route_after_intent_with_clarification,
+    route_after_rule_validation,
+)
 
 
 def test_new_workflow_compiles_and_has_core_nodes():
@@ -52,3 +57,9 @@ def test_clarification_returns_to_intent_until_limit():
     assert route_after_clarification({"clarification_round": 0}) == "intent"
     assert route_after_clarification({"clarification_round": 4}) == "intent"
     assert route_after_clarification({"clarification_round": 5}) == "llm_answer"
+
+
+def test_rule_validation_requires_three_valid_plans():
+    assert route_after_rule_validation({"rule_validation_result": {"valid_plans": []}}) == "repair_loop"
+    assert route_after_rule_validation({"rule_validation_result": {"valid_plans": [{}, {}]}}) == "repair_loop"
+    assert route_after_rule_validation({"rule_validation_result": {"valid_plans": [{}, {}, {}]}}) == "scoring"

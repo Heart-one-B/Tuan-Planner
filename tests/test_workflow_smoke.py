@@ -143,7 +143,7 @@ def test_smoke_new_workflow_does_not_execute_before_confirmation():
 
     def fake_rule_validation(state):
         candidates = state.get("candidate_plans", {}).get("candidates", []) if isinstance(state.get("candidate_plans"), dict) else []
-        valid = [candidates[0]] if candidates else []
+        valid = candidates[:3]
         return {
             "rule_validation_result": {
                 "request_type": "family_with_kids",

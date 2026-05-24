@@ -19,6 +19,14 @@ _STRONG_INDOOR_TOKENS = (
     "博物馆",
     "美术馆",
     "艺术馆",
+    "商场",
+    "商城",
+    "百货",
+    "商业场",
+    "购物中心",
+    "购物广场",
+    "商业综合体",
+    "ifs",
     "水族馆",
     "海洋馆",
     "影像馆",
@@ -47,7 +55,12 @@ _OUTDOOR_TOKENS = (
 )
 _INDOOR_TOKENS = (
     "商场",
+    "商城",
+    "百货",
+    "商业场",
     "购物中心",
+    "购物广场",
+    "商业综合体",
     "mall",
     "博物馆",
     "科技馆",
@@ -200,6 +213,8 @@ class MockToolAPI:
             cls._append_text_parts(parts, item.get(key))
         cls._append_text_parts(parts, item.get("tags"))
         cls._append_text_parts(parts, item.get("tags_semantic"))
+        cls._append_text_parts(parts, item.get("keyword_source"))
+        cls._append_text_parts(parts, item.get("search_keyword_sources"))
         raw_poi = item.get("raw_poi")
         if isinstance(raw_poi, dict):
             for key in ("name", "type", "address"):
@@ -468,6 +483,10 @@ class MockToolAPI:
             if keyword not in sources:
                 sources.append(keyword)
             item_copy["search_keyword_sources"] = sources
+            item_copy["activity_environment"] = MockToolAPI._infer_activity_environment(
+                item_copy,
+                respect_existing=False,
+            )
 
             item_id = item_copy.get("id") if isinstance(item_copy.get("id"), str) else ""
             item_name = item_copy.get("name") if isinstance(item_copy.get("name"), str) else ""
@@ -483,6 +502,10 @@ class MockToolAPI:
                     existing["search_keyword_sources"] = existing_sources
                     if not existing.get("keyword_source"):
                         existing["keyword_source"] = keyword
+                    existing["activity_environment"] = MockToolAPI._infer_activity_environment(
+                        existing,
+                        respect_existing=False,
+                    )
                     break
             else:
                 existing_items.append(item_copy)
@@ -534,7 +557,7 @@ class MockToolAPI:
                         payload = amap.maps_around_search(
                             keyword,
                             location=runtime_origin_coordinates.strip(),
-                            radius="2000",
+                            radius="10000",
                         )
                         keyword_results = self._normalize_amap_pois(payload, kind="activity")
                         if keyword_results:
@@ -598,7 +621,7 @@ class MockToolAPI:
                     payload = amap.maps_around_search(
                         keywords,
                         location=runtime_origin_coordinates.strip(),
-                        radius="2000",
+                        radius="10000",
                     )
                     normalized = self._normalize_amap_pois(payload, kind="restaurant")
                     if normalized:

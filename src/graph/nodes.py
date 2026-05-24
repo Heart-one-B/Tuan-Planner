@@ -661,11 +661,13 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 }}
 4. steps 必须按真实顺序输出，不要编造没有给出的 poi_id。
 5. 如果用户明确提到了某个时段的餐饮偏好，例如“晚上吃火锅”，应优先把该类型安排在更合适的 phase。
-6. 如果要安排多餐，餐饮类型一定不要重复；如果要安排多个活动，也一定不要重复。
+6. 如果要安排多餐，餐饮类型一定不要重复；如果要安排多个活动，活动类型也一定不要重复，比如（剧本杀，电影院，KTV）是合理的，（剧本杀，剧本杀，密室逃脱）这种一定要避免。
 7. phase 可以使用 morning / noon / afternoon / evening / lunch / dinner / flex。
 8. reasoning 只要 2-3 条简短理由。
 9. 当 hard_constraints.daypart 为“全天”时，每个候选的 steps 必须包含 morning 活动、lunch 餐饮、afternoon 活动、dinner 餐饮；餐厅不足时晚餐可以复用午餐餐厅。
 10. 天气约束：{weather_planning_instruction}
+11. 生成的三个候选计划选择的活动要尽量不同
+12. 一定要明确匹配用户对于活动数量的需求
 
 输入：
 - request_type: {request_type}
@@ -1574,6 +1576,47 @@ def _weather_requires_indoor(weather_risk: str) -> bool:
     return weather_risk in {"High", "high"}
 
 
+_WEATHER_RISKY_ACTIVITY_KEYWORD_TOKENS = (
+    "公园",
+    "动物园",
+    "植物园",
+    "游乐园",
+    "景区",
+    "绿道",
+    "步道",
+    "露营",
+    "营地",
+    "农场",
+    "森林",
+    "湿地",
+    "户外",
+    "室外",
+    "草坪",
+    "江滩",
+    "河滨",
+)
+_WEATHER_SAFE_ACTIVITY_FALLBACK_KEYWORDS = ("科技馆", "博物馆", "水族馆", "海洋馆", "商场", "儿童乐园")
+
+
+def _prune_weather_risky_activity_keywords(keywords: list[str], *, indoor_required: bool) -> tuple[list[str], list[str]]:
+    if not indoor_required:
+        return keywords, []
+    kept: list[str] = []
+    removed: list[str] = []
+    for keyword in keywords:
+        if not isinstance(keyword, str) or not keyword.strip():
+            continue
+        text = keyword.strip()
+        if any(token in text for token in _WEATHER_RISKY_ACTIVITY_KEYWORD_TOKENS):
+            removed.append(text)
+        else:
+            kept.append(text)
+    if kept:
+        return kept, removed
+    fallback = [keyword for keyword in _WEATHER_SAFE_ACTIVITY_FALLBACK_KEYWORDS if keyword not in removed]
+    return fallback, removed
+
+
 def _candidate_activities(candidate: dict) -> list[dict]:
     if not isinstance(candidate, dict):
         return []
@@ -1893,6 +1936,34 @@ def activity_search_node(state: AgentState) -> AgentState:
         keywords_activity = _normalize_text_list(constraints.get("keywords_activity"))
         activity_search_keywords = _normalize_text_list(constraints.get("activity_search_keywords"))
         preferred_activity_tags = _normalize_text_list(constraints.get("preferred_activity_tags"))
+        weather = state.get("weather") if isinstance(state.get("weather"), dict) else {}
+        weather_risk = weather.get("risk_level") or weather.get("risk") or ""
+        indoor_required = (
+            constraints.get("indoor_preferred") is True
+            or constraints.get("indoor_only") is True
+            or constraints.get("weather_guard") == "indoor_preferred"
+            or _weather_requires_indoor(weather_risk)
+        )
+        original_activity_search_keywords = list(activity_search_keywords)
+        original_keywords_activity = list(keywords_activity)
+        activity_search_keywords, removed_search_keywords = _prune_weather_risky_activity_keywords(
+            activity_search_keywords,
+            indoor_required=indoor_required,
+        )
+        keywords_activity, removed_activity_keywords = _prune_weather_risky_activity_keywords(
+            keywords_activity,
+            indoor_required=indoor_required,
+        )
+        if indoor_required and (removed_search_keywords or removed_activity_keywords):
+            print(
+                f"[Activity Search Node] weather-aware keyword pruning: "
+                f"weather_risk={weather_risk!r}, "
+                f"search_keywords_before={original_activity_search_keywords!r}, "
+                f"search_keywords_after={activity_search_keywords!r}, "
+                f"keywords_before={original_keywords_activity!r}, "
+                f"keywords_after={keywords_activity!r}, "
+                f"removed={list(dict.fromkeys(removed_search_keywords + removed_activity_keywords))!r}"
+            )
         activities = MockToolAPI().search_activities(
             scenario,
             activity_keywords=activity_search_keywords or keywords_activity,
@@ -1904,11 +1975,6 @@ def activity_search_node(state: AgentState) -> AgentState:
         if not isinstance(activities, list):
             activities = []
 
-        indoor_required = (
-            constraints.get("indoor_preferred") is True
-            or constraints.get("indoor_only") is True
-            or constraints.get("weather_guard") == "indoor_preferred"
-        )
         child_friendly_required = constraints.get("child_friendly_required") is True
         child_friendly_preferred = constraints.get("child_friendly_preferred") is True
         normalized_activities: list[dict] = []
@@ -1981,8 +2047,17 @@ def activity_search_node(state: AgentState) -> AgentState:
             bucket_order=activity_search_keywords,
             bucket_key_from_item_fn=_activity_search_keyword_bucket if activity_search_keywords else None,
             allow_unverified_fallback=bool(activity_search_keywords),
-            total_limit=5 if activity_search_keywords else None,
+            total_limit=10 if activity_search_keywords else None,
         )
+        keyword_bucket_counts: dict[str, int] = {}
+        keyword_bucket_indoor_counts: dict[str, int] = {}
+        for item in normalized_activities:
+            if not isinstance(item, dict):
+                continue
+            bucket = _activity_search_keyword_bucket(item) if activity_search_keywords else _activity_bucket_key_from_name(item.get("name") if isinstance(item.get("name"), str) else "")
+            keyword_bucket_counts[bucket] = keyword_bucket_counts.get(bucket, 0) + 1
+            if _activity_environment(item) == "indoor":
+                keyword_bucket_indoor_counts[bucket] = keyword_bucket_indoor_counts.get(bucket, 0) + 1
         if not matched:
             update = _append_error(state, f"Activity Search node found no activities with open_time/opentime2 for daypart [{daypart}] after detail enrichment")
             print(
@@ -2005,6 +2080,7 @@ def activity_search_node(state: AgentState) -> AgentState:
             f"provider={activity_provider!r}, requested_city={activity_requested_city!r}, "
             f"search_mode={activity_search_mode!r}, "
             f"keywords={keywords_activity!r}, search_keywords={activity_search_keywords!r}, preferred_tags={preferred_activity_tags!r}, "
+            f"bucket_counts={keyword_bucket_counts!r}, bucket_indoor_counts={keyword_bucket_indoor_counts!r}, "
             f"shortlisted_n={len(matched)}, matched_names={[item.get('name') for item in matched]}, "
             f"activity_environments={[item.get('activity_environment') for item in matched]}, "
             f"keyword_sources={[item.get('search_keyword_sources') or item.get('keyword_source') for item in matched]}"
@@ -2135,7 +2211,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             bucket_order=query_keywords,
             bucket_key_from_item_fn=_restaurant_search_keyword_bucket if query_keywords else None,
             allow_unverified_fallback=bool(query_keywords),
-            total_limit=5 if query_keywords else None,
+            total_limit=10 if query_keywords else None,
         )
         if not matched:
             update = _append_error(state, f"Restaurant Search node found no restaurants with open_time/opentime2 for daypart [{daypart}] after detail enrichment")
