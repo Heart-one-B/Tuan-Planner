@@ -81,7 +81,8 @@ def route_after_candidate_planning(state: AgentState) -> str:
 
 def route_after_rule_validation(state: AgentState) -> str:
     result = state.get("rule_validation_result")
-    if isinstance(result, dict) and isinstance(result.get("valid_plans"), list) and result.get("valid_plans"):
+    valid_plans = result.get("valid_plans") if isinstance(result, dict) else None
+    if isinstance(valid_plans, list) and len(valid_plans) >= 3:
         return "scoring"
     return "repair_loop"
 
@@ -180,17 +181,15 @@ def build_workflow():
     graph.add_edge("llm_answer", END)
     graph.add_edge("retrieval", "constraint_build")
     graph.add_edge("constraint_build", "weather_check")
-    graph.add_edge("constraint_build", "activity_search")
     graph.add_edge("constraint_build", "restaurant_search")
     graph.add_edge("constraint_build", "traffic_eta")
     graph.add_edge("constraint_build", "queue_check")
     graph.add_edge("constraint_build", "crowd_risk")
-    graph.add_edge("weather_check", "fact_gathering")
-    graph.add_edge("activity_search", "fact_gathering")
-    graph.add_edge("restaurant_search", "fact_gathering")
-    graph.add_edge("traffic_eta", "fact_gathering")
-    graph.add_edge("queue_check", "fact_gathering")
-    graph.add_edge("crowd_risk", "fact_gathering")
+    graph.add_edge("weather_check", "activity_search")
+    graph.add_edge(
+        ["activity_search", "restaurant_search", "traffic_eta", "queue_check", "crowd_risk"],
+        "fact_gathering",
+    )
     graph.add_edge("fact_gathering", "candidate_planning")
     graph.add_conditional_edges(
         "candidate_planning",

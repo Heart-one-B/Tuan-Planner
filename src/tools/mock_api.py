@@ -400,9 +400,18 @@ class MockToolAPI:
             cached_payload = self._resolve_cached_detail_payload(poi_id)
             cached_detail = cached_payload.get("detail") if isinstance(cached_payload, dict) else None
             if isinstance(cached_detail, dict) and self._is_cache_fresh(cached_payload.get("updated_at", "")):
-                for key in ("open_time", "opentime2", "location", "address", "city", "business_area", "type", "alias"):
+                if item_copy.get("coordinates") and not item_copy.get("source_coordinates"):
+                    item_copy["source_coordinates"] = item_copy.get("coordinates")
+                for key in ("open_time", "opentime2", "address", "city", "business_area", "type", "alias"):
                     if cached_detail.get(key) and not item_copy.get(key):
                         item_copy[key] = cached_detail.get(key)
+                detail_coordinates = cached_detail.get("coordinates")
+                if isinstance(detail_coordinates, str) and detail_coordinates.strip():
+                    item_copy["coordinates"] = detail_coordinates
+                elif not item_copy.get("coordinates") and isinstance(cached_detail.get("location"), str):
+                    item_copy["coordinates"] = cached_detail.get("location")
+                elif item_copy.get("source_coordinates"):
+                    item_copy["coordinates"] = item_copy["source_coordinates"]
                 item_copy["detail_loaded"] = True
                 if item_copy.get("child_friendly") is True:
                     self._attach_activity_environment(item_copy, refresh=True)
@@ -416,9 +425,18 @@ class MockToolAPI:
                 except Exception:
                     detail = None
             if isinstance(detail, dict):
-                for key in ("open_time", "opentime2", "location", "address", "city", "business_area", "type", "alias"):
+                if item_copy.get("coordinates") and not item_copy.get("source_coordinates"):
+                    item_copy["source_coordinates"] = item_copy.get("coordinates")
+                for key in ("open_time", "opentime2", "address", "city", "business_area", "type", "alias"):
                     if detail.get(key) and not item_copy.get(key):
                         item_copy[key] = detail.get(key)
+                detail_coordinates = detail.get("coordinates")
+                if isinstance(detail_coordinates, str) and detail_coordinates.strip():
+                    item_copy["coordinates"] = detail_coordinates
+                elif not item_copy.get("coordinates") and isinstance(detail.get("location"), str):
+                    item_copy["coordinates"] = detail.get("location")
+                elif item_copy.get("source_coordinates"):
+                    item_copy["coordinates"] = item_copy["source_coordinates"]
                 item_copy["detail_loaded"] = True
             if item_copy.get("child_friendly") is True:
                 self._attach_activity_environment(item_copy, refresh=True)

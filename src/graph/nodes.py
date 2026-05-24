@@ -78,6 +78,182 @@ def _append_error(state: AgentState, error: str) -> AgentState:
     return {"errors": errors}
 
 
+def _distance_result_minutes(result) -> int | None:
+    if not isinstance(result, dict):
+        return None
+    results = result.get("results")
+    if not isinstance(results, list) or not results or not isinstance(results[0], dict):
+        return None
+    duration = results[0].get("duration")
+    if isinstance(duration, str) and duration.isdigit():
+        return max(1, int(duration) // 60)
+    if isinstance(duration, (int, float)) and not isinstance(duration, bool):
+        return max(1, int(duration) // 60)
+    return None
+
+
+def _candidate_poi_maps(candidate: dict) -> tuple[dict[str, dict], dict[str, dict]]:
+    activity_by_id: dict[str, dict] = {}
+    restaurant_by_id: dict[str, dict] = {}
+
+    def add(target: dict, bucket: dict[str, dict]) -> None:
+        if not isinstance(target, dict):
+            return
+        target_id = target.get("id")
+        if isinstance(target_id, str) and target_id:
+            bucket[target_id] = target
+
+    add(candidate.get("activity"), activity_by_id)
+    add(candidate.get("secondary_activity"), activity_by_id)
+    for item in candidate.get("activities") if isinstance(candidate.get("activities"), list) else []:
+        add(item, activity_by_id)
+
+    add(candidate.get("restaurant"), restaurant_by_id)
+    for item in candidate.get("restaurants") if isinstance(candidate.get("restaurants"), list) else []:
+        add(item, restaurant_by_id)
+
+    return activity_by_id, restaurant_by_id
+
+
+def _candidate_route_stops(candidate: dict) -> list[dict]:
+    activity_by_id, restaurant_by_id = _candidate_poi_maps(candidate)
+    stops: list[dict] = []
+
+    def append_stop(poi_type: str, poi_id: str) -> None:
+        if poi_type == "activity":
+            target = activity_by_id.get(poi_id)
+        elif poi_type == "restaurant":
+            target = restaurant_by_id.get(poi_id)
+        else:
+            target = None
+        if isinstance(target, dict) and target:
+            stops.append({"poi_type": poi_type, "poi_id": poi_id, "target": target})
+
+    steps = candidate.get("steps")
+    if isinstance(steps, list) and steps:
+        for step in steps:
+            if not isinstance(step, dict):
+                continue
+            poi_type = step.get("poi_type")
+            poi_id = step.get("poi_id")
+            if isinstance(poi_type, str) and isinstance(poi_id, str) and poi_id:
+                append_stop(poi_type, poi_id)
+        if stops:
+            return stops
+
+    timeline = candidate.get("timeline")
+    if isinstance(timeline, list) and timeline:
+        for item in timeline:
+            if not isinstance(item, dict):
+                continue
+            ref_type = item.get("ref_type")
+            ref_id = item.get("ref_id")
+            if isinstance(ref_type, str) and isinstance(ref_id, str) and ref_id:
+                append_stop(ref_type, ref_id)
+        if stops:
+            return stops
+
+    activity = candidate.get("activity")
+    if isinstance(activity, dict) and isinstance(activity.get("id"), str):
+        stops.append({"poi_type": "activity", "poi_id": activity["id"], "target": activity})
+    restaurant = candidate.get("restaurant")
+    if isinstance(restaurant, dict) and isinstance(restaurant.get("id"), str):
+        stops.append({"poi_type": "restaurant", "poi_id": restaurant["id"], "target": restaurant})
+    return stops
+
+
+def _resolve_poi_location(item: dict, api: MockToolAPI) -> str:
+    coordinates = item.get("coordinates") if isinstance(item.get("coordinates"), str) else ""
+    if coordinates.strip():
+        return coordinates.strip()
+    location = item.get("location") if isinstance(item.get("location"), str) else ""
+    if location.strip():
+        return location.strip()
+
+    item_id = item.get("id")
+    source = item.get("source")
+    if not isinstance(item_id, str) or source != "mcp" or item.get("detail_loaded") is True:
+        return ""
+    try:
+        detail_item = api.enrich_poi_details([item])
+        if isinstance(detail_item, list) and detail_item and isinstance(detail_item[0], dict):
+            detail = detail_item[0]
+            detail_coordinates = detail.get("coordinates") if isinstance(detail.get("coordinates"), str) else ""
+            if detail_coordinates.strip():
+                return detail_coordinates.strip()
+            detail_location = detail.get("location") if isinstance(detail.get("location"), str) else ""
+            if detail_location.strip():
+                return detail_location.strip()
+    except Exception:
+        return ""
+    return ""
+
+
+def _estimate_candidate_route_minutes(*, candidate: dict, origin_coordinates: str, api: MockToolAPI) -> dict:
+    """Estimate full ordered route travel time for one candidate plan."""
+    stops = _candidate_route_stops(candidate if isinstance(candidate, dict) else {})
+    amap = api._get_amap()
+    if not amap or not isinstance(origin_coordinates, str) or not origin_coordinates.strip():
+        return {
+            "total_route_minutes": None,
+            "segments": [],
+            "missing_segments": [],
+            "route_status": "unavailable",
+        }
+
+    segments: list[dict] = []
+    missing_segments: list[dict] = []
+    total_route_minutes = 0
+    previous_location = origin_coordinates.strip()
+    previous_label = "origin"
+
+    for stop in stops:
+        target = stop.get("target") if isinstance(stop, dict) else {}
+        if not isinstance(target, dict):
+            target = {}
+        poi_id = stop.get("poi_id") if isinstance(stop.get("poi_id"), str) else ""
+        destination = _resolve_poi_location(target, api)
+        segment = {
+            "from": previous_label,
+            "to": poi_id,
+            "from_location": previous_location,
+            "to_location": destination,
+        }
+        if not previous_location or not destination:
+            missing_segments.append({**segment, "status": "missing_location"})
+            previous_location = destination or previous_location
+            previous_label = poi_id or previous_label
+            continue
+        try:
+            minutes = _distance_result_minutes(amap.maps_distance(previous_location, destination, "1"))
+        except Exception:
+            minutes = None
+        if minutes is None:
+            missing_segments.append({**segment, "status": "missing_distance"})
+        else:
+            total_route_minutes += minutes
+            segments.append({**segment, "minutes": minutes, "status": "ok"})
+        previous_location = destination
+        previous_label = poi_id or previous_label
+
+    if not segments and missing_segments:
+        route_status = "unavailable"
+        total_value = None
+    elif missing_segments:
+        route_status = "partial"
+        total_value = total_route_minutes
+    else:
+        route_status = "ok"
+        total_value = total_route_minutes
+
+    return {
+        "total_route_minutes": total_value,
+        "segments": segments,
+        "missing_segments": missing_segments,
+        "route_status": route_status,
+    }
+
+
 def intent_node(state: AgentState) -> AgentState:
     try:
         intent = IntentAgent().parse(
@@ -661,7 +837,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 }}
 4. steps 必须按真实顺序输出，不要编造没有给出的 poi_id。
 5. 如果用户明确提到了某个时段的餐饮偏好，例如“晚上吃火锅”，应优先把该类型安排在更合适的 phase。
-6. 如果要安排多餐，餐饮类型一定不要重复；如果要安排多个活动，活动类型也一定不要重复，比如（剧本杀，电影院，KTV）是合理的，（剧本杀，剧本杀，密室逃脱）这种一定要避免。
+6. 如果要安排多餐，餐饮类型一定不要重复；如果要安排多个活动，活动类型也一定不要重复，比如（剧本杀，电影院，KTV）是合理的，（剧本杀，剧本杀，密室逃脱）这种一定要避免，剧本杀，密室逃脱，桌游都看作是一类。
 7. phase 可以使用 morning / noon / afternoon / evening / lunch / dinner / flex。
 8. reasoning 只要 2-3 条简短理由。
 9. 当 hard_constraints.daypart 为“全天”时，每个候选的 steps 必须包含 morning 活动、lunch 餐饮、afternoon 活动、dinner 餐饮；餐厅不足时晚餐可以复用午餐餐厅。
@@ -1058,96 +1234,99 @@ def repair_loop_node(state: AgentState) -> AgentState:
 
 
 def scoring_node(state: AgentState) -> AgentState:
-    """新架构打分节点骨架：对合法候选计划做结构化打分。"""
-    print("[Scoring Node] 对合法候选计划进行打分骨架...")
+    """新架构打分节点：按完整路线总耗时对合法候选计划排序打分。"""
+    print("[Scoring Node] 按完整路线总耗时对合法候选计划打分...")
     try:
         rule_validation_result = state.get("rule_validation_result")
         if not isinstance(rule_validation_result, dict):
             rule_validation_result = {}
 
-        constraint_build = state.get("constraint_build")
-        if not isinstance(constraint_build, dict):
-            constraint_build = {}
-
         fact_gathering_result = state.get("fact_gathering_result")
         if not isinstance(fact_gathering_result, dict):
             fact_gathering_result = {}
+        traffic = fact_gathering_result.get("traffic")
+        if not isinstance(traffic, dict):
+            traffic = {}
 
         valid_plans = rule_validation_result.get("valid_plans")
         if not isinstance(valid_plans, list):
             valid_plans = []
 
-        scoring_profile = constraint_build.get("scoring_profile")
-        if not isinstance(scoring_profile, dict):
-            scoring_profile = {}
+        origin_coordinates = state.get("runtime_origin_coordinates")
+        if not isinstance(origin_coordinates, str) or not origin_coordinates.strip():
+            origin_coordinates = traffic.get("origin_coordinates_used")
+        if not isinstance(origin_coordinates, str) or not origin_coordinates.strip():
+            origin_coordinates = traffic.get("traffic_origin_used")
+        if not isinstance(origin_coordinates, str):
+            origin_coordinates = ""
 
-        weights = scoring_profile.get("weights")
-        if not isinstance(weights, dict):
-            weights = {
-                "semantic_match": 0.30,
-                "time_relaxation": 0.20,
-                "weather_fit": 0.15,
-                "distance_fit": 0.15,
-                "queue_fit": 0.10,
-                "review_quality": 0.10,
-            }
+        api = MockToolAPI()
+        route_candidates = []
 
-        scored_candidates = []
-        weather = fact_gathering_result.get("weather") if isinstance(fact_gathering_result.get("weather"), dict) else {}
-        weather_risk = weather.get("risk_level") or weather.get("risk") or ""
-
-        for item in valid_plans:
+        for index, item in enumerate(valid_plans):
             if not isinstance(item, dict):
                 continue
 
             candidate_id = item.get("id") if isinstance(item.get("id"), str) else "unknown_plan"
-            activity = item.get("activity") if isinstance(item.get("activity"), dict) else {}
-            restaurant = item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {}
-            candidate_activities = _candidate_activities(item)
-
-            semantic_match = 8.0 if activity or restaurant else 3.0
-            time_relaxation = 7.0
-            weather_fit = (
-                9.0
-                if not _weather_requires_indoor(weather_risk)
-                or all(_activity_environment(activity_item) == "indoor" for activity_item in candidate_activities)
-                else 4.0
+            route_estimation = _estimate_candidate_route_minutes(
+                candidate=item,
+                origin_coordinates=origin_coordinates,
+                api=api,
             )
-            distance_fit = 8.0
-            queue_fit = 7.0
-            review_quality = 7.0
-
-            final_score = (
-                semantic_match * float(weights.get("semantic_match", 0.30)) * 10
-                + time_relaxation * float(weights.get("time_relaxation", 0.20)) * 10
-                + weather_fit * float(weights.get("weather_fit", 0.15)) * 10
-                + distance_fit * float(weights.get("distance_fit", 0.15)) * 10
-                + queue_fit * float(weights.get("queue_fit", 0.10)) * 10
-                + review_quality * float(weights.get("review_quality", 0.10)) * 10
+            total_route_minutes = route_estimation.get("total_route_minutes")
+            has_route_minutes = (
+                isinstance(total_route_minutes, (int, float))
+                and not isinstance(total_route_minutes, bool)
             )
-
-            scored_candidates.append(
+            route_candidates.append(
                 {
+                    "candidate": item,
                     "candidate_id": candidate_id,
-                    "score_breakdown": {
-                        "semantic_match": semantic_match,
-                        "time_relaxation": time_relaxation,
-                        "weather_fit": weather_fit,
-                        "distance_fit": distance_fit,
-                        "queue_fit": queue_fit,
-                        "review_quality": review_quality,
-                    },
-                    "final_score": round(final_score, 2),
+                    "route_estimation": route_estimation,
+                    "total_route_minutes": total_route_minutes,
+                    "has_route_minutes": has_route_minutes,
+                    "original_index": index,
                 }
             )
 
-        scored_candidates.sort(key=lambda item: item.get("final_score", 0), reverse=True)
+        route_candidates.sort(
+            key=lambda item: (
+                0 if item["has_route_minutes"] else 1,
+                item["total_route_minutes"] if item["has_route_minutes"] else float("inf"),
+                item["original_index"],
+            )
+        )
+
+        scored_candidates = []
+        for rank, item in enumerate(route_candidates, start=1):
+            route_estimation = item["route_estimation"]
+            final_score = max(0, 100 - (rank - 1) * 20) if item["has_route_minutes"] else 0
+            scored_candidates.append(
+                {
+                    "candidate_id": item["candidate_id"],
+                    "score_breakdown": {
+                        "route_rank": rank,
+                        "total_route_minutes": item["total_route_minutes"],
+                        "route_status": route_estimation.get("route_status"),
+                        "known_segment_count": len(route_estimation.get("segments", [])) if isinstance(route_estimation.get("segments"), list) else 0,
+                        "missing_segment_count": len(route_estimation.get("missing_segments", [])) if isinstance(route_estimation.get("missing_segments"), list) else 0,
+                    },
+                    "route_estimation": route_estimation,
+                    "final_score": final_score,
+                }
+            )
+
+        print(
+            "[Scoring Node] route_scores="
+            f"{[(item.get('candidate_id'), item.get('score_breakdown', {}).get('total_route_minutes'), item.get('final_score')) for item in scored_candidates]!r}"
+        )
 
         return {
             "scoring_result": {
                 "request_type": rule_validation_result.get("request_type", "generic_local_plan"),
                 "plan_mode": rule_validation_result.get("plan_mode", "activity_plus_meal"),
-                "weights": weights,
+                "scoring_method": "shortest_total_route_minutes",
+                "weights": {"total_route_minutes": 1.0},
                 "scored_candidates": scored_candidates,
             }
         }
@@ -1545,6 +1724,15 @@ def _normalize_text_list(value) -> list[str]:
     return []
 
 
+def _merge_text_lists(*values) -> list[str]:
+    merged: list[str] = []
+    for value in values:
+        for item in _normalize_text_list(value):
+            if item not in merged:
+                merged.append(item)
+    return merged
+
+
 def _poi_text(item: dict) -> str:
     tags = item.get("tags") or []
     tags_semantic = item.get("tags_semantic") or []
@@ -1751,6 +1939,7 @@ def _shortlist_with_detail_gate(
     bucket_key_from_item_fn=None,
     allow_unverified_fallback: bool = False,
     total_limit: int | None = None,
+    debug_label: str = "",
 ) -> list[dict]:
     buckets: dict[str, list[dict]] = {}
     for item in items:
@@ -1761,6 +1950,12 @@ def _shortlist_with_detail_gate(
         else:
             bucket = bucket_key_fn(item.get("name") if isinstance(item.get("name"), str) else "")
         buckets.setdefault(bucket, []).append(dict(item))
+
+    if debug_label:
+        print(
+            f"[{debug_label}][DEBUG] candidates_by_bucket="
+            f"{ {key: len(value) for key, value in buckets.items()} }"
+        )
 
     shortlisted: list[dict] = []
     ordered_bucket_keys: list[str] = []
@@ -1798,9 +1993,20 @@ def _shortlist_with_detail_gate(
                 accepted.append(fallback_item)
         accepted_by_bucket[bucket_key] = accepted
 
+    if debug_label:
+        print(
+            f"[{debug_label}][DEBUG] accepted_by_bucket="
+            f"{ {key: len(value) for key, value in accepted_by_bucket.items()} }"
+        )
+
     if total_limit is None:
         for bucket_key in ordered_bucket_keys:
             shortlisted.extend(accepted_by_bucket.get(bucket_key, []))
+        if debug_label:
+            print(
+                f"[{debug_label}][DEBUG] shortlisted_by_bucket="
+                f"{ {key: sum(1 for item in shortlisted if (bucket_key_from_item_fn(item) if bucket_key_from_item_fn else bucket_key_fn(item.get('name') if isinstance(item.get('name'), str) else '')) == key) for key in ordered_bucket_keys} }"
+            )
         return shortlisted
 
     for offset in range(per_bucket_limit):
@@ -1809,8 +2015,18 @@ def _shortlist_with_detail_gate(
             if offset < len(bucket_items):
                 shortlisted.append(bucket_items[offset])
                 if len(shortlisted) >= total_limit:
+                    if debug_label:
+                        print(
+                            f"[{debug_label}][DEBUG] shortlisted_by_bucket="
+                            f"{ {key: sum(1 for item in shortlisted if (bucket_key_from_item_fn(item) if bucket_key_from_item_fn else bucket_key_fn(item.get('name') if isinstance(item.get('name'), str) else '')) == key) for key in ordered_bucket_keys} }"
+                        )
                     return shortlisted
 
+    if debug_label:
+        print(
+            f"[{debug_label}][DEBUG] shortlisted_by_bucket="
+            f"{ {key: sum(1 for item in shortlisted if (bucket_key_from_item_fn(item) if bucket_key_from_item_fn else bucket_key_fn(item.get('name') if isinstance(item.get('name'), str) else '')) == key) for key in ordered_bucket_keys} }"
+        )
     return shortlisted
 
 
@@ -1933,8 +2149,9 @@ def activity_search_node(state: AgentState) -> AgentState:
         daypart = constraints.get("daypart")
         if not isinstance(daypart, str):
             daypart = ""
-        keywords_activity = _normalize_text_list(constraints.get("keywords_activity"))
-        activity_search_keywords = _normalize_text_list(constraints.get("activity_search_keywords"))
+        activity_explicit_types = _normalize_text_list(constraints.get("activity_explicit_types"))
+        keywords_activity = _merge_text_lists(constraints.get("keywords_activity"), activity_explicit_types)
+        activity_search_keywords = _merge_text_lists(constraints.get("activity_search_keywords"), activity_explicit_types)
         preferred_activity_tags = _normalize_text_list(constraints.get("preferred_activity_tags"))
         weather = state.get("weather") if isinstance(state.get("weather"), dict) else {}
         weather_risk = weather.get("risk_level") or weather.get("risk") or ""
@@ -2108,7 +2325,10 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             print("[Restaurant Search Node] skipped, query_constraints.need_restaurant=False")
             return {"restaurants": []}
 
-        query_keywords = _normalize_text_list(constraints.get("keywords_restaurant"))
+        query_keywords = _merge_text_lists(
+            constraints.get("keywords_restaurant"),
+            constraints.get("restaurant_explicit_types"),
+        )
         exclude_keywords = _normalize_text_list(constraints.get("exclude_keywords_restaurant"))
         diet_preference = query_keywords or constraints.get("diet_preference") or ""
         scenario = constraints.get("scenario") or ""
@@ -2121,6 +2341,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
         if query_keywords:
             restaurants = []
             seen_ids: set[str] = set()
+            raw_candidates_by_keyword: dict[str, int] = {}
             for keyword in query_keywords:
                 batch = api.search_restaurants(
                     [keyword],
@@ -2130,7 +2351,9 @@ def restaurant_search_node(state: AgentState) -> AgentState:
                     enrich_details=False,
                 )
                 if not isinstance(batch, list):
+                    raw_candidates_by_keyword[keyword] = 0
                     continue
+                raw_candidates_by_keyword[keyword] = len([item for item in batch if isinstance(item, dict)])
                 for item in batch:
                     if not isinstance(item, dict):
                         continue
@@ -2157,6 +2380,9 @@ def restaurant_search_node(state: AgentState) -> AgentState:
                     if isinstance(item_id, str):
                         seen_ids.add(item_id)
                     restaurants.append(item_copy)
+            print(
+                f"[Restaurant Search Node][DEBUG] raw_candidates_by_keyword={raw_candidates_by_keyword}"
+            )
         else:
             restaurants = api.search_restaurants(
                 diet_preference,
@@ -2174,12 +2400,14 @@ def restaurant_search_node(state: AgentState) -> AgentState:
                 continue
             normalized_restaurants.append(dict(item))
 
-        if query_keywords:
-            keyword_matched = [
-                item for item in normalized_restaurants if _matches_keywords(item, query_keywords)
-            ]
-            if keyword_matched:
-                normalized_restaurants = keyword_matched
+        # 暂时关闭餐厅关键词二次匹配过滤，便于观察高德按 keyword
+        # 查回来的原始候选在营业时间门禁后的真实分布。
+        # if query_keywords:
+        #     keyword_matched = [
+        #         item for item in normalized_restaurants if _matches_keywords(item, query_keywords)
+        #     ]
+        #     if keyword_matched:
+        #         normalized_restaurants = keyword_matched
 
         if exclude_keywords:
             filtered = [
@@ -2212,6 +2440,7 @@ def restaurant_search_node(state: AgentState) -> AgentState:
             bucket_key_from_item_fn=_restaurant_search_keyword_bucket if query_keywords else None,
             allow_unverified_fallback=bool(query_keywords),
             total_limit=10 if query_keywords else None,
+            debug_label="Restaurant Search Node",
         )
         if not matched:
             update = _append_error(state, f"Restaurant Search node found no restaurants with open_time/opentime2 for daypart [{daypart}] after detail enrichment")

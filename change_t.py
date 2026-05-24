@@ -1,47 +1,39 @@
-from pprint import pprint
-import importlib
+from src.graph.nodes import _estimate_candidate_route_minutes
+from src.tools.mock_api import MockToolAPI
 
-import src.graph.nodes as nodes_module
-import src.tools.mock_api as mock_api_module
 
-importlib.reload(mock_api_module)
-importlib.reload(nodes_module)
-
-from src.graph.nodes import restaurant_search_node
-
-state = {
-  "constraints": {
-      "scenario": "friends",
-      "time_window": "today_afternoon",
-      "date_label": "今天",
-      "daypart": "下午",
-      "time_phrase": "今天下午",
-      "origin_area": "area_central",
-  },
-  "constraint_build": {
-      "query_constraints": {
-          "need_activity": False,
-          "need_restaurant": True,
-          "time_window": "today_afternoon",
-          "keywords_restaurant": ["川菜"],
-          "exclude_keywords_restaurant": [],
-      }
-  },
-  "runtime_origin_area": "北京",
-  "runtime_origin_coordinates": "",
-  "errors": [],
+candidate = {
+  "id": "plan_1",
+  "steps": [
+      {
+          "poi_type": "activity",
+          "poi_id": "A1",
+      },
+      {
+          "poi_type": "restaurant",
+          "poi_id": "R1",
+      },
+  ],
+  "activities": [
+      {
+          "id": "A1",
+          "name": "活动A",
+          "coordinates": "116.397128,39.916527",
+      },
+  ],
+  "restaurants": [
+      {
+          "id": "R1",
+          "name": "餐厅R",
+          "coordinates": "116.407128,39.926527",
+      },
+  ],
 }
 
-restaurant_result = restaurant_search_node(state)
+result = _estimate_candidate_route_minutes(
+  candidate=candidate,
+  origin_coordinates="116.387128,39.906527",
+  api=MockToolAPI(),
+)
 
-pprint([
-  (
-      item.get("id"),
-      item.get("name"),
-      item.get("source"),
-      item.get("search_mode"),
-      item.get("address"),
-      item.get("rating"),
-  )
-  for item in restaurant_result["restaurants"]
-])
+print(result)
