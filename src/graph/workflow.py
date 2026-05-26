@@ -13,6 +13,7 @@ from src.graph.nodes import (
     final_plan_node,
     intent_node,
     llm_answer_node,
+    interaction_wait_node,
     location_lookup_node,
     location_fallback_node,
     location_permission_node,
@@ -42,10 +43,6 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
         return "constraint_build"
     if intent.get("is_leisure_planning") is False:
         return "llm_answer"
-    # 对本地生活规划请求，定位询问必须先发生一次；后续若已询问过
-    # （无论用户授权与否），则不再重复打断主链路。
-    if "location_permission_granted" not in state:
-        return "location_permission"
     missing_global = (intent.get("missing_slots", {}) or {}).get("global", [])
     if intent.get("clarification_needed") is True and "scenario" in missing_global:
         return "clarification"
@@ -57,7 +54,8 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
         hint = location.get("origin_area_hint")
         if isinstance(hint, str):
             origin_area_hint = hint.strip()
-    if not origin_area_hint and not state.get("runtime_origin_area"):
+    # 若用户已经给出地点线索，就直接进入后续约束收集，不再强制打断询问定位权限。
+    if not origin_area_hint and not state.get("runtime_origin_area") and "location_permission_granted" not in state:
         return "location_permission"
     if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
         return "retrieval"
@@ -67,6 +65,8 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
 
 
 def route_after_clarification(state: AgentState) -> str:
+    if state.get("pending_action") == "clarification":
+        return "interaction_wait"
     clarification_round = state.get("clarification_round", 0)
     if isinstance(clarification_round, bool) or not isinstance(clarification_round, int):
         clarification_round = 0
@@ -107,6 +107,26 @@ def route_after_scoring(state: AgentState) -> str:
     return "final_plan"
 
 
+def route_after_location_permission(state: AgentState) -> str:
+    if state.get("pending_action") == "location_permission":
+        return "interaction_wait"
+    return "location_lookup" if state.get("location_permission_granted") else "constraint_build"
+
+
+def route_after_location_fallback(state: AgentState) -> str:
+    if state.get("pending_action") == "location_fallback":
+        return "interaction_wait"
+    return "constraint_build"
+
+
+def route_after_confirmation(state: AgentState) -> str:
+    if state.get("pending_action") == "confirmation":
+        return "interaction_wait"
+    if state.get("user_confirmed"):
+        return "execute"
+    return "replan"
+
+
 def build_workflow():
     graph = StateGraph(AgentState)
 
@@ -135,6 +155,7 @@ def build_workflow():
     graph.add_node("final_plan", final_plan_node)
     graph.add_node("schedule_timing", schedule_timing_node)
     graph.add_node("presentation", presentation_node)
+    graph.add_node("interaction_wait", interaction_wait_node)
     graph.add_node("confirmation", confirmation_node)
     graph.add_node("execution", execution_node)
     graph.add_node("final_message", final_message_node)
@@ -155,10 +176,11 @@ def build_workflow():
     )
     graph.add_conditional_edges(
         "location_permission",
-        lambda state: "location_lookup" if state.get("location_permission_granted") else "constraint_build",
+        route_after_location_permission,
         {
             "location_lookup": "location_lookup",
             "constraint_build": "constraint_build",
+            "interaction_wait": "interaction_wait",
         },
     )
     graph.add_conditional_edges(
@@ -169,13 +191,21 @@ def build_workflow():
             "constraint_build": "constraint_build",
         },
     )
-    graph.add_edge("location_fallback", "constraint_build")
+    graph.add_conditional_edges(
+        "location_fallback",
+        route_after_location_fallback,
+        {
+            "interaction_wait": "interaction_wait",
+            "constraint_build": "constraint_build",
+        },
+    )
     graph.add_conditional_edges(
         "clarification",
         route_after_clarification,
         {
             "intent": "intent",
             "llm_answer": "llm_answer",
+            "interaction_wait": "interaction_wait",
         },
     )
     graph.add_edge("llm_answer", END)
@@ -226,8 +256,10 @@ def build_workflow():
         {
             "execute": "execution",
             "replan": "repair_loop",
+            "interaction_wait": "interaction_wait",
         },
     )
+    graph.add_edge("interaction_wait", END)
     graph.add_edge("execution", "final_message")
     graph.add_edge("final_message", END)
     graph.add_edge("reject", END)

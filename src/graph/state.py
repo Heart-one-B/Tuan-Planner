@@ -9,6 +9,7 @@ class AgentState(TypedDict, total=False):
     user_input: str
     conversation_turns: list[str]
     clarification_round: int
+    interactive_mode: bool
     runtime_origin_area: str
     runtime_origin_coordinates: str
     location_permission_granted: bool
@@ -24,6 +25,12 @@ class AgentState(TypedDict, total=False):
     missing_slots: dict[str, list[str]]
     follow_up_message: str
     llm_answer: str
+    clarification_response: str
+    pending_action: str
+    ui_state: dict[str, Any]
+    ui_prompt: str
+    ui_kind: str
+    ui_options: list[dict[str, Any]]
 
     # --- retrieval and unified constraints ---
     retrieval_context: dict[str, Any]
