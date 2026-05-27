@@ -12,7 +12,7 @@ from src.agent.presentation_agent import PresentationAgent
 from src.agent.retrieval_agent import RetrievalAgent
 from src.graph.state import AgentState
 from src.graph.time_contract import missing_required_time_fields
-from src.model.factory import chat_model
+from src.model.factory import get_chat_model
 from src.tools.mock_api import MockToolAPI
 
 
@@ -444,7 +444,7 @@ def llm_answer_node(state: AgentState) -> AgentState:
     user_input = state.get("user_input", "")
     print("[LLM Answer Node] 检测到非本地生活规划任务，调用 LLM 直接回答...")
     try:
-        response = chat_model.invoke([HumanMessage(content=user_input)])
+        response = get_chat_model().invoke([HumanMessage(content=user_input)])
         answer = getattr(response, "content", None)
         if not isinstance(answer, str) or not answer.strip():
             raise ValueError("LLM 返回为空或不是字符串")
@@ -862,7 +862,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 
         normalized_candidates = []
         try:
-            response = chat_model.invoke([HumanMessage(content=prompt)])
+            response = get_chat_model().invoke([HumanMessage(content=prompt)])
             content = getattr(response, "content", "") or ""
             json_text = _extract_json_object(content)
             payload = json.loads(json_text) if json_text else {}

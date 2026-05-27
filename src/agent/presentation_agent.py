@@ -1,6 +1,6 @@
 ﻿from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.model.factory import chat_model
+from src.model.factory import get_chat_model
 
 
 class PresentationAgent:
@@ -100,7 +100,7 @@ class PresentationAgent:
         """
 
         try:
-            response = chat_model.invoke(
+            response = get_chat_model().invoke(
                 [
                     SystemMessage(content="你是一个谨慎的本地生活规划助手，确认前不要写成已经执行完成。"),
                     HumanMessage(content=prompt),
