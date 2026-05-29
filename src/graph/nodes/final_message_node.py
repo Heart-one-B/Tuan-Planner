@@ -1,11 +1,11 @@
 # src/graph/nodes/final_message_node.py
 from src.graph.state import AgentState
-from src.utils.state_utils import _derive_plan_compat_from_state
+# from src.utils.state_utils import _derive_plan_compat_from_state
 
 def final_message_node(state: AgentState) -> AgentState:
     """Final Message Node：把执行结果转成可转发的最终消息。"""
     execution_result = state.get("execution_result") or {}
-    plan = _derive_plan_compat_from_state(state)
+    plan = state
     intent = state.get("intent") or {}
     status = execution_result.get("status")
     scenario = intent.get("scenario", "family")

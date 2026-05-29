@@ -1,7 +1,7 @@
 # src/graph/nodes/presentation_node.py
 from src.graph.state import AgentState
 from src.agent.presentation_agent import PresentationAgent
-from src.utils.state_utils import _derive_plan_compat_from_state, _append_error
+from src.utils.state_utils import  _append_error
 
 def presentation_node(state: AgentState) -> AgentState:
     """Presentation Node：将选定的最优计划及其排期信息渲染为富文本供用户预览。"""
@@ -26,7 +26,7 @@ def presentation_node(state: AgentState) -> AgentState:
             plan["final_score"] = final_plan_result.get("final_score", 0)
             plan["all_scored_candidates"] = final_plan_result.get("all_scored_candidates", [])
         else:
-            plan = _derive_plan_compat_from_state(state)
+            return state
 
         display_text = PresentationAgent().generate_plan_display(plan, state.get("intent", {}))
         print("\n" + "=" * 20 + " 方案详情 " + "=" * 20)
