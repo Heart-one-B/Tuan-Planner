@@ -1,14 +1,15 @@
-from src.tools.mock_api import MockToolAPI
+from src.tools.mock_api import MockBookingAPI
 
 
 class ExecutionAgent:
     def __init__(self):
-        self.tools = MockToolAPI()
+        self.tools = MockBookingAPI()
 
     def execute(self, plan: dict):
-        print("\n[Execution Agent] 用户已确认，正在静默执行并发现预订请求...")
+        print("\n[Execution Agent] 用户已确认，正在执行预订请求...")
         activities = plan.get("activities") or []
         restaurant = plan.get("restaurant") or {}
+
         if not isinstance(activities, list) or not activities or not isinstance(activities[0], dict):
             return {
                 "status": "error",
@@ -36,12 +37,12 @@ class ExecutionAgent:
 
         print("[OK] 所有行程凭证已生成。")
         return {
-            "status": "success",
+            "status":           "success",
             "core_plan_changed": False,
             "non_core_failures": [],
-            "message": "所有关键预约已处理完成。",
+            "message":          "所有关键预约已处理完成。",
             "orders": [
-                {"type": "activity", **res},
+                {"type": "activity",   **res},
                 {"type": "restaurant", **res2},
             ],
         }
