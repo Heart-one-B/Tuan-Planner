@@ -40,13 +40,7 @@ _TTL: dict[str, timedelta] = {
 # 进程内共享的内存缓存，避免同一进程重复读文件
 _MEM_CACHE: dict[str, dict] = {}
 
-_HIGH_RISK   = {"暴雨", "大暴雨", "雷阵雨", "雷雨", "大雪", "暴雪", "冰雹", "台风", "大风"}
-_MEDIUM_RISK = {"阴", "多云", "小雨", "中雨", "小雪", "阵雨"}
-_ADVICE = {
-    "high":   "天气风险较高，优先安排室内活动。",
-    "medium": "天气一般，建议准备室内备选方案。",
-    "low":    "天气良好，可正常安排活动。",
-}
+
 
 
 class CachedAmapClient:
@@ -161,8 +155,7 @@ class CachedAmapClient:
         查询城市实时天气（调用 src/tools/get_weather.py）。
 
         返回：
-            {city, day_weather, day_temp, day_wind, humidity, risk_level, advice}
-            risk_level: "low" | "medium" | "high"
+            {city, day_weather, day_temp, day_wind, humidity}
         """
         key = self._key("weather", city)
         hit = self._get(key, "weather")
@@ -172,7 +165,6 @@ class CachedAmapClient:
         result: dict = {
             "city": city, "day_weather": "", "day_temp": "",
             "day_wind": "", "humidity": "",
-            "risk_level": "low", "advice": _ADVICE["low"],
         }
         if self._cache_only:
             print(f"[CachedAmapClient] cache_only=true，跳过 weather API，返回空结果")
@@ -189,20 +181,12 @@ class CachedAmapClient:
                 raw_text,
             )
             if m:
-                day_w = m.group(2).strip()
-                risk  = (
-                    "high"   if any(t in day_w for t in _HIGH_RISK) else
-                    "medium" if any(t in day_w for t in _MEDIUM_RISK) else
-                    "low"
-                )
                 result = {
                     "city":        m.group(1).strip(),
-                    "day_weather": day_w,
+                    "day_weather": m.group(2).strip(),
                     "day_temp":    m.group(3).strip(),
                     "day_wind":    m.group(4).strip(),
                     "humidity":    m.group(5).strip(),
-                    "risk_level":  risk,
-                    "advice":      _ADVICE[risk],
                 }
             else:
                 print(f"[CachedAmapClient][WARN] weather parse failed, raw={raw_text!r}")
