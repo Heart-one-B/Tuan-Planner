@@ -1,3 +1,7 @@
+# AmapMCPClient 需要两处修改：
+# 1. __init__ 加 headers 参数（ModelScope 端点可能需要认证）
+# 2. call() 解包 ExceptionGroup，让真实错误能被 except Exception 捕获
+
 from __future__ import annotations
 
 import asyncio
@@ -23,6 +27,8 @@ class AmapMCPClient:
         self.url = url or tools_conf.get("amap_mcp_url", "")
         if not self.url:
             raise ValueError("Missing amap_mcp_url in config/tools.yml")
+
+
 
     async def _call(self, tool_name: str, arguments: dict[str, Any] | None = None) -> Any:
         async with streamable_http_client(self.url) as (read, write, _):
@@ -60,7 +66,14 @@ class AmapMCPClient:
         return result
 
     def call(self, tool_name: str, arguments: dict[str, Any] | None = None) -> Any:
-        return asyncio.run(self._call(tool_name, arguments))
+        try:
+            return asyncio.run(self._call(tool_name, arguments))
+        except BaseException as e:
+            # Python 3.11+ ExceptionGroup（TaskGroup 内部异常）
+            # 解包出真实的子异常，让上层 except Exception 能正常捕获
+            if hasattr(e, "exceptions") and e.exceptions:
+                raise e.exceptions[0] from e
+            raise
 
     def list_tools(self) -> list[_ToolSpec]:
         async def _list():
@@ -78,7 +91,6 @@ class AmapMCPClient:
                             )
                         )
                     return tools
-
         return asyncio.run(_list())
 
     def maps_geo(self, address: str, city: str | None = None) -> Any:

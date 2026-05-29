@@ -1,7 +1,7 @@
 # src/graph/nodes/execution_node.py
 from src.graph.state import AgentState
 from src.agent.execution_agent import ExecutionAgent
-from src.utils.state_utils import _derive_plan_compat_from_state
+# from src.utils.state_utils import _derive_plan_compat_from_state
 
 def execution_node(state: AgentState) -> AgentState:
     """Execution Node: 事务性的一键预约、预订下单与亲友最终版本通知组装。
@@ -15,7 +15,7 @@ def execution_node(state: AgentState) -> AgentState:
 
     # 1. 读取确认状态，做出分路下单执行
     user_confirmed = state.get("user_confirmed", False)
-    plan = _derive_plan_compat_from_state(state)
+    plan = state
 
     if user_confirmed is True:
         try:
