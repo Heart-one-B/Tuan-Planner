@@ -1,5 +1,3 @@
-"""LangGraph shared state contract for the local life planning workflow."""
-
 from operator import add
 from typing import Any, Annotated, TypedDict
 
@@ -9,32 +7,38 @@ class AgentState(TypedDict, total=False):
     user_input: str
     conversation_turns: list[str]
     clarification_round: int
+    
+    # 🌟 新增：支持异步澄清交互的状态字段 🌟
+    pending_clarification: str  # 挂起时输出给前端的追问消息
+    user_reply: str            # 前端注入的用户回复
+    
     runtime_origin_area: str
     runtime_origin_coordinates: str
     location_permission_granted: bool
     location_lookup_result: dict[str, Any]
-    normalized_time: dict[str, Any]
-    time_normalization_result: dict[str, Any]
 
     # --- intent and routing ---
     intent: dict[str, Any]
     is_leisure_planning: bool
     need_retrieval: bool
     clarification_needed: bool
-    missing_slots: dict[str, list[str]]
+    
+    # 🌟 修改：由 dict 修改为 list[str]，扁平化管理缺失槽位 🌟
+    missing_slots: list[str]
+    
+    # 🌟 新增：显示当前正在澄清的特定槽位名（如 scenario / time_day / time_window 等） 🌟
+    current_asking_slot: str | None
+    
     follow_up_message: str
     llm_answer: str
 
     # --- retrieval and unified constraints ---
     retrieval_context: dict[str, Any]
-    constraints: dict[str, Any]
-    constraint_build: dict[str, Any]
+    plan_context: dict[str, Any]
     # constraints currently carries at least:
     # scenario / party / time_window / date_label / daypart / time_phrase /
-    # start_time / duration_hours / diet_preference / origin_area /
+    # start_time / end_time / diet_preference / origin_area /
     # max_traffic_minutes / max_queue_minutes / indoor_preferred / replan_hints
-    # Minimum node-level time requirements are centralized in
-    # ``src.graph.time_contract.MIN_TIME_FIELDS_BY_NODE``.
 
     # --- parallel fact gathering ---
     weather: dict[str, Any]
