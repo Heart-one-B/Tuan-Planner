@@ -1,129 +1,135 @@
-# src/graph/nodes/rule_validation_node.py
+from __future__ import annotations
+
 from src.graph.state import AgentState
-from src.utils.state_utils import _append_error, _candidate_activities
-from src.utils.poi_utils import _activity_environment
-from src.utils.weather_utils import _weather_requires_indoor
-from src.utils.parsing_utils import _steps_cover_daypart
+from src.utils.state_utils import _append_error
+
+_MIN_TRANSITION_MINUTES = 10   # 低于此间隔视为仓促
+_SPARE_GAP_MINUTES      = 90   # 高于此间隔视为有空档可加活动
+
+
+def _hhmm_to_minutes(t: str) -> int | None:
+    if not isinstance(t, str) or ":" not in t:
+        return None
+    try:
+        h, m = map(int, t.split(":", 1))
+        return h * 60 + m
+    except ValueError:
+        return None
+
+
 
 def rule_validation_node(state: AgentState) -> AgentState:
-    """新架构规则校验节点骨架：逐个检查 candidate_plans，并输出合法/非法结果。"""
-    print("[Rule Validation Node] 校验候选计划骨架...")
+    """
+    Rule Validation Node：对候选方案进行规则校验。
+
+    规则：时间合理性
+      - 相邻 step 间隔 < 10 分钟 → violation（仓促，物理不可行）
+      - 相邻 step 间隔 or 末尾剩余 >= 90 分钟 → violation（有空档，打回重规划）
+
+    天气与室内外的判断完全交给 candidate_planning_node 的 LLM 处理。
+    有 violation → invalid_plans；无问题 → valid_plans。
+    """
+    print("[Rule Validation Node] 校验候选计划...")
     try:
-        candidate_plans = state.get("candidate_plans")
-        if not isinstance(candidate_plans, dict):
-            candidate_plans = {}
+        candidate_plans     = state.get("candidate_plans") or {}
+        fact_gathering_result = state.get("fact_gathering_result") or {}
+        plan_context        = state.get("plan_context") or {}
 
-        constraint_build = state.get("constraint_build")
-        if not isinstance(constraint_build, dict):
-            constraint_build = {}
+        candidates: list[dict] = candidate_plans.get("candidates") or []
+        end_time: str = plan_context.get("end_time") or ""
 
-        fact_gathering_result = state.get("fact_gathering_result")
-        if not isinstance(fact_gathering_result, dict):
-            fact_gathering_result = {}
+        valid_plans:   list[dict] = []
+        invalid_plans: list[dict] = []
 
-        validation_profile = constraint_build.get("validation_profile")
-        if not isinstance(validation_profile, dict):
-            validation_profile = {}
-        hard_constraints = constraint_build.get("hard_constraints")
-        if not isinstance(hard_constraints, dict):
-            hard_constraints = {}
-        daypart = hard_constraints.get("daypart") if isinstance(hard_constraints.get("daypart"), str) else ""
-
-        candidates = candidate_plans.get("candidates")
-        if not isinstance(candidates, list):
-            candidates = []
-
-        valid_plans = []
-        invalid_plans = []
-
-        weather = fact_gathering_result.get("weather") if isinstance(fact_gathering_result.get("weather"), dict) else state.get("weather") or {}
-        weather_risk = weather.get("risk_level") or weather.get("risk") or ""
-
-        for item in candidates:
-            if not isinstance(item, dict):
+        for candidate in candidates:
+            if not isinstance(candidate, dict):
                 continue
 
-            candidate_id = item.get("id") if isinstance(item.get("id"), str) else "unknown_plan"
-            activity = item.get("activity") if isinstance(item.get("activity"), dict) else {}
-            restaurant = item.get("restaurant") if isinstance(item.get("restaurant"), dict) else {}
-            candidate_activities = _candidate_activities(item)
+            cid      = candidate.get("id") or "unknown"
+            steps    = [s for s in (candidate.get("steps") or []) if isinstance(s, dict)]
+            violations: list[str] = []
+            warnings:   list[str] = []
 
-            violations = []
-            repair_instructions = []
-            steps = item.get("steps") if isinstance(item.get("steps"), list) else []
+            # ── 规则1：时间合理性 ─────────────────────────────────────────────
+            for i in range(len(steps) - 1):
+                curr = steps[i]
+                nxt  = steps[i + 1]
+                curr_end   = _hhmm_to_minutes(curr.get("end_time") or "")
+                next_start = _hhmm_to_minutes(nxt.get("start_time") or "")
 
-            if not _steps_cover_daypart(steps, daypart):
-                violations.append("daypart_coverage_conflict")
-                repair_instructions.append(
-                    {"type": "regenerate_steps", "constraint": "full_day_requires_morning_lunch_afternoon_dinner"}
-                )
+                if curr_end is None or next_start is None:
+                    continue
 
-            if validation_profile.get("check_weather_compatibility") is True:
-                weather_conflict_activities = [
-                    activity_item
-                    for activity_item in candidate_activities
-                    if _weather_requires_indoor(weather_risk)
-                    and _activity_environment(activity_item) in {"outdoor", "mixed", "unknown"}
-                ]
-                if weather_conflict_activities:
-                    violations.append("weather_outdoor_conflict")
-                    repair_instructions.append(
-                        {
-                            "type": "replace_activity",
-                            "constraint": "indoor_only",
-                            "poi_ids": [
-                                activity_item.get("id")
-                                for activity_item in weather_conflict_activities
-                                if isinstance(activity_item.get("id"), str)
-                            ],
-                            "poi_names": [
-                                activity_item.get("name")
-                                for activity_item in weather_conflict_activities
-                                if isinstance(activity_item.get("name"), str)
-                            ],
-                        }
+                gap = next_start - curr_end
+                curr_label = curr.get("label") or curr.get("poi_id") or f"step_{i+1}"
+                next_label = nxt.get("label")  or nxt.get("poi_id")  or f"step_{i+2}"
+
+                if gap < _MIN_TRANSITION_MINUTES:
+                    violations.append(
+                        f"transition_too_rushed: 「{curr_label}」结束到「{next_label}」开始仅 {gap} 分钟，时间仓促"
                     )
+                elif gap >= _SPARE_GAP_MINUTES:
+                    curr_phase = steps[i].get("phase") or ""
+                    next_phase = steps[i + 1].get("phase") or ""
+                    # 以下属于合理过渡，不触发 violation：
+                    # - 下一个是 dinner（晚饭前休息）
+                    # - 下一个是 evening 或当前是 dinner（dinner→evening 的消化时间）
+                    if next_phase in {"dinner", "evening"} or curr_phase == "dinner":
+                        pass
+                    else:
+                        curr_end_str   = steps[i].get("end_time") or ""
+                        next_start_str = steps[i + 1].get("start_time") or ""
+                        violations.append(
+                            f"spare_gap: 「{curr_label}」({curr_end_str}) 到「{next_label}」({next_start_str}) 有 {gap} 分钟空档，"
+                            f"请在此时段补充一个活动"
+                        )
 
-            if validation_profile.get("check_party_fit") is True:
-                if not restaurant:
-                    violations.append("restaurant_missing")
-                    repair_instructions.append(
-                        {"type": "replace_restaurant", "constraint": "party_fit_required"}
-                    )
-
-            if violations:
-                invalid_plans.append(
-                    {
-                        "candidate_id": candidate_id,
-                        "violations": violations,
-                        "repair_instructions": repair_instructions,
-                    }
-                )
-            else:
-                valid_plans.append(item)
+            # 检查最后一个 step 到计划结束的剩余时间
+            if steps and end_time:
+                last_end  = _hhmm_to_minutes(steps[-1].get("end_time") or "")
+                plan_end  = _hhmm_to_minutes(end_time)
+                if last_end is not None and plan_end is not None:
+                    remaining = plan_end - last_end
+                    last_phase = steps[-1].get("phase") or ""
+                    # 晚饭/夜间活动之后的剩余时间是自由时间，不强制补活动
+                    if remaining >= _SPARE_GAP_MINUTES and last_phase not in {"dinner", "evening"}:
+                        last_label = steps[-1].get("label") or f"step_{len(steps)}"
+                        violations.append(
+                            f"spare_tail: 「{last_label}」结束后({steps[-1].get('end_time')})距计划结束({end_time})"
+                            f"还有 {remaining} 分钟，请补充活动"
+                        )
 
             print(
-                f"[Rule Validation Node] candidate_id={candidate_id!r}, "
-                f"weather_risk={weather_risk!r}, "
-                f"activities={[(activity_item.get('name'), _activity_environment(activity_item)) for activity_item in candidate_activities]!r}, "
-                f"violations={violations!r}"
+                f"[Rule Validation Node] {cid}: "
+                f"violations={violations}, warnings={warnings}"
             )
+
+            if violations:
+                invalid_plans.append({
+                    "candidate_id": cid,
+                    "violations":   violations,
+                    "warnings":     warnings,
+                })
+            else:
+                valid_plans.append({
+                    **candidate,
+                    "warnings": warnings,
+                })
 
         return {
             "rule_validation_result": {
-                "request_type": candidate_plans.get("request_type", "generic_local_plan"),
-                "plan_mode": candidate_plans.get("plan_mode", "activity_plus_meal"),
-                "valid_plans": valid_plans,
+                "plan_mode":    candidate_plans.get("plan_mode", "activity_plus_meal"),
+                "valid_plans":  valid_plans,
                 "invalid_plans": invalid_plans,
             }
         }
+
     except Exception as exc:
-        print(f"[Rule Validation Node][WARN] 节点异常，返回空骨架: {exc}")
-        update = _append_error(state, f"Rule Validation node failed: {exc}")
+        print(f"[Rule Validation Node][ERROR] {exc}")
+        update = _append_error(state, f"Rule Validation failed: {exc}")
         update["rule_validation_result"] = {
-            "request_type": "generic_local_plan",
-            "plan_mode": "activity_plus_meal",
-            "valid_plans": [],
+            "plan_mode":     "activity_plus_meal",
+            "valid_plans":   [],
             "invalid_plans": [],
         }
         return update
