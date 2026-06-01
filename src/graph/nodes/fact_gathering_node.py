@@ -128,7 +128,25 @@ def fact_gathering_node(state: AgentState) -> AgentState:
         except Exception as exc:
             errors.append(f"Restaurant search failed: {exc}")
 
-    # ── 5. ETA（仅有坐标时计算）──────────────────────────────────────────────
+    # ── 5. 补全 POI 坐标（搜索结果通常不含 location 字段）────────────────────
+    # 调 poi_detail() 获取坐标，结果有 7 天缓存，同一 POI 只调一次
+    if coordinates:
+        for poi in activities + restaurants:
+            if poi.get("location"):
+                continue                          # 已有坐标，跳过
+            pid = poi.get("id") or ""
+            if not pid:
+                continue
+            try:
+                detail = api.poi_detail(pid)
+                if isinstance(detail, dict):
+                    loc = detail.get("location") or ""
+                    if loc:
+                        poi["location"] = loc
+            except Exception:
+                continue
+
+    # ── 6. ETA（仅有出发坐标时计算）─────────────────────────────────────────
     eta: dict[str, Any] = {}
 
     if coordinates:
