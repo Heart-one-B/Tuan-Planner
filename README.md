@@ -127,10 +127,24 @@ deepseek_base_url: https://api.deepseek.com
 
 注意：不要提交真实 API Key。可以参考 config/model_example.yml 创建本地 model.yml。
 
-### 第五步：运行 Demo
+### 第五步：运行命令行 Demo
 
 ```
 python src/main.py
+```
+
+### 第六步：运行网页前端
+
+如果你想通过浏览器查看规划结果和执行确认页面，可以启动 FastAPI 前端：
+
+```powershell
+uvicorn src.web.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+启动后在浏览器访问：
+
+```text
+http://127.0.0.1:8000
 ```
 
 输出示例如下
