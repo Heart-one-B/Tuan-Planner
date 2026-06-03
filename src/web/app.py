@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from src.graph.nodes.execution_node import execution_node
 from src.graph.workflow import build_workflow
-
+from src.graph.nodes.confirmation_node import _update_preference_document
 
 app = FastAPI(title="Local Life Planner", version="0.1.0")
 workflow_app = build_workflow(MemorySaver())
@@ -106,6 +106,13 @@ def _run_confirmation(session_id: str, confirmed: bool) -> dict[str, Any]:
     state = dict(session.get("state") or {})
     state["user_confirmed"] = confirmed
     state["web_preview_mode"] = False
+
+    # ── 新增：确认时同步触发偏好文档更新（补全原 confirmation_node 中的逻辑）──
+    if confirmed:
+        try:
+            _update_preference_document(state)
+        except Exception as exc:
+            print(f"[Web Confirm] 用户偏好文档更新失败：{exc}")
 
     execution_state = execution_node(state)
     merged_state = dict(state)
@@ -240,14 +247,20 @@ def _render_html() -> str:
     .result {
       white-space: pre-wrap;
       line-height: 1.8;
-      min-height: 260px;
       padding: 18px;
       border-radius: 18px;
       border: 1px solid rgba(148, 163, 184, 0.22);
       background: rgba(2, 6, 23, 0.46);
       overflow: auto;
-      font-family: "SFMono-Regular", "Consolas", monospace;
       font-size: 14px;
+    }
+    .result.plan {
+      min-height: 220px;
+      font-family: inherit;
+    }
+    .result.message {
+      min-height: 140px;
+      font-family: inherit;
     }
     .split { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
     .card {
@@ -255,6 +268,31 @@ def _render_html() -> str:
       border-radius: 16px;
       background: rgba(148, 163, 184, 0.06);
       padding: 14px;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(245, 185, 66, 0.18);
+      color: #ffd98b;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+    .section-copy {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+      line-height: 1.6;
     }
     .tag {
       display: inline-block;
@@ -327,17 +365,19 @@ def _render_html() -> str:
         <div class="meta">状态：<span id="statusText" class="status">等待输入</span></div>
         <div class="split" style="margin:14px 0;">
           <div class="card">
-            <strong>展示文案</strong>
-            <div id="planPreview" class="result" style="min-height:220px; margin-top:10px;">生成结果后会显示在这里。</div>
+            <div class="section-title"><span class="section-badge">1</span><strong>行程安排</strong></div>
+            <div id="planSectionOne" class="result plan">生成结果后会显示在这里。</div>
+            <div class="section-copy">展示当前规划中的时间安排、活动与餐厅，不展示结构化原始结果。</div>
           </div>
           <div class="card">
-            <strong>结构化结果</strong>
-            <div id="planJson" class="result" style="min-height:220px; margin-top:10px;">{}</div>
+            <div class="section-title"><span class="section-badge">2</span><strong>方案说明</strong></div>
+            <div id="planSectionTwo" class="result plan">生成结果后会显示在这里。</div>
+            <div class="section-copy">展示方案为什么这样安排，以及当前方案的核心理由。</div>
           </div>
         </div>
         <div class="card">
           <strong>执行反馈</strong>
-          <div id="finalMessage" class="result" style="min-height:140px; margin-top:10px;">尚未执行。</div>
+          <div id="finalMessage" class="result message" style="margin-top:10px;">尚未执行。</div>
         </div>
       </div>
     </section>
@@ -346,8 +386,8 @@ def _render_html() -> str:
   <script>
     const sessionIdEl = document.getElementById('sessionId');
     const statusTextEl = document.getElementById('statusText');
-    const planPreviewEl = document.getElementById('planPreview');
-    const planJsonEl = document.getElementById('planJson');
+    const planSectionOneEl = document.getElementById('planSectionOne');
+    const planSectionTwoEl = document.getElementById('planSectionTwo');
     const finalMessageEl = document.getElementById('finalMessage');
     const clarifyBoxEl = document.getElementById('clarifyBox');
     const clarifyTextEl = document.getElementById('clarifyText');
@@ -358,16 +398,30 @@ def _render_html() -> str:
 
     let currentSessionId = localStorage.getItem('planner_session_id') || '';
 
-    function prettyJson(value) {
-      return JSON.stringify(value ?? {}, null, 2);
+    function escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
+
+    function extractSection(text, sectionNumber) {
+      const content = String(text || '').trim();
+      if (!content) return '';
+      const regex = sectionNumber === 1
+        ? /##\\s*第一部分[：:]\\s*行程安排\\s*([\\s\\S]*?)(?=\\n##\\s*第二部分[：:]\\s*方案说明|\\n##\\s*第三部分[：:]\\s*确认提示|$)/
+        : /##\\s*第二部分[：:]\\s*方案说明\\s*([\\s\\S]*?)(?=\\n##\\s*第三部分[：:]\\s*确认提示|$)/;
+      const match = content.match(regex);
+      const body = (match && match[1] ? match[1] : '').trim();
+      return body || (sectionNumber === 1 ? '暂无行程安排。' : '暂无方案说明。');
     }
 
     function renderSession(session) {
       if (!session) return;
       sessionIdEl.textContent = session.session_id || '未开始';
       statusTextEl.textContent = session.status || 'unknown';
-      planPreviewEl.textContent = session.display_text || '暂无规划结果。';
-      planJsonEl.textContent = prettyJson(session.plan || {});
+      planSectionOneEl.innerHTML = escapeHtml(extractSection(session.display_text, 1));
+      planSectionTwoEl.innerHTML = escapeHtml(extractSection(session.display_text, 2));
       finalMessageEl.textContent = session.final_message || '尚未执行。';
 
       const pendingClarification = session.pending_clarification || '';
@@ -416,6 +470,7 @@ def _render_html() -> str:
         return;
       }
       const data = await requestJson(`/api/sessions/${currentSessionId}/clarify`, { user_reply: reply });
+      clarifyReplyEl.value = '';
       renderSession(data);
     }
 
@@ -441,11 +496,12 @@ def _render_html() -> str:
       localStorage.removeItem('planner_session_id');
       sessionIdEl.textContent = '未开始';
       statusTextEl.textContent = '等待输入';
-      planPreviewEl.textContent = '生成结果后会显示在这里。';
-      planJsonEl.textContent = '{}';
+      planSectionOneEl.textContent = '生成结果后会显示在这里。';
+      planSectionTwoEl.textContent = '生成结果后会显示在这里。';
       finalMessageEl.textContent = '尚未执行。';
       clarifyBoxEl.style.display = 'none';
       confirmBoxEl.style.display = 'none';
+      clarifyReplyEl.value = '';
     });
 
     loadCurrentSession().catch(() => {});
