@@ -1,0 +1,1266 @@
+{
+  "geocode:8e2a1dc5aaaa": {
+    "cached_at": "2026-06-03T01:51:30",
+    "data": {
+      "city": "成都",
+      "coordinates": "103.999715,30.557573",
+      "district": "双流区",
+      "formatted_address": "四川大学江安校区"
+    }
+  },
+  "weather:14bf5c897776": {
+    "cached_at": "2026-06-03T01:51:30",
+    "data": {
+      "city": "成都",
+      "day_weather": "阴",
+      "day_temp": "24",
+      "day_wind": "东南风",
+      "humidity": "65"
+    }
+  },
+  "search:943e8819494e": {
+    "cached_at": "2026-06-03T01:51:32",
+    "data": [
+      {
+        "id": "B0FFFODEOP",
+        "name": "友谊林",
+        "address": "环行大道北段四川大学(江安校区)",
+        "location": "",
+        "type": "110101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "公园",
+        "environment": "unknown"
+      },
+      {
+        "id": "B001C7YIHX",
+        "name": "和贵·滨河公园",
+        "address": "锦华路江安河桥旁",
+        "location": "",
+        "type": "110101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "公园",
+        "environment": "outdoor"
+      },
+      {
+        "id": "B0FFHSBBXD",
+        "name": "久居福运动公园",
+        "address": "临港路一段",
+        "location": "",
+        "type": "110101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "公园",
+        "environment": "outdoor"
+      },
+      {
+        "id": "B0MDKUDCKV",
+        "name": "珠江路臻心公园",
+        "address": "临港路五段250号",
+        "location": "",
+        "type": "110101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "公园",
+        "environment": "outdoor"
+      },
+      {
+        "id": "B0J2OSKUED",
+        "name": "江安河公园",
+        "address": "滨河路与光电大道交叉口南40米",
+        "location": "",
+        "type": "110101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "公园",
+        "environment": "outdoor"
+      },
+      {
+        "id": "B0JA4L267W",
+        "name": "骑龙中水湿地公园",
+        "address": "昆华路与老双中路交叉口西南320米",
+        "location": "",
+        "type": "110101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "公园",
+        "environment": "outdoor"
+      },
+      {
+        "id": "B0FFIMU701",
+        "name": "桂溪安全文化公园",
+        "address": "桂溪街道昆华路919-10号附近",
+        "location": "",
+        "type": "110101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "公园",
+        "environment": "outdoor"
+      }
+    ]
+  },
+  "search:45ea8a1c1a9c": {
+    "cached_at": "2026-06-03T01:51:33",
+    "data": [
+      {
+        "id": "B0LD1CMQ5K",
+        "name": "香嘴乐园",
+        "address": "长城路西街117号",
+        "location": "103.990499,30.549767",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      },
+      {
+        "id": "B0KUGZAW9S",
+        "name": "奥乐奥儿童乐园(双流西航港店)",
+        "address": "川大南路二段99号1栋附23号",
+        "location": "104.006271,30.545574",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      },
+      {
+        "id": "B0LG072FMB",
+        "name": "精灵岛主题儿童乐园",
+        "address": "大件路白家段280号韩国城购物中心",
+        "location": "104.008175,30.569525",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      },
+      {
+        "id": "B0KGD7LJQD",
+        "name": "亲子主题乐园(蓝光CoCo可可摩B馆店)",
+        "address": "临港路五段与珠江路交叉口东南140米",
+        "location": "104.007949,30.570299",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      },
+      {
+        "id": "B0LUFL4Q2H",
+        "name": "露比鹿Park儿童乐园",
+        "address": "锦华路一段与临港路一段交叉口西南100米",
+        "location": "103.986025,30.566575",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      },
+      {
+        "id": "B0L19KFOAS",
+        "name": "小兔乖乖乐园",
+        "address": "临港路一段与锦华路一段交叉口西南100米",
+        "location": "103.986043,30.566720",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      },
+      {
+        "id": "B0K1N4JRYW",
+        "name": "君游乐",
+        "address": "西航港街道成白路188号成都华丰食品城",
+        "location": "",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "unknown"
+      },
+      {
+        "id": "B0LKF1UM7F",
+        "name": "泰迪来了",
+        "address": "珠江路与临港路四段交叉口西北220米",
+        "location": "",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "unknown"
+      },
+      {
+        "id": "B0J16H0FTV",
+        "name": "乖比兔(成都购物中心北京华联店)",
+        "address": "锦华路二段166号北京华联(成都购物中心)F4层F4-ZD-05",
+        "location": "",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "unknown"
+      },
+      {
+        "id": "B0L35KCR3P",
+        "name": "宝贝王家庭娱乐中心(双流北京华联店)",
+        "address": "北京华联购物中心3F3037-3038",
+        "location": "",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "unknown"
+      },
+      {
+        "id": "B0L05RUO9M",
+        "name": "谷梦时光(动动乐园)",
+        "address": "锦华路二段172号北京华联BHG Mall成都店F3层",
+        "location": "103.986772,30.571953",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      },
+      {
+        "id": "B0FFIKLWXA",
+        "name": "动动乐园(空港华联店)",
+        "address": "锦华路二段166号BHG Mall北京华联成都空港购物中心3层",
+        "location": "103.986989,30.572263",
+        "type": "061207",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "儿童乐园",
+        "environment": "indoor"
+      }
+    ]
+  },
+  "search:6f2f12e890b7": {
+    "cached_at": "2026-06-03T01:51:35",
+    "data": [
+      {
+        "id": "B0L3SK1UUD",
+        "name": "大气探测博物馆(航空港校区)",
+        "address": "学府路与黄河北路交叉口西北340米",
+        "location": "103.992695,30.582768",
+        "type": "140100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "博物馆",
+        "environment": "indoor"
+      }
+    ]
+  },
+  "search:200066dcb04b": {
+    "cached_at": "2026-06-03T01:51:36",
+    "data": [
+      {
+        "id": "B0MB6UO1O9",
+        "name": "木桑森林·轻食健康餐(川大进校店)",
+        "address": "西航港街道川大路三段108号8栋附4号",
+        "location": "103.989894,30.552428",
+        "type": "060000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0M6MZU72H",
+        "name": "馒大师",
+        "address": "西航港街道大件路白家段996号3栋1层附4-5号",
+        "location": "104.000933,30.567420",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0IAVPB2ER",
+        "name": "鲸落十里·健康餐轻食(川大店)",
+        "address": "西航港街道川大路三段108号13栋附20号",
+        "location": "103.988900,30.553205",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KUYKRAB1",
+        "name": "柠檬鸡鲜椒冷锅冒菜",
+        "address": "光明苑6栋9号(文星地铁站B1口步行180米)",
+        "location": "103.989604,30.552004",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0K2NP1IJM",
+        "name": "MURVEY·LF·蔓味轻食(川大店)",
+        "address": "川大路三段108号光明苑",
+        "location": "103.989252,30.552462",
+        "type": "050201",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0JKM1AUXK",
+        "name": "修修娃轻食店(光明苑店)",
+        "address": "川大路三段108号光明苑",
+        "location": "103.988171,30.552925",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0MBFD5A7P",
+        "name": "芊纤轻食店",
+        "address": "川大路三段108号光明苑",
+        "location": "103.987875,30.553175",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0M65SHHTM",
+        "name": "顺源轻食店",
+        "address": "川大路三段108号光明苑",
+        "location": "103.987875,30.553175",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0K3UDVK1A",
+        "name": "张甜甜控卡轻食(川大店)",
+        "address": "西航港街道川大路三段108号22栋附28号(自主申报)",
+        "location": "103.987611,30.553409",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0IULCQIZ0",
+        "name": "素颜轻食LowCalorie",
+        "address": "川大路三段108号32栋附8号",
+        "location": "103.988725,30.551125",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0L2HCBDEO",
+        "name": "胃有福",
+        "address": "光明苑29栋附23号(文星地铁站B2口步行240米)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0L0SGHX8C",
+        "name": "双流区王芳芳轻食店",
+        "address": "长城路二段499号金色校园广场",
+        "location": "",
+        "type": "050201",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0L31SVABE",
+        "name": "木多森中式健康菜·低脂轻油餐(川大店)",
+        "address": "川大路三段108号46栋附4号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0LK0D7ZW5",
+        "name": "超牛堡·炙烤牛肉汉堡(川大店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KAFCHK21",
+        "name": "小满轻食店",
+        "address": "西航港街道韩国城一期一栋1单元",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KUAN038M",
+        "name": "禧厨稻香轻食",
+        "address": "湖夹滩西五街与蜀星路交叉口西120米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KG4SMJGM",
+        "name": "冒一冒轻食店(百家苑店)",
+        "address": "文化街一段65号百家苑二期",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0JRT14MJI",
+        "name": "掌门土豆(双流茂业天地店)",
+        "address": "茂业天地(双流店)",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0MB5RKJKN",
+        "name": "木桑森林轻食健康餐(花天锦地店)",
+        "address": "西航港街道临港路四段88号2栋附105、106号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0IBYH1YAI",
+        "name": "喜赞·超级碗健康轻食(航空港店)",
+        "address": "珠江路599号3栋附79号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      }
+    ]
+  },
+  "search:5114373e5c28": {
+    "cached_at": "2026-06-03T01:51:38",
+    "data": [
+      {
+        "id": "B0MB6UO1O9",
+        "name": "木桑森林·轻食健康餐(川大进校店)",
+        "address": "西航港街道川大路三段108号8栋附4号",
+        "location": "",
+        "type": "060000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0M6MZU72H",
+        "name": "馒大师",
+        "address": "西航港街道大件路白家段996号3栋1层附4-5号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0IAVPB2ER",
+        "name": "鲸落十里·健康餐轻食(川大店)",
+        "address": "西航港街道川大路三段108号13栋附20号",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0KUYKRAB1",
+        "name": "柠檬鸡鲜椒冷锅冒菜",
+        "address": "光明苑6栋9号(文星地铁站B1口步行180米)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0K2NP1IJM",
+        "name": "MURVEY·LF·蔓味轻食(川大店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050201",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0JKM1AUXK",
+        "name": "修修娃轻食店(光明苑店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0MBFD5A7P",
+        "name": "芊纤轻食店",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0M65SHHTM",
+        "name": "顺源轻食店",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0K3UDVK1A",
+        "name": "张甜甜控卡轻食(川大店)",
+        "address": "西航港街道川大路三段108号22栋附28号(自主申报)",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0IULCQIZ0",
+        "name": "素颜轻食LowCalorie",
+        "address": "川大路三段108号32栋附8号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0L2HCBDEO",
+        "name": "胃有福",
+        "address": "光明苑29栋附23号(文星地铁站B2口步行240米)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0L0SGHX8C",
+        "name": "双流区王芳芳轻食店",
+        "address": "长城路二段499号金色校园广场",
+        "location": "",
+        "type": "050201",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0L31SVABE",
+        "name": "木多森中式健康菜·低脂轻油餐(川大店)",
+        "address": "川大路三段108号46栋附4号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0KAFCHK21",
+        "name": "小满轻食店",
+        "address": "西航港街道韩国城一期一栋1单元",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0KUAN038M",
+        "name": "禧厨稻香轻食",
+        "address": "湖夹滩西五街与蜀星路交叉口西120米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0KG4SMJGM",
+        "name": "冒一冒轻食店(百家苑店)",
+        "address": "文化街一段65号百家苑二期",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0JRT14MJI",
+        "name": "掌门土豆(双流茂业天地店)",
+        "address": "茂业天地(双流店)",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0MB5RKJKN",
+        "name": "木桑森林轻食健康餐(花天锦地店)",
+        "address": "西航港街道临港路四段88号2栋附105、106号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0IBYH1YAI",
+        "name": "喜赞·超级碗健康轻食(航空港店)",
+        "address": "珠江路599号3栋附79号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      },
+      {
+        "id": "B0M6F11S22",
+        "name": "轻卡盒子轻食店",
+        "address": "蓝光空港国际城2、3期",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "减脂餐"
+      }
+    ]
+  },
+  "search:07b8b6fc072b": {
+    "cached_at": "2026-06-03T01:51:40",
+    "data": []
+  },
+  "detail:330b39c9b044": {
+    "cached_at": "2026-06-03T01:51:41",
+    "data": {
+      "id": "B0LD1CMQ5K",
+      "name": "香嘴乐园",
+      "location": "103.990499,30.549767",
+      "address": "长城路西街117号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "体育休闲服务;休闲场所;游乐场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/7127b4fc4ee3ed5a58b5eddd16f08097"
+      },
+      "cost": [],
+      "opentime2": "周一至周日 10:00-22:00",
+      "rating": "3.2",
+      "open_time": "10:00-22:00"
+    }
+  },
+  "detail:07ff20410ea3": {
+    "cached_at": "2026-06-03T01:51:43",
+    "data": {
+      "id": "B0KUGZAW9S",
+      "name": "奥乐奥儿童乐园(双流西航港店)",
+      "location": "104.006271,30.545574",
+      "address": "川大南路二段99号1栋附23号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "体育休闲服务;休闲场所;游乐场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/2cedbf1dbc50907cefaefde15d08dd71"
+      },
+      "cost": "375.00",
+      "opentime2": "周一至周日 09:00-21:00",
+      "rating": "3.8",
+      "open_time": "09:00-21:00"
+    }
+  },
+  "detail:a28a19d21f16": {
+    "cached_at": "2026-06-03T01:51:44",
+    "data": {
+      "id": "B0LG072FMB",
+      "name": "精灵岛主题儿童乐园",
+      "location": "104.008175,30.569525",
+      "address": "大件路白家段280号韩国城购物中心",
+      "business_area": "双流片区",
+      "city": "成都市",
+      "type": "体育休闲服务;休闲场所;游乐场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/fe40f12b57b5d1621c471cf81a347175"
+      },
+      "cost": [],
+      "opentime2": "周一至周日 10:00-21:30",
+      "rating": "3.8",
+      "open_time": "10:00-21:30"
+    }
+  },
+  "detail:f629ad1fa31d": {
+    "cached_at": "2026-06-03T01:51:46",
+    "data": {
+      "id": "B0KGD7LJQD",
+      "name": "亲子主题乐园(蓝光CoCo可可摩B馆店)",
+      "location": "104.007949,30.570299",
+      "address": "临港路五段与珠江路交叉口东南140米",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "体育休闲服务;休闲场所;游乐场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/4e9853998c2f9c98dd29bf982c348d02"
+      },
+      "cost": "39.00",
+      "opentime2": [],
+      "rating": "3.6",
+      "open_time": []
+    }
+  },
+  "detail:916f9e51efe5": {
+    "cached_at": "2026-06-03T01:51:47",
+    "data": {
+      "id": "B0LUFL4Q2H",
+      "name": "露比鹿Park儿童乐园",
+      "location": "103.986025,30.566575",
+      "address": "锦华路一段与临港路一段交叉口西南100米",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "体育休闲服务;休闲场所;游乐场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/6e7363d60eb5f3fd5cb164bb7c9877ae"
+      },
+      "cost": "65.00",
+      "opentime2": "周一至周日 10:00-22:00",
+      "rating": "4.0",
+      "open_time": "10:00-22:00"
+    }
+  },
+  "detail:7e6d917c868b": {
+    "cached_at": "2026-06-03T01:51:49",
+    "data": {
+      "id": "B0L19KFOAS",
+      "name": "小兔乖乖乐园",
+      "location": "103.986043,30.566720",
+      "address": "临港路一段与锦华路一段交叉口西南100米",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "体育休闲服务;休闲场所;游乐场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/72df1d6bdddaa7969d5d602a7865b3e3"
+      },
+      "cost": [],
+      "opentime2": [],
+      "rating": "3.0",
+      "open_time": []
+    }
+  },
+  "detail:a16aba76b81f": {
+    "cached_at": "2026-06-03T01:51:50",
+    "data": {
+      "id": "B0L05RUO9M",
+      "name": "谷梦时光(动动乐园)",
+      "location": "103.986772,30.571953",
+      "address": "锦华路二段172号北京华联BHG Mall成都店F3层",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "体育休闲服务;休闲场所;游乐场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/c13300ddabc7ee9e6337d83d87474bf6"
+      },
+      "cost": [],
+      "opentime2": [],
+      "rating": "2.9",
+      "open_time": []
+    }
+  },
+  "detail:d2b636a6a279": {
+    "cached_at": "2026-06-03T01:51:51",
+    "data": {
+      "id": "B0FFIKLWXA",
+      "name": "动动乐园(空港华联店)",
+      "location": "103.986989,30.572263",
+      "address": "锦华路二段166号BHG Mall北京华联成都空港购物中心3层",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "购物服务;专卖店;儿童用品店",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/13b3e0475e6741ac0000000682400502?type=pic"
+      },
+      "cost": "122.00",
+      "opentime2": "周一至周日 10:00-21:00",
+      "rating": "3.6",
+      "open_time": "10:00-21:00"
+    }
+  },
+  "detail:aa4c1945831a": {
+    "cached_at": "2026-06-03T01:51:52",
+    "data": {
+      "id": "B0L3SK1UUD",
+      "name": "大气探测博物馆(航空港校区)",
+      "location": "103.992695,30.582768",
+      "address": "学府路与黄河北路交叉口西北340米",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "科教文化服务;博物馆;博物馆",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": "2.7",
+      "open_time": []
+    }
+  },
+  "detail:b2219abb8f83": {
+    "cached_at": "2026-06-03T01:51:54",
+    "data": {
+      "id": "B0MB6UO1O9",
+      "name": "木桑森林·轻食健康餐(川大进校店)",
+      "location": "103.989894,30.552428",
+      "address": "西航港街道川大路三段108号8栋附4号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "购物服务;购物相关场所;购物相关场所",
+      "alias": [],
+      "cost": "20.00",
+      "opentime2": "周一至周日 10:00-21:00",
+      "rating": "2.7",
+      "open_time": "10:00-21:00"
+    }
+  },
+  "detail:ad09c88c362f": {
+    "cached_at": "2026-06-03T01:51:55",
+    "data": {
+      "id": "B0M6MZU72H",
+      "name": "馒大师",
+      "location": "104.000933,30.567420",
+      "address": "西航港街道大件路白家段996号3栋1层附4-5号",
+      "business_area": "四川天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;餐饮相关场所;餐饮相关",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/c495bab426b5311c659a3216121a71d9"
+      },
+      "cost": [],
+      "opentime2": [],
+      "rating": "3.9",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:d973856ae8a9": {
+    "cached_at": "2026-06-03T01:51:56",
+    "data": {
+      "id": "B0IAVPB2ER",
+      "name": "鲸落十里·健康餐轻食(川大店)",
+      "location": "103.988900,30.553205",
+      "address": "西航港街道川大路三段108号13栋附20号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;快餐厅;快餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0IAVPB2ER/comment/content_media_external_images_media_100013870_1740689424130_78113277.jpg"
+      },
+      "cost": "25.00",
+      "opentime2": "周一至周日 10:00-19:00 2026-02-08至2026-02-24 全天关闭",
+      "rating": "4.3",
+      "open_time": "10:00-19:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:8c8e5a498391": {
+    "cached_at": "2026-06-03T01:51:58",
+    "data": {
+      "id": "B0KUYKRAB1",
+      "name": "柠檬鸡鲜椒冷锅冒菜",
+      "location": "103.989604,30.552004",
+      "address": "光明苑6栋9号(文星地铁站B1口步行180米)",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/7578f0656747f340243c68eb89972f03"
+      },
+      "cost": [],
+      "opentime2": [],
+      "rating": "3.3",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:8448617c5c35": {
+    "cached_at": "2026-06-03T01:51:59",
+    "data": {
+      "id": "B0K2NP1IJM",
+      "name": "MURVEY·LF·蔓味轻食(川大店)",
+      "location": "103.989252,30.552462",
+      "address": "川大路三段108号光明苑",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;外国餐厅;西餐厅(综合风味)",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/3345f1d5987ed9fad370f85f00a6d80f"
+      },
+      "cost": "75.00",
+      "opentime2": "周一至周日 09:00-21:00",
+      "rating": "3.7",
+      "open_time": "09:00-21:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:a8cc3700ba72": {
+    "cached_at": "2026-06-03T01:52:01",
+    "data": {
+      "id": "B0JKM1AUXK",
+      "name": "修修娃轻食店(光明苑店)",
+      "location": "103.988171,30.552925",
+      "address": "川大路三段108号光明苑",
+      "business_area": "双流片区",
+      "city": "成都市",
+      "type": "餐饮服务;快餐厅;快餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/efcc3dde50876336235019d415285031"
+      },
+      "cost": [],
+      "opentime2": [],
+      "rating": "3.6",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:e2df7383c56d": {
+    "cached_at": "2026-06-03T01:52:02",
+    "data": {
+      "id": "B0MBFD5A7P",
+      "name": "芊纤轻食店",
+      "location": "103.987875,30.553175",
+      "address": "川大路三段108号光明苑",
+      "business_area": "四川天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": "1.3",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:aa539ab2430d": {
+    "cached_at": "2026-06-03T01:52:03",
+    "data": {
+      "id": "B0M65SHHTM",
+      "name": "顺源轻食店",
+      "location": "103.987875,30.553175",
+      "address": "川大路三段108号光明苑",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;餐饮相关场所;餐饮相关",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": "1.1",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:fd3980e19ec2": {
+    "cached_at": "2026-06-03T01:52:05",
+    "data": {
+      "id": "B0K3UDVK1A",
+      "name": "张甜甜控卡轻食(川大店)",
+      "location": "103.987611,30.553409",
+      "address": "西航港街道川大路三段108号22栋附28号(自主申报)",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中式素菜馆",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/0709eefe3c9c612c2f5125ce48983831"
+      },
+      "cost": [],
+      "opentime2": "周一至周日 09:00-20:00",
+      "rating": "2.4",
+      "open_time": "09:00-20:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:88c21ce52b52": {
+    "cached_at": "2026-06-03T01:52:06",
+    "data": {
+      "id": "B0IULCQIZ0",
+      "name": "素颜轻食LowCalorie",
+      "location": "103.988725,30.551125",
+      "address": "川大路三段108号32栋附8号",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/ae14428b8268ac137410db88a49d7ed8"
+      },
+      "cost": "22.00",
+      "opentime2": "周一至周日 08:00-20:00",
+      "rating": "3.4",
+      "open_time": "08:00-20:00",
+      "meal_ordering": "0"
+    }
+  },
+  "distance:473a9591e574": {
+    "cached_at": "2026-06-03T01:52:08",
+    "data": {
+      "distance_meters": "2685",
+      "duration_seconds": "489",
+      "eta_minutes": 8
+    }
+  },
+  "distance:ed533bc8ccaf": {
+    "cached_at": "2026-06-03T01:52:09",
+    "data": {
+      "distance_meters": "2358",
+      "duration_seconds": "492",
+      "eta_minutes": 8
+    }
+  },
+  "distance:8fe1a4898ece": {
+    "cached_at": "2026-06-03T01:52:10",
+    "data": {
+      "distance_meters": "3026",
+      "duration_seconds": "702",
+      "eta_minutes": 12
+    }
+  },
+  "distance:ed53dbf1a565": {
+    "cached_at": "2026-06-03T01:52:12",
+    "data": {
+      "distance_meters": "3026",
+      "duration_seconds": "702",
+      "eta_minutes": 12
+    }
+  },
+  "distance:b8be690d5fc0": {
+    "cached_at": "2026-06-03T01:52:13",
+    "data": {
+      "distance_meters": "5452",
+      "duration_seconds": "814",
+      "eta_minutes": 14
+    }
+  },
+  "distance:5af68ec6ff22": {
+    "cached_at": "2026-06-03T01:52:14",
+    "data": {
+      "distance_meters": "5457",
+      "duration_seconds": "813",
+      "eta_minutes": 14
+    }
+  },
+  "distance:9cecef8e2755": {
+    "cached_at": "2026-06-03T01:52:16",
+    "data": {
+      "distance_meters": "5027",
+      "duration_seconds": "803",
+      "eta_minutes": 13
+    }
+  },
+  "distance:7f097b720b26": {
+    "cached_at": "2026-06-03T01:52:17",
+    "data": {
+      "distance_meters": "5188",
+      "duration_seconds": "853",
+      "eta_minutes": 14
+    }
+  },
+  "distance:454b3e3dcb58": {
+    "cached_at": "2026-06-03T01:52:18",
+    "data": {
+      "distance_meters": "5759",
+      "duration_seconds": "996",
+      "eta_minutes": 17
+    }
+  },
+  "distance:fc6a7f8b57e5": {
+    "cached_at": "2026-06-03T01:52:20",
+    "data": {
+      "distance_meters": "3687",
+      "duration_seconds": "566",
+      "eta_minutes": 9
+    }
+  },
+  "distance:e12aafa23e3a": {
+    "cached_at": "2026-06-03T01:52:21",
+    "data": {
+      "distance_meters": "2784",
+      "duration_seconds": "594",
+      "eta_minutes": 10
+    }
+  },
+  "distance:f116819611b3": {
+    "cached_at": "2026-06-03T01:52:23",
+    "data": {
+      "distance_meters": "3679",
+      "duration_seconds": "580",
+      "eta_minutes": 10
+    }
+  },
+  "distance:84f30f7e8cec": {
+    "cached_at": "2026-06-03T01:52:24",
+    "data": {
+      "distance_meters": "3766",
+      "duration_seconds": "588",
+      "eta_minutes": 10
+    }
+  },
+  "distance:0a34670a047b": {
+    "cached_at": "2026-06-03T01:52:25",
+    "data": {
+      "distance_meters": "3747",
+      "duration_seconds": "583",
+      "eta_minutes": 10
+    }
+  },
+  "distance:89ab593bf701": {
+    "cached_at": "2026-06-03T01:52:27",
+    "data": {
+      "distance_meters": "3107",
+      "duration_seconds": "613",
+      "eta_minutes": 10
+    }
+  },
+  "distance:edff94376927": {
+    "cached_at": "2026-06-03T01:52:28",
+    "data": {
+      "distance_meters": "3128",
+      "duration_seconds": "613",
+      "eta_minutes": 10
+    }
+  },
+  "distance:3e6e20376db3": {
+    "cached_at": "2026-06-03T01:52:29",
+    "data": {
+      "distance_meters": "3108",
+      "duration_seconds": "608",
+      "eta_minutes": 10
+    }
+  },
+  "distance:3c877af11f02": {
+    "cached_at": "2026-06-03T01:52:31",
+    "data": {
+      "distance_meters": "2915",
+      "duration_seconds": "542",
+      "eta_minutes": 9
+    }
+  }
+}

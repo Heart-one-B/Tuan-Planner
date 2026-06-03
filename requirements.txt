@@ -6,5 +6,3 @@ dashscope
 pyyaml
 langgraph
 mcp
-fastapi
-uvicorn

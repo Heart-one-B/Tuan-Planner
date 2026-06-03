@@ -194,27 +194,3 @@ Meituan Local Life Execution Agent - Hackathon Demo
 [MOCK] 详细凭证已发送至您的手机（模拟），您可以随时出发！
 ```
 
-------
-
-## 4. 标准版 Web 前端
-
-如果你要把这个 Agent 做成可交互的网页，当前仓库已经改成单端口模式：
-
-- 后端：FastAPI，入口是 [src/web/app.py](src/web/app.py)
-- 前端：由后端根路径 `/` 直接返回页面
-- 交互方式：通过 `/api/chat` 提交新需求或补充信息，后端返回当前 `state`、待交互 `ui` 和最终结果
-
-### 4.1 后端启动
-
-```powershell
-f:\work\Code\-AI-Hackathon-\.venv\Scripts\python.exe -m uvicorn src.web.app:app --reload --host 0.0.0.0 --port 8000
-```
-
-也可以直接运行仓库根目录的 `start-dev.ps1`，只启动后端。页面会在同一个端口直接打开。
-
-### 4.2 页面交互说明
-
-- 初始输入框负责提交用户需求和起点区域。
-- 遇到定位授权、澄清问题或执行确认时，页面会根据后端返回的 `ui.step` 切换为按钮或文本补充。
-- 结果区会展示 `display_text`、`final_message`、`execution_result` 和完整 `state`，方便调试。
-

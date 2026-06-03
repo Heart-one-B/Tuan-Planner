@@ -1,85 +1,65 @@
-﻿from langgraph.graph import END, StateGraph
+﻿# src/graph/workflow.py
+from langgraph.graph import END, StateGraph
 
-from src.graph.nodes import (
-    activity_search_node,
-    candidate_planning_node,
-    clarification_node,
-    confirmation_node,
-    constraint_collect_node,
-    crowd_risk_node,
-    execution_node,
-    fact_gathering_node,
-    final_message_node,
-    final_plan_node,
-    intent_node,
-    llm_answer_node,
-    interaction_wait_node,
-    location_lookup_node,
-    location_fallback_node,
-    location_permission_node,
-    presentation_node,
-    queue_check_node,
-    reject_node,
-    repair_loop_node,
-    retrieval_node,
-    rule_validation_node,
-    route_after_confirmation,
-    schedule_timing_node,
-    time_normalize_node,
-    restaurant_search_node,
-    traffic_eta_node,
-    weather_check_node,
-    scoring_node,
-)
+from src.graph.nodes.intent_node import intent_node
+
+from src.graph.nodes.clarification_node import clarification_node, receive_clarification_node
+from src.graph.nodes.llm_answer_node import llm_answer_node
+from src.graph.nodes.constraint_build_node import constraint_build_node
+from src.graph.nodes.fact_gathering_node import fact_gathering_node
+from src.graph.nodes.candidate_planning_node import candidate_planning_node
+from src.graph.nodes.rule_validation_node import rule_validation_node
+from src.graph.nodes.repair_loop_node import repair_loop_node
+from src.graph.nodes.scoring_node import scoring_node
+from src.graph.nodes.final_plan_node import final_plan_node
+from src.graph.nodes.presentation_node import presentation_node
+from src.graph.nodes.confirmation_node import confirmation_node
+from src.graph.nodes.execution_node import execution_node
+from src.graph.nodes.final_message_node import final_message_node
+
+from src.graph.nodes.retrieval_node import retrieval_node
+
+from src.graph.routers import route_after_confirmation
 from src.graph.state import AgentState
-
 
 _MAX_CLARIFICATION_ROUNDS = 5
 
 
+# ---------------------------------------------------------------------------
+# 对应工作流专用的条件路由函数定义
+# ---------------------------------------------------------------------------
 def route_after_intent_with_clarification(state: AgentState) -> str:
+    """对应第一部分流程图中的 Leisure Planning Task? 与 Need Clarification? 判断流。"""
     intent = state.get("intent")
     if not isinstance(intent, dict):
         return "constraint_build"
+
+    # 1. Leisure Planning Task? (No -> 走直答)
     if intent.get("is_leisure_planning") is False:
         return "llm_answer"
-    missing_global = (intent.get("missing_slots", {}) or {}).get("global", [])
-    if intent.get("clarification_needed") is True and "scenario" in missing_global:
+
+    # 2. Need Clarification? (Yes -> 追问澄清分流)
+    if intent.get("clarification_needed") is True:
+        # 🌟 修复点 1：将轮次上限判定前置到路由中，避免输出无意义的空白追问状态 🌟
+        clarification_round = state.get("clarification_round", 0)
+        if isinstance(clarification_round, bool) or not isinstance(clarification_round, int):
+            clarification_round = 0
+
+        if clarification_round >= _MAX_CLARIFICATION_ROUNDS:
+            print(f"[Workflow] 达到追问上限轮次 ({_MAX_CLARIFICATION_ROUNDS})，转向直答。")
+            return "llm_answer"
+
         return "clarification"
-    if intent.get("clarification_needed") is True and any(slot in missing_global for slot in ("time_day", "time_window")):
-        return "clarification"
-    location = intent.get("location")
-    origin_area_hint = ""
-    if isinstance(location, dict):
-        hint = location.get("origin_area_hint")
-        if isinstance(hint, str):
-            origin_area_hint = hint.strip()
-    # 若用户已经给出地点线索，就直接进入后续约束收集，不再强制打断询问定位权限。
-    if not origin_area_hint and not state.get("runtime_origin_area") and "location_permission_granted" not in state:
-        return "location_permission"
+
+    # 3. 正常休闲规划路径：是否需要 mock RAG 数据检索
     if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
         return "retrieval"
-    if intent.get("clarification_needed") is True:
-        return "clarification"
+
     return "constraint_build"
 
 
-def route_after_clarification(state: AgentState) -> str:
-    if state.get("pending_action") == "clarification":
-        return "interaction_wait"
-    clarification_round = state.get("clarification_round", 0)
-    if isinstance(clarification_round, bool) or not isinstance(clarification_round, int):
-        clarification_round = 0
-    if clarification_round >= _MAX_CLARIFICATION_ROUNDS:
-        return "llm_answer"
-    return "intent"
-
-
-def route_after_candidate_planning(state: AgentState) -> str:
-    return "rule_validation"
-
-
 def route_after_rule_validation(state: AgentState) -> str:
+    """对应流程图中的 Enough Valid Plans? 合法候选充足性校验决策。"""
     result = state.get("rule_validation_result")
     valid_plans = result.get("valid_plans") if isinstance(result, dict) else None
     if isinstance(valid_plans, list) and len(valid_plans) >= 3:
@@ -88,64 +68,32 @@ def route_after_rule_validation(state: AgentState) -> str:
 
 
 def route_after_repair_loop_new(state: AgentState) -> str:
-    repair_loop_result = state.get("repair_loop_result")
-    if not isinstance(repair_loop_result, dict):
-        repair_loop_result = {}
-    next_constraint_build = repair_loop_result.get("next_constraint_build")
-    if not isinstance(next_constraint_build, dict):
-        next_constraint_build = {}
-    context_memory = next_constraint_build.get("context_memory")
-    if not isinstance(context_memory, dict):
-        context_memory = {}
-    repair_round = context_memory.get("repair_round")
-    if isinstance(repair_round, int) and repair_round >= 2:
-        return "final_plan"
+    """对应流程图中的 Repair Loop 重试计数控制路由（上限 3 次重规划）。"""
+    count = state.get("replan_count", 0)
+    if isinstance(count, bool) or not isinstance(count, int):
+        count = 0
+    if count >= 3:
+        return "final_plan"  # 达到上限时，走 final_plan 降级兜底展示
     return "constraint_build"
 
 
-def route_after_scoring(state: AgentState) -> str:
-    return "final_plan"
-
-
-def route_after_location_permission(state: AgentState) -> str:
-    if state.get("pending_action") == "location_permission":
-        return "interaction_wait"
-    return "location_lookup" if state.get("location_permission_granted") else "constraint_build"
-
-
-def route_after_location_fallback(state: AgentState) -> str:
-    if state.get("pending_action") == "location_fallback":
-        return "interaction_wait"
-    return "constraint_build"
-
-
-def route_after_confirmation(state: AgentState) -> str:
-    if state.get("pending_action") == "confirmation":
-        return "interaction_wait"
-    if state.get("user_confirmed"):
-        return "execute"
-    return "replan"
-
-
-def build_workflow():
+# ---------------------------------------------------------------------------
+# 组装并编译工作流图 (LangGraph Build)
+# ---------------------------------------------------------------------------
+def build_workflow(checkpointer=None):
     graph = StateGraph(AgentState)
 
+    # === 注册节点 (Nodes) ===
     graph.add_node("intent", intent_node)
-    graph.add_node("time_normalize", time_normalize_node)
-    graph.add_node("clarification", clarification_node)
-    graph.add_node("llm_answer", llm_answer_node)
-    graph.add_node("location_permission", location_permission_node)
-    graph.add_node("location_lookup", location_lookup_node)
-    graph.add_node("location_fallback", location_fallback_node)
-    graph.add_node("retrieval", retrieval_node)
-    graph.add_node("constraint_build", constraint_collect_node)
 
-    graph.add_node("weather_check", weather_check_node)
-    graph.add_node("activity_search", activity_search_node)
-    graph.add_node("restaurant_search", restaurant_search_node)
-    graph.add_node("traffic_eta", traffic_eta_node)
-    graph.add_node("queue_check", queue_check_node)
-    graph.add_node("crowd_risk", crowd_risk_node)
+    # 🌟 修改：分别注册发问节点与回复接收合并节点 🌟
+    graph.add_node("clarification", clarification_node)
+    graph.add_node("receive_clarification", receive_clarification_node)
+
+    graph.add_node("llm_answer", llm_answer_node)
+    graph.add_node("retrieval", retrieval_node)
+    graph.add_node("constraint_build", constraint_build_node)
+
     graph.add_node("fact_gathering", fact_gathering_node)
 
     graph.add_node("candidate_planning", candidate_planning_node)
@@ -153,79 +101,51 @@ def build_workflow():
     graph.add_node("repair_loop", repair_loop_node)
     graph.add_node("scoring", scoring_node)
     graph.add_node("final_plan", final_plan_node)
-    graph.add_node("schedule_timing", schedule_timing_node)
     graph.add_node("presentation", presentation_node)
-    graph.add_node("interaction_wait", interaction_wait_node)
     graph.add_node("confirmation", confirmation_node)
     graph.add_node("execution", execution_node)
     graph.add_node("final_message", final_message_node)
-    graph.add_node("reject", reject_node)
 
+    # === 建立连线与跳转 (Edges & Routers) ===
+
+    # 图入口
     graph.set_entry_point("intent")
-    graph.add_edge("intent", "time_normalize")
+
+    # 意图分流
     graph.add_conditional_edges(
-        "time_normalize",
+        "intent",
         route_after_intent_with_clarification,
         {
             "llm_answer": "llm_answer",
-            "location_permission": "location_permission",
             "clarification": "clarification",
             "retrieval": "retrieval",
             "constraint_build": "constraint_build",
         },
     )
-    graph.add_conditional_edges(
-        "location_permission",
-        route_after_location_permission,
-        {
-            "location_lookup": "location_lookup",
-            "constraint_build": "constraint_build",
-            "interaction_wait": "interaction_wait",
-        },
-    )
-    graph.add_conditional_edges(
-        "location_lookup",
-        lambda state: "location_fallback" if not state.get("runtime_origin_area") else "constraint_build",
-        {
-            "location_fallback": "location_fallback",
-            "constraint_build": "constraint_build",
-        },
-    )
-    graph.add_conditional_edges(
-        "location_fallback",
-        route_after_location_fallback,
-        {
-            "interaction_wait": "interaction_wait",
-            "constraint_build": "constraint_build",
-        },
-    )
-    graph.add_conditional_edges(
-        "clarification",
-        route_after_clarification,
-        {
-            "intent": "intent",
-            "llm_answer": "llm_answer",
-            "interaction_wait": "interaction_wait",
-        },
-    )
+
+    # 🌟 修改：通过静态连线直接串联澄清与接收闭环，原 route_after_clarification 条件路由废弃 🌟
+    # 澄清节点执行完毕后，执行 receive_clarification，此时由于 interrupt_after 的作用，图会在 clarification 之后自动挂起
+    graph.add_edge("clarification", "receive_clarification")
+
+    # 接收完毕并合并对话历史后，自动路由回 intent 节点重新执行完整解析
+    graph.add_edge("receive_clarification", "intent")
+
+    # 非规划直答出口
     graph.add_edge("llm_answer", END)
+
+    # 数据检索拉取 -> 约束构建
     graph.add_edge("retrieval", "constraint_build")
-    graph.add_edge("constraint_build", "weather_check")
-    graph.add_edge("constraint_build", "restaurant_search")
-    graph.add_edge("constraint_build", "traffic_eta")
-    graph.add_edge("constraint_build", "queue_check")
-    graph.add_edge("constraint_build", "crowd_risk")
-    graph.add_edge("weather_check", "activity_search")
-    graph.add_edge(
-        ["activity_search", "restaurant_search", "traffic_eta", "queue_check", "crowd_risk"],
-        "fact_gathering",
-    )
+
+    # 形成统一规划问题后，进行事实采集
+    graph.add_edge("constraint_build", "fact_gathering")
+
+    # 事实采集完毕 -> LLM规划初始方案
     graph.add_edge("fact_gathering", "candidate_planning")
-    graph.add_conditional_edges(
-        "candidate_planning",
-        route_after_candidate_planning,
-        {"rule_validation": "rule_validation"},
-    )
+
+    # 候选生成直接送审合规校验
+    graph.add_edge("candidate_planning", "rule_validation")
+
+    # 规则合规分流 (Enough Valid Plans?)
     graph.add_conditional_edges(
         "rule_validation",
         route_after_rule_validation,
@@ -234,6 +154,8 @@ def build_workflow():
             "repair_loop": "repair_loop",
         },
     )
+
+    # 修复及重规划回环退让控制
     graph.add_conditional_edges(
         "repair_loop",
         route_after_repair_loop_new,
@@ -242,29 +164,35 @@ def build_workflow():
             "final_plan": "final_plan",
         },
     )
-    graph.add_conditional_edges(
-        "scoring",
-        route_after_scoring,
-        {"final_plan": "final_plan"},
-    )
-    graph.add_edge("final_plan", "schedule_timing")
-    graph.add_edge("schedule_timing", "presentation")
+
+    # 耗时最优打分 -> 挑选高分计划并解算时刻排期
+    graph.add_edge("scoring", "final_plan")
+
+    # 排期解算完毕后渲染富文本呈现
+    graph.add_edge("final_plan", "presentation")
+
+    # 方案呈现 -> 等待 CLI 终端用户一键确认
     graph.add_edge("presentation", "confirmation")
+
+    # 用户确认状态分流 (User Confirm?) [1]
     graph.add_conditional_edges(
         "confirmation",
         route_after_confirmation,
         {
             "execute": "execution",
             "replan": "repair_loop",
-            "interaction_wait": "interaction_wait",
         },
     )
-    graph.add_edge("interaction_wait", END)
+
+    # 执行完直接进入整理消息收尾，出图
     graph.add_edge("execution", "final_message")
     graph.add_edge("final_message", END)
-    graph.add_edge("reject", END)
 
-    return graph.compile()
+    # 🌟 修改：设置图在 clarification 执行完毕、填充完 pending_clarification 之后，原地中断并保存状态 🌟
+    return graph.compile(
+        interrupt_after=["clarification"],
+        checkpointer=checkpointer,
+    )
 
 
 app = build_workflow()

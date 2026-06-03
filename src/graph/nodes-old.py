@@ -1,7 +1,6 @@
 ﻿from datetime import datetime
 import json
 import re
-from typing import Any
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
@@ -77,31 +76,6 @@ def _append_error(state: AgentState, error: str) -> AgentState:
     errors = list(state.get("errors", []))
     errors.append(error)
     return {"errors": errors}
-
-
-def _interactive_mode_enabled(state: AgentState) -> bool:
-    return state.get("interactive_mode", True) is not False
-
-
-def _pending_interaction(
-    *,
-    action: str,
-    prompt: str,
-    kind: str,
-    options: list[dict[str, Any]] | None = None,
-) -> AgentState:
-    return {
-        "pending_action": action,
-        "ui_state": {
-            "step": action,
-            "prompt": prompt,
-            "kind": kind,
-            "options": options or [],
-        },
-        "ui_prompt": prompt,
-        "ui_kind": kind,
-        "ui_options": options or [],
-    }
 
 
 def _distance_result_minutes(result) -> int | None:
@@ -361,58 +335,22 @@ def time_normalize_node(state: AgentState) -> AgentState:
 def location_permission_node(state: AgentState) -> AgentState:
     """定位权限节点：当用户未明确地点时，先询问是否允许自动定位。"""
     print("[Location Permission Node] 用户未明确地点，准备请求定位授权...")
-    if "location_permission_granted" not in state and not _interactive_mode_enabled(state):
-        follow_up = "如果你没说具体地点，我可以先用当前定位继续规划。是否允许？(y/n)"
-        return _pending_interaction(
-            action="location_permission",
-            prompt=follow_up,
-            kind="confirm",
-            options=[
-                {"label": "允许", "value": True},
-                {"label": "不允许", "value": False},
-            ],
-        )
-
-    if "location_permission_granted" in state:
-        granted = bool(state.get("location_permission_granted"))
-    else:
-        follow_up = "如果你没说具体地点，我可以先用当前定位继续规划。是否允许？(y/n): "
-        confirm = input(follow_up)
-        granted = confirm.strip().lower() == "y"
-
+    follow_up = "如果你没说具体地点，我可以先用当前定位继续规划。是否允许？(y/n): "
+    confirm = input(follow_up)
+    granted = confirm.strip().lower() == "y"
     return {
         "location_permission_granted": granted,
-        "pending_action": "",
-        "ui_state": {},
-        "ui_prompt": "",
-        "ui_kind": "",
-        "ui_options": [],
     }
 
 
 def location_fallback_node(state: AgentState) -> AgentState:
     """定位兜底节点：自动定位失败时，改为询问用户所在城市/区域。"""
     print("[Location Fallback Node] 自动定位失败，改为询问城市/区域...")
-    user_area = state.get("runtime_origin_area")
-    if not isinstance(user_area, str) or not user_area.strip():
-        if not _interactive_mode_enabled(state):
-            follow_up = "你大概在哪个城市或区域？"
-            return _pending_interaction(
-                action="location_fallback",
-                prompt=follow_up,
-                kind="text",
-            )
+    user_area = input("你大概在哪个城市或区域？\n> ").strip()
+    while not user_area:
         user_area = input("你大概在哪个城市或区域？\n> ").strip()
-        while not user_area:
-            user_area = input("你大概在哪个城市或区域？\n> ").strip()
-
     return {
         "runtime_origin_area": user_area,
-        "pending_action": "",
-        "ui_state": {},
-        "ui_prompt": "",
-        "ui_kind": "",
-        "ui_options": [],
         "location_lookup_result": {
             "status": "fallback_user_input",
             "city": user_area,
@@ -532,22 +470,11 @@ def clarification_node(state: AgentState) -> AgentState:
     if isinstance(clarification_round, bool) or not isinstance(clarification_round, int):
         clarification_round = 0
 
-    if not _interactive_mode_enabled(state):
-        clarification_response = state.get("clarification_response")
-        if not isinstance(clarification_response, str) or not clarification_response.strip():
-            print(f"[Clarification Node] waiting for web clarification: {follow_up}")
-            return _pending_interaction(
-                action="clarification",
-                prompt=follow_up,
-                kind="text",
-            )
-        extra_input = clarification_response.strip()
-    else:
-        print(f"[Clarification Node] {follow_up}")
+    print(f"[Clarification Node] {follow_up}")
+    extra_input = input("> ")
+    while not extra_input.strip():
         extra_input = input("> ")
-        while not extra_input.strip():
-            extra_input = input("> ")
-        extra_input = extra_input.strip()
+    extra_input = extra_input.strip()
 
     turns = list(state.get("conversation_turns", []))
     if not turns:
@@ -565,12 +492,6 @@ def clarification_node(state: AgentState) -> AgentState:
         "clarification_needed": False,
         "missing_slots": {},
         "follow_up_message": "",
-        "clarification_response": "",
-        "pending_action": "",
-        "ui_state": {},
-        "ui_prompt": "",
-        "ui_kind": "",
-        "ui_options": [],
     }
 
 
@@ -3325,47 +3246,9 @@ def presentation_node(state: AgentState) -> AgentState:
         return {"display_text": display_text, "plan": plan}
     except Exception as exc:
         return _append_error(state, f"Presentation node failed: {exc}")
-
-
-def interaction_wait_node(state: AgentState) -> AgentState:
-    return {}
-
-
 def confirmation_node(state: AgentState) -> AgentState:
     if "user_confirmed" in state:
-        confirmed = bool(state.get("user_confirmed"))
-        if confirmed:
-            return {
-                "user_confirmed": True,
-                "pending_action": "",
-                "ui_state": {},
-                "ui_prompt": "",
-                "ui_kind": "",
-                "ui_options": [],
-            }
-        return {
-            "user_confirmed": False,
-            "pending_action": "",
-            "ui_state": {},
-            "ui_prompt": "",
-            "ui_kind": "",
-            "ui_options": [],
-            "replan_reason": "用户未确认当前方案",
-            "replan_reason_type": "user_feedback",
-        }
-
-    if not _interactive_mode_enabled(state):
-        follow_up = "确定按照此方案执行一键下单吗？(y/n)"
-        return _pending_interaction(
-            action="confirmation",
-            prompt=follow_up,
-            kind="confirm",
-            options=[
-                {"label": "确认执行", "value": True},
-                {"label": "暂不执行", "value": False},
-            ],
-        )
-
+        return {"user_confirmed": state["user_confirmed"]}
     confirm = input("\n[系统提示] 确定按照此方案执行一键下单吗？(y/n): ")
     confirmed = confirm.lower() == "y"
     if confirmed:
@@ -3461,8 +3344,6 @@ def final_message_node(state: AgentState) -> AgentState:
 
 
 def route_after_confirmation(state: AgentState) -> str:
-    if state.get("pending_action") == "confirmation":
-        return "interaction_wait"
     if state.get("user_confirmed"):
         return "execute"
     return "replan"
