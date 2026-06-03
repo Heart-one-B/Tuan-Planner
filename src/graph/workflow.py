@@ -181,6 +181,7 @@ def build_workflow(checkpointer=None):
         {
             "execute": "execution",
             "replan": "repair_loop",
+            "await_confirmation": END,
         },
     )
 

@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import Any
 
 from src.tools.amap_mcp_client import AmapMCPClient
+from src.utils.config_handler import tools_conf
 from src.utils.path_tool import get_abs_path
-from utils.config_handler import tools_conf
 
 _CACHE_FILE        = get_abs_path("data/amap_cache.json")
 _POI_DETAIL_CACHE  = get_abs_path("data/poi_detail_cache.json")

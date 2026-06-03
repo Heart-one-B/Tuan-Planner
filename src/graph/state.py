@@ -70,6 +70,8 @@ class AgentState(TypedDict, total=False):
     plan: dict[str, Any]
     display_text: str
     user_confirmed: bool
+    web_preview_mode: bool
+    pending_confirmation: dict[str, Any]
 
     # --- execution and final output ---
     execution_result: dict[str, Any]
