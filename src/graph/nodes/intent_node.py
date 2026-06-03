@@ -28,7 +28,6 @@ def intent_node(state: AgentState) -> AgentState:
     return {
         "intent": intent_dict,
         "is_leisure_planning": intent_dict.get("is_leisure_planning"),
-        "need_retrieval": intent_dict.get("need_retrieval"),
         "clarification_needed": intent_dict.get("clarification_needed"),
         "missing_slots": intent_dict.get("missing_slots", []),
         "current_asking_slot": intent_dict.get("current_asking_slot"),

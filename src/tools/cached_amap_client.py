@@ -267,7 +267,7 @@ class CachedAmapClient:
             {id, name, address, location, type, rating, distance, tel, keyword_source}
         """
         loc_key = location or city
-        key = self._key("search", keywords, loc_key, radius)
+        key = self._key("search", keywords, loc_key, radius, poi_type)
         hit = self._get(key, "search")
         if hit is not None:
             return hit

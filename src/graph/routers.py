@@ -55,21 +55,3 @@ def route_after_intent(state: AgentState) -> str:
         return "llm_answer"
     return "planning"
 
-
-def route_after_intent_for_retrieval(state: AgentState) -> str:
-    """Intent 节点之后的条件路由（含 retrieval 分支）。
-
-    判定逻辑：
-        * intent 缺失 / 非 dict → 保守走 ``planning``；
-        * ``is_leisure_planning is False`` → ``llm_answer``；
-        * ``is_leisure_planning is True`` 且 ``need_retrieval is True`` → ``retrieval``；
-        * 其它 → ``planning``。
-    """
-    intent = state.get("intent")
-    if not isinstance(intent, dict):
-        return "planning"
-    if intent.get("is_leisure_planning") is False:
-        return "llm_answer"
-    if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
-        return "retrieval"
-    return "planning"

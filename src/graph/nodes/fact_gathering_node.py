@@ -10,23 +10,97 @@ from src.utils.state_utils import _append_error
 _CHILD_KEYWORDS = ("儿童", "亲子", "乐园", "科技馆", "博物馆", "动物园", "水族")
 _RADIUS = {"near": "3000", "medium": "5000"}
 
+# 最小化验证版核心改动：池子构建从"首词吃满 [:10]"改为"逐词限额轮询"。
+# 每个关键词最多贡献 _PER_KEYWORD_LIMIT 条，保证每个关键词都能进池子，
+# 池子总上限仍是 _POOL_LIMIT。这样下午聚会的"桌游/台球"不会被"酒吧"挤掉。
+_PER_KEYWORD_LIMIT = 3
+_POOL_LIMIT = 12
+
 
 def _safe_list(v: Any) -> list:
     return v if isinstance(v, list) else []
 
 
+def _collect_pois_round_robin(
+    api: CachedAmapClient,
+    keywords: list[str],
+    *,
+    location: str,
+    city: str,
+    radius: str,
+    poi_type: str = "",
+    exclude: list[str] | None = None,
+    post_process=None,
+) -> list[dict]:
+    """
+    逐关键词限额收集 POI，轮询合并，去重。
+    - 每个关键词先各取最多 _PER_KEYWORD_LIMIT 条（保证多样性）
+    - 若总量不足 _POOL_LIMIT，再从各关键词剩余结果补齐
+    - post_process: 可选，对单个 poi 做加工（如 infer_environment），返回加工后的 poi
+    """
+    exclude = exclude or []
+    # 先把每个关键词的搜索结果各自存好（不立即截断）
+    per_kw_results: list[list[dict]] = []
+    for kw in keywords:
+        try:
+            pois = api.search_pois(kw, location=location, city=city, radius=radius, poi_type=poi_type)
+        except Exception:
+            pois = []
+        cleaned: list[dict] = []
+        for poi in pois:
+            if not isinstance(poi, dict):
+                continue
+            name = poi.get("name") or ""
+            if exclude and any(ex in name for ex in exclude):
+                continue
+            if post_process:
+                poi = post_process(poi)
+            cleaned.append(poi)
+        per_kw_results.append(cleaned)
+
+    seen_ids: set[str] = set()
+    pool: list[dict] = []
+
+    def _try_add(poi: dict) -> bool:
+        pid = poi.get("id") or ""
+        if pid and pid in seen_ids:
+            return False
+        if pid:
+            seen_ids.add(pid)
+        pool.append(poi)
+        return True
+
+    # 第一轮：每个关键词各取前 _PER_KEYWORD_LIMIT 条
+    for results in per_kw_results:
+        added = 0
+        for poi in results:
+            if added >= _PER_KEYWORD_LIMIT:
+                break
+            if _try_add(poi):
+                added += 1
+        if len(pool) >= _POOL_LIMIT:
+            return pool[:_POOL_LIMIT]
+
+    # 第二轮：池子还没满，从各关键词剩余结果补齐
+    idx = _PER_KEYWORD_LIMIT
+    while len(pool) < _POOL_LIMIT:
+        progressed = False
+        for results in per_kw_results:
+            if idx < len(results):
+                if _try_add(results[idx]):
+                    progressed = True
+                if len(pool) >= _POOL_LIMIT:
+                    break
+        idx += 1
+        if not progressed:
+            break
+
+    return pool[:_POOL_LIMIT]
+
+
 def fact_gathering_node(state: AgentState) -> AgentState:
     """
-    Fact Gathering Node：将 plan_context 中的文字信息转化为真实外部数据。
-
-    核心流程：
-      1. geocode(origin_area)          → city + coordinates
-      2. weather(city)                 → 天气 + 风险等级
-      3. search_pois(activity_keywords) → 活动候选列表
-      4. search_pois(restaurant_keywords) → 餐厅候选列表
-      5. distance(origin → each POI)   → ETA（有坐标时）
-
-    所有调用经 CachedAmapClient，命中缓存直接返回，不消耗高德额度。
+    Fact Gathering Node（最小化验证版）：检索循环改轮询，保证池子多样。
     """
     print("[Fact Gathering Node] 采集事实数据...")
 
@@ -34,14 +108,13 @@ def fact_gathering_node(state: AgentState) -> AgentState:
     errors = list(state.get("errors") or [])
     api    = CachedAmapClient()
 
-    # ── 1. Geocode：出发地文字 → 城市 + 坐标 ─────────────────────────────────
+    # ── 1. Geocode ────────────────────────────────────────────────────────────
     origin_area:        str = plan.get("origin_area") or ""
     origin_coordinates: str = plan.get("origin_coordinates") or ""
 
     geo = {"city": "", "coordinates": "", "district": ""}
     try:
         geo = api.geocode(origin_area)
-        # plan_context 已有精确坐标时优先使用（用户授权定位时写入）
         if origin_coordinates:
             geo["coordinates"] = origin_coordinates
     except Exception as exc:
@@ -58,7 +131,7 @@ def fact_gathering_node(state: AgentState) -> AgentState:
     except Exception as exc:
         errors.append(f"Weather failed: {exc}")
 
-    # ── 3. 活动搜索 ───────────────────────────────────────────────────────────
+    # ── 3. 活动搜索（轮询）────────────────────────────────────────────────────
     activities:  list[dict] = []
     child_friendly: bool    = bool(plan.get("child_friendly"))
     weather_high:   bool    = (weather.get("risk_level") or "low") == "high"
@@ -66,74 +139,49 @@ def fact_gathering_node(state: AgentState) -> AgentState:
 
     if plan.get("need_activity") is not False:
         try:
-            seen_ids: set[str] = set()
-            for kw in _safe_list(plan.get("activity_keywords")):
-                pois = api.search_pois(
-                    kw,
-                    location=coordinates,
-                    city=city,
-                    radius=radius,
-                )
-                for poi in pois:
-                    pid = poi.get("id") or ""
-                    if pid and pid in seen_ids:
-                        continue
-                    if pid:
-                        seen_ids.add(pid)
-                    poi["environment"] = CachedAmapClient.infer_environment(poi)
-                    activities.append(poi)
+            activities = _collect_pois_round_robin(
+                api,
+                _safe_list(plan.get("activity_keywords")),
+                location=coordinates,
+                city=city,
+                radius=radius,
+                post_process=lambda p: {**p, "environment": CachedAmapClient.infer_environment(p)},
+            )
 
-            # 亲子过滤：优先保留名称含亲子关键词的场所
             if child_friendly:
                 cf = [a for a in activities
                       if any(t in (a.get("name") or "") for t in _CHILD_KEYWORDS)]
                 activities = cf or activities
 
-            # 天气过滤：高风险天气优先室内
             if weather_high:
                 indoor = [a for a in activities if a.get("environment") == "indoor"]
                 if indoor:
                     activities = indoor
-
-            activities = activities[:10]
         except Exception as exc:
             errors.append(f"Activity search failed: {exc}")
 
-    # ── 4. 餐厅搜索 ───────────────────────────────────────────────────────────
+    # ── 4. 餐厅搜索（轮询）────────────────────────────────────────────────────
     restaurants: list[dict] = []
 
     if plan.get("need_restaurant") is not False:
         try:
-            exclude: list[str] = _safe_list(plan.get("exclude_restaurant"))
-            seen_ids = set()
-            for kw in _safe_list(plan.get("restaurant_keywords")):
-                pois = api.search_pois(
-                    kw,
-                    location=coordinates,
-                    city=city,
-                    radius=radius,
-                    poi_type="050000",
-                )
-                for poi in pois:
-                    pid = poi.get("id") or ""
-                    if pid and pid in seen_ids:
-                        continue
-                    if pid:
-                        seen_ids.add(pid)
-                    if exclude and any(ex in (poi.get("name") or "") for ex in exclude):
-                        continue
-                    restaurants.append(poi)
-
-            restaurants = restaurants[:10]
+            restaurants = _collect_pois_round_robin(
+                api,
+                _safe_list(plan.get("restaurant_keywords")),
+                location=coordinates,
+                city=city,
+                radius=radius,
+                poi_type="050000",
+                exclude=_safe_list(plan.get("exclude_restaurant")),
+            )
         except Exception as exc:
             errors.append(f"Restaurant search failed: {exc}")
 
-    # ── 5. 补全 POI 坐标（搜索结果通常不含 location 字段）────────────────────
-    # 调 poi_detail() 获取坐标，结果有 7 天缓存，同一 POI 只调一次
+    # ── 5. 补全坐标 ───────────────────────────────────────────────────────────
     if coordinates:
         for poi in activities + restaurants:
             if poi.get("location"):
-                continue                          # 已有坐标，跳过
+                continue
             pid = poi.get("id") or ""
             if not pid:
                 continue
@@ -146,9 +194,8 @@ def fact_gathering_node(state: AgentState) -> AgentState:
             except Exception:
                 continue
 
-    # ── 6. ETA（仅有出发坐标时计算）─────────────────────────────────────────
+    # ── 6. ETA ────────────────────────────────────────────────────────────────
     eta: dict[str, Any] = {}
-
     if coordinates:
         for poi in activities + restaurants:
             pid  = poi.get("id") or ""
@@ -162,7 +209,6 @@ def fact_gathering_node(state: AgentState) -> AgentState:
             except Exception:
                 continue
 
-    # ── 输出 ─────────────────────────────────────────────────────────────────
     fact_gathering_result = {
         "weather":     weather,
         "activities":  activities,

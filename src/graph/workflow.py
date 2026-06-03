@@ -2,7 +2,6 @@
 from langgraph.graph import END, StateGraph
 
 from src.graph.nodes.intent_node import intent_node
-
 from src.graph.nodes.clarification_node import clarification_node, receive_clarification_node
 from src.graph.nodes.llm_answer_node import llm_answer_node
 from src.graph.nodes.constraint_build_node import constraint_build_node
@@ -16,8 +15,6 @@ from src.graph.nodes.presentation_node import presentation_node
 from src.graph.nodes.confirmation_node import confirmation_node
 from src.graph.nodes.execution_node import execution_node
 from src.graph.nodes.final_message_node import final_message_node
-
-from src.graph.nodes.retrieval_node import retrieval_node
 
 from src.graph.routers import route_after_confirmation
 from src.graph.state import AgentState
@@ -40,7 +37,7 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
 
     # 2. Need Clarification? (Yes -> 追问澄清分流)
     if intent.get("clarification_needed") is True:
-        # 🌟 修复点 1：将轮次上限判定前置到路由中，避免输出无意义的空白追问状态 🌟
+        # 将轮次上限判定前置到路由中，避免输出无意义的空白追问状态
         clarification_round = state.get("clarification_round", 0)
         if isinstance(clarification_round, bool) or not isinstance(clarification_round, int):
             clarification_round = 0
@@ -51,10 +48,7 @@ def route_after_intent_with_clarification(state: AgentState) -> str:
 
         return "clarification"
 
-    # 3. 正常休闲规划路径：是否需要 mock RAG 数据检索
-    if intent.get("is_leisure_planning") is True and intent.get("need_retrieval") is True:
-        return "retrieval"
-
+    # 3. 正常休闲规划路径：去除了数据检索判断，直接流向约束构建
     return "constraint_build"
 
 
@@ -86,12 +80,11 @@ def build_workflow(checkpointer=None):
     # === 注册节点 (Nodes) ===
     graph.add_node("intent", intent_node)
 
-    # 🌟 修改：分别注册发问节点与回复接收合并节点 🌟
+    # 分别注册发问节点与回复接收合并节点
     graph.add_node("clarification", clarification_node)
     graph.add_node("receive_clarification", receive_clarification_node)
 
     graph.add_node("llm_answer", llm_answer_node)
-    graph.add_node("retrieval", retrieval_node)
     graph.add_node("constraint_build", constraint_build_node)
 
     graph.add_node("fact_gathering", fact_gathering_node)
@@ -111,19 +104,17 @@ def build_workflow(checkpointer=None):
     # 图入口
     graph.set_entry_point("intent")
 
-    # 意图分流
     graph.add_conditional_edges(
         "intent",
         route_after_intent_with_clarification,
         {
             "llm_answer": "llm_answer",
             "clarification": "clarification",
-            "retrieval": "retrieval",
             "constraint_build": "constraint_build",
         },
     )
 
-    # 🌟 修改：通过静态连线直接串联澄清与接收闭环，原 route_after_clarification 条件路由废弃 🌟
+    # 通过静态连线直接串联澄清与接收闭环，原 route_after_clarification 条件路由废弃
     # 澄清节点执行完毕后，执行 receive_clarification，此时由于 interrupt_after 的作用，图会在 clarification 之后自动挂起
     graph.add_edge("clarification", "receive_clarification")
 
@@ -132,9 +123,6 @@ def build_workflow(checkpointer=None):
 
     # 非规划直答出口
     graph.add_edge("llm_answer", END)
-
-    # 数据检索拉取 -> 约束构建
-    graph.add_edge("retrieval", "constraint_build")
 
     # 形成统一规划问题后，进行事实采集
     graph.add_edge("constraint_build", "fact_gathering")
@@ -174,7 +162,7 @@ def build_workflow(checkpointer=None):
     # 方案呈现 -> 等待 CLI 终端用户一键确认
     graph.add_edge("presentation", "confirmation")
 
-    # 用户确认状态分流 (User Confirm?) [1]
+    # 用户确认状态分流 (User Confirm?)
     graph.add_conditional_edges(
         "confirmation",
         route_after_confirmation,
@@ -188,9 +176,9 @@ def build_workflow(checkpointer=None):
     graph.add_edge("execution", "final_message")
     graph.add_edge("final_message", END)
 
-    # 🌟 修改：设置图在 clarification 执行完毕、填充完 pending_clarification 之后，原地中断并保存状态 🌟
+    # 设置图在 clarification 执行完毕、填充完 pending_clarification 之后，原地中断并保存状态
     return graph.compile(
-        interrupt_after=["clarification"],
+        interrupt_after=["clarification", "confirmation"],
         checkpointer=checkpointer,
     )
 
