@@ -1,4 +1,4 @@
-from utils.config_handler import tools_conf
+from src.utils.config_handler import tools_conf
 import requests
 from langchain_core.tools import tool
 
