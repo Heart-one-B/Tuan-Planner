@@ -10,22 +10,6 @@ from src.graph.state import AgentState
 from src.model.factory import get_chat_model
 from src.utils.state_utils import _append_error
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 最小化验证版本：核心改动 = 把完整语境（用户原话）还给模型，不再用结构化字段架空它。
-#
-# 改动点：
-#   1. System Prompt：删掉"满天行程"四步示例（morning→lunch→afternoon→dinner），
-#      改成单步极简示例 + 明确声明"段数随需求和时间窗变化，留白优于硬塞"。
-#   2. System Prompt：新增一条总则——以用户原始需求为唯一权威，结构化字段仅供参考。
-#   3. System Prompt：afternoon 相位判断从"单端点 end_time>=15:00"改为"重叠判断"，
-#      避免 18:00-22:00 这种纯晚间窗口凭空多出下午段。
-#   4. user_message：raw_query 提到最顶、强措辞声明为权威需求；
-#      删除 diet_preference 字段（它把"晚上喝点酒"压成全局"喝酒"标签污染所有时段）。
-#      activity_style / must_avoid 保留（未被污染，是有效约束）。
-#
-# 不改：schema、意图节点输出、时间地板修正逻辑、池子结构。
-# ──────────────────────────────────────────────────────────────────────────────
-
 _SYSTEM_PROMPT = """\
 你是本地生活行程规划助手，负责根据用户需求和候选 POI 池生成 3 个候选行程方案。
 
@@ -60,7 +44,7 @@ poi_type 值：activity / restaurant。
 休闲行程的时长本就因人而异、无法精确，请按活动的强度给一个**档位**，系统会结合可用时间换算成实际时长：
 - "short"：约 1 小时（咖啡馆小坐、逛商场、快餐、小酌一杯）
 - "medium"：约 2 小时（正餐、台球、桌游、KTV、一般景点）
-- "long"：约 3 小时（剧本杀、密室逃脱、深度局、大型场馆/乐园）
+- "long"：约 2-3 小时（剧本杀、密室逃脱、电影、大型场馆/乐园）——电影至少2小时，请给 long
 按"这是个轻松/常规/深度的活动"来选档，不要纠结具体分钟。
 
 ## 选址规则
@@ -82,20 +66,54 @@ poi_type 值：activity / restaurant。
 人需要吃饭——不管下午安排了多少活动，只要时间窗包含晚饭时间，就必须有一个 poi_type=restaurant 的 dinner step。
 用户原话没有提到晚饭，不代表不需要吃饭；这是基本的生活常识，不是可选项。
 
-## 时段密度（同一时段安排几个活动）
-判断每个时段适合安排几个活动：先大致估算各活动占用的时长档位（short≈1h / medium≈2h / long≈3h），
-再看这个时段的可用时间能容纳几个（活动之间还需留通勤时间）。
-例如下午 14:00-17:30 约 3.5 小时，可安排两个 medium 活动，或一个 long 活动。
-宁可排得舒展，也不要硬塞到时间紧张；但明显有大段空白时应再加一个活动填充。
-**你只决定"排几个、各是什么档位"，具体时刻由系统计算。**
+## 时段密度——输出前必须完成的推算步骤（硬规则）
+
+档位时长参考：short≈1h，medium≈2h，long≈2.5h。
+
+**每次输出前，按以下步骤逐项推算，不能跳过：**
+
+### 上午（morning）
+可用时间 = 11:30 - 用户开始时间
+- 可用 < 1.5h → 最多 1 个 short
+- 1.5h ≤ 可用 < 3h → 1 个 medium 或 1short+1short
+- 可用 ≥ 3h → 可安排 1 个 long，或 1medium+1short
+- **绝对不要在上午塞 2 个 long**，否则午饭会被顶过 13:00
+
+### 下午（afternoon）——最容易出错，重点检查
+可用时间 = 17:30 - 午饭结束时间（午饭 medium 约 1h，结束约 12:30~13:00）
+
+**下午所有活动时长之和必须覆盖到 16:00 以后**，否则到 17:30 晚饭前会出现超过 90 分钟空档，触发重规划。
+
+推算示例（必须照此执行）：
+- 午饭 12:30 结束 → 下午可用约 5h → 需要 2~3 个活动（如 long+short，或 medium+medium，或 medium+short+short）
+- 午饭 13:00 结束 → 下午可用约 4.5h → 需要 2 个活动（如 long+short，或 medium+medium）
+- 午饭 13:30 结束 → 下午可用约 4h → 需要 2 个活动（如 medium+medium，或 medium+short）
+
+**结论：只要午饭在 13:30 前结束，下午就必须安排至少 2 个活动。只安排 1 个必然触发重规划。**
+
+### 验证（输出前自查）
+排完 steps 后，心算最后一个下午活动的结束时间：
+- 结束时间 ≥ 16:00 → 通过，到晚饭等待 ≤ 90 分钟合理
+- 结束时间 < 16:00 → 不通过，必须再加一个 short 活动
+
+**不要在上午/下午堆太多 long**，否则会把午饭顶过 13:00 或晚饭顶过 19:00。
 
 ## evening 场景规则
 - family（有孩子）→ 不安排 evening，dinner 是终点
 - couple / friends / team → evening 可正常安排
+- **晚饭结束后可以直接开始 evening 活动，不需要强制等待消化时间**
 
 ## 天气规则
 - 雨/雷雨/大风 → 优先 environment=indoor
 - 阴天/多云/晴 → 室内外均可，优先贴合用户原话
+
+## waypoint（途径小需求，重要）
+用户有时会提出非主要活动的小需求（吃DQ、买奶茶、顺路买甜品等）。
+系统会把搜索到的 waypoint POI 单独提供给你，你需要把它安排进方案里：
+- waypoint 不是主要活动，不独占完整时段，而是**插在两个活动之间作为过渡**
+- 选择最自然的位置（根据 time_hint 或上下文判断），时长给 short 档
+- 如果提供了 waypoint 但 not_found=true，在 reasoning 里说明"附近未找到XXX，已跳过"
+- waypoint step 的 phase 填它所在的时段（afternoon/evening 等），poi_type 填 "activity"
 
 ## 其他
 - reasoning 只写 2-3 条简短理由，并体现"为什么这样安排贴合用户原话"
@@ -124,45 +142,39 @@ _DEFAULT_TRAVEL = 15      # 拿不到 ETA 时的兜底通勤（分钟）
 _MIN_STEP_DURATION = 45   # 超时压缩时的时长下限
 _MIN_TRANSITION_MINUTES = 10  # 相邻 step 最小间隔，与 rule_validation 保持一致
 
-# 时长档位 → (下限, 上限) 分钟区间。代码按可用时间在区间内弹性取值。
-_TIER_RANGE: dict[str, tuple[int, int]] = {
-    "short":  (45, 75),
-    "medium": (90, 150),
-    "long":   (150, 210),
+# 时长档位 → (下限, 上限) 分钟区间。活动和餐饮分开，避免一顿饭被拉到 140 分钟。
+_TIER_RANGE_ACTIVITY: dict[str, tuple[int, int]] = {
+    "short":  (45,  75),
+    "medium": (90,  150),
+    "long":   (120, 180),  # 电影/剧本杀等需要 2 小时+的活动
+}
+_TIER_RANGE_MEAL: dict[str, tuple[int, int]] = {
+    "short":  (30,  45),   # 快餐/轻食
+    "medium": (45,  75),   # 普通正餐
+    "long":   (90,  120),  # 自助/火锅/大桌宴
 }
 _DEFAULT_TIER = "medium"
 
-# 常识 sanity 规则：各 phase 的最早开始时间（只拦离谱值，不硬拉到这个点）。
-_PHASE_EARLIEST: dict[str, int] = {
-    "lunch":   11 * 60 + 30,   # 午餐不早于 11:30
-    "dinner":  17 * 60 + 30,   # 晚餐不早于 17:30
-    "evening": 19 * 60 + 30,   # 夜间活动不早于 19:30
-}
-# 晚餐与夜间活动之间的消化/转场间隔（分钟）
-_DINNER_TO_EVENING_GAP = (60, 120)
+# ── 餐饮时间窗口（自适应窗口，不是固定开始时间）────────────────────────────
+# 餐饮开始时间 = max(上一活动结束 + 通勤, 窗口下限)
+# 若超出窗口上限才触发 repair
+_LUNCH_WINDOW  = (11 * 60 + 30, 13 * 60)       # 午饭合理区间 11:30 ~ 13:00
+_DINNER_WINDOW = (17 * 60 + 30, 19 * 60)       # 晚饭合理区间 17:30 ~ 19:00
 
 
 def _tier_range(step: dict) -> tuple[int, int]:
+    poi_type = step.get("poi_type")
+    table = _TIER_RANGE_MEAL if poi_type == "restaurant" else _TIER_RANGE_ACTIVITY
     tier = step.get("duration_tier")
-    if tier not in _TIER_RANGE:
-        # 兼容/兜底：餐厅默认 medium 偏短，活动默认 medium
-        tier = _DEFAULT_TIER
-    return _TIER_RANGE[tier]
+    return table.get(tier) or table[_DEFAULT_TIER]
 
 
 def _travel_to(prev_step: dict | None, step: dict, eta: dict) -> int:
-    """相邻两段之间的通勤分钟。优先用高德真实 ETA，拿不到用兜底值。
-
-    说明：当前 eta 是 origin→POI 的单程时间。第一段（出发地→首个 POI）精确；
-    后续段用目标 POI 的 origin-ETA 作为近似（点到点 ETA 需另算，见 TODO）。
-    """
     if prev_step is None:
-        # 第一段：出发地 → 首个 POI，直接用该 POI 的 origin-ETA
         rec = eta.get(step.get("poi_id") or "")
         if isinstance(rec, dict) and rec.get("eta_minutes") is not None:
             return int(rec["eta_minutes"])
         return _DEFAULT_TRAVEL
-    # 后续段：用目标 POI 的 origin-ETA 近似（TODO: 改为 prev→curr 点到点 ETA）
     rec = eta.get(step.get("poi_id") or "")
     if isinstance(rec, dict) and rec.get("eta_minutes") is not None:
         return int(rec["eta_minutes"])
@@ -176,16 +188,19 @@ def _assign_step_times(
     eta: dict | None = None,
 ) -> list[dict]:
     """
-    纯代码时刻求解器。模型只给"有序活动 + 档位 + phase"，这里负责算出所有时刻。
+    纯代码时刻求解器。核心理念：活动驱动、餐饮跟随。
+    - lunch:  start = max(prev_end + transit, LUNCH_WINDOW[0])，超出上限由 rule_validation 上报
+    - dinner: start = max(prev_end + transit, DINNER_WINDOW[0])，超出上限优先压缩下午活动，
+              压缩不动（活动已在下限）则交 rule_validation 上报 dinner_too_late
+    - evening: start = dinner_end + transit（不强制消化间隔）
 
-    流程：
-      1. 每段时长先取档位区间下限，通勤用高德 ETA（拿不到用兜底）。
-      2. 应用常识 sanity：午餐不早于 11:30、晚餐不早于 17:30、
-         晚餐与其后的夜间活动至少留 60 分钟间隔。
-      3. 若总时长未填满用户时间窗，按比例把各段在档位区间内弹性拉长，填充富余。
-      4. 若超出 end_time，压缩最后一段（下限 _MIN_STEP_DURATION）；
-         仍放不下交 rule_validation 的 overflow 校验兜底。
-    模型不再输出 start_time，故此处不读取模型时刻。
+    时长分配分三层（顺序很重要）：
+      1. 餐前空档填充：把餐饮前的活动拉长以消除"活动早早结束、干等饭点"的空档，
+         但**绝不把餐饮顶出窗口上限**（顶出则回退多加的部分）。
+      2. 末段 slack 填充：剩余空闲按末段优先分配。
+      3. dinner 超时压缩 + 末段超时压缩：兜底收口。
+      下午活动太少（拉满仍有大空档）或太多（压不动仍超时）属于"语义层面排得不合理"，
+      不在求解器内强行扭曲，交由 rule_validation + repair_loop 让模型重排。
     """
     eta = eta or {}
     plan_start = _hhmm_to_minutes(start_time)
@@ -204,60 +219,113 @@ def _assign_step_times(
         prev = steps[i - 1] if i > 0 else None
         travels.append(0 if i == 0 else _travel_to(prev, step, eta))
 
-    # ── 2. 先排一遍，应用 sanity 规则得到每段起始 ───────────────────────────
+    # ── 2. 排布函数：活动驱动、餐饮自适应跟随 ──────────────────────────────
     def _layout(durs: list[int]) -> list[tuple[int, int]]:
-        """给定各段时长，结合通勤与 sanity 规则，算出 [(start, end), ...]。"""
         spans: list[tuple[int, int]] = []
         cursor = plan_start
-        prev_phase = ""
-        prev_end = None
+
         for i, step in enumerate(steps):
             phase = step.get("phase") or "afternoon"
             cursor += travels[i]
-            # sanity：phase 最早开始
-            earliest = _PHASE_EARLIEST.get(phase)
-            if earliest is not None and cursor < earliest:
-                cursor = earliest
-            # sanity：晚餐 → 夜间活动 至少留间隔
-            if prev_phase == "dinner" and phase == "evening" and prev_end is not None:
-                min_start = prev_end + _DINNER_TO_EVENING_GAP[0]
-                if cursor < min_start:
-                    cursor = min_start
+
+            if phase == "lunch":
+                cursor = max(cursor, _LUNCH_WINDOW[0])
+            elif phase == "dinner":
+                cursor = max(cursor, _DINNER_WINDOW[0])
+            elif phase == "evening":
+                # 紧跟 dinner 结束 + 通勤，不强制额外等待
+                pass
+
             start = cursor
             end = start + durs[i]
             spans.append((start, end))
             cursor = end
-            prev_phase = phase
-            prev_end = end
+
         return spans
 
-    spans = _layout(durations)
+    # ── 3a. 餐前空档填充：消除"活动早结束、干等饭点"的空档 ──────────────────
+    def _fill_pre_meal_gaps() -> list[tuple[int, int]]:
+        spans = _layout(durations)
+        for meal_idx, step in enumerate(steps):
+            phase = step.get("phase")
+            if phase not in ("lunch", "dinner") or meal_idx == 0:
+                continue
+            window = _LUNCH_WINDOW if phase == "lunch" else _DINNER_WINDOW
 
-    # ── 3. 弹性填充：末段优先策略 ────────────────────────────────────────────
-    # 优先拉长最后一段（在酒吧多待一会儿），而非均摊到所有段。
-    # 均摊会让中间段结束时间后移，压缩后续段的通勤缓冲，触发 transition_too_rushed。
-    # 末段拉长后若仍有剩余 slack，再反向逐段补充（倒数第二、第三…），
-    # 但每段补充后都重新校验相邻间隔，保证通勤空间不被压垮。
+            # 餐饮已自然顺延到窗口下限之后（前序活动够长）→ 无需填充
+            if spans[meal_idx][0] > window[0]:
+                continue
+
+            prev_end = spans[meal_idx - 1][1]
+            transit = travels[meal_idx]
+            gap = window[0] - (prev_end + transit)
+            if gap <= 0:
+                continue
+
+            # 把空档分配给餐饮前面的活动（从紧邻的往前），不超过各自上限
+            remaining = gap
+            for i in range(meal_idx - 1, -1, -1):
+                if steps[i].get("phase") in ("lunch", "dinner", "evening"):
+                    continue
+                lo, hi = _tier_range(steps[i])
+                headroom = hi - durations[i]
+                if headroom <= 0:
+                    continue
+                add = min(headroom, remaining)
+                durations[i] += add
+                remaining -= add
+                if remaining <= 0:
+                    break
+            spans = _layout(durations)
+
+            # 关键保护：填充后若把餐饮顶出窗口上限，回退多加的部分
+            if spans[meal_idx][0] > window[1]:
+                overshoot = spans[meal_idx][0] - window[1]
+                for i in range(meal_idx - 1, -1, -1):
+                    if steps[i].get("phase") in ("lunch", "dinner", "evening"):
+                        continue
+                    lo, _ = _tier_range(steps[i])
+                    back = min(durations[i] - lo, overshoot)
+                    if back > 0:
+                        durations[i] -= back
+                        overshoot -= back
+                    if overshoot <= 0:
+                        break
+                spans = _layout(durations)
+        return spans
+
+    spans = _fill_pre_meal_gaps()
+
+    # ── 3b. 末段 slack 填充：按 headroom 比例分配，活动与餐饮平等竞争 ───────────
+    # 比例分配：每段能拿到的 slack 与自己的 headroom（上限-下限）成正比，
+    # 避免倒序时末段（evening）把 slack 独吞，餐饮和前面的活动一无所获。
+    # 这样 long 餐饮（自助/火锅）和 long 活动（电影/KTV）都能按比例拿到合理时长。
     if plan_end is not None:
         slack = plan_end - spans[-1][1]
         if slack > 0:
-            headrooms = []
-            for step in steps:
-                lo, hi = _tier_range(step)
-                headrooms.append(hi - lo)
-
-            # 从最后一段开始向前逐段消化 slack
-            for i in range(n - 1, -1, -1):
-                if slack <= 0:
-                    break
-                add_i = min(slack, headrooms[i])
-                if add_i > 0:
-                    durations[i] += add_i
-                    slack -= add_i
+            headrooms = [max(0, _tier_range(steps[i])[1] - durations[i]) for i in range(n)]
+            total_headroom = sum(headrooms)
+            if total_headroom > 0:
+                for i in range(n):
+                    if headrooms[i] <= 0:
+                        continue
+                    # 按比例分配，向下取整；余数在后面补
+                    add_i = int(slack * headrooms[i] / total_headroom)
+                    add_i = min(add_i, headrooms[i])
+                    if add_i > 0:
+                        durations[i] += add_i
+                # 分配完后把整除余数补给 headroom 最大的段
+                spans = _layout(durations)
+                remaining = plan_end - spans[-1][1]
+                if remaining > 0:
+                    best = max(range(n), key=lambda i: headrooms[i])
+                    extra = min(remaining, headrooms[best] - (durations[best] - (int(slack * headrooms[best] / total_headroom) if total_headroom > 0 else 0)))
+                    extra = min(remaining, _tier_range(steps[best])[1] - durations[best])
+                    if extra > 0:
+                        durations[best] += extra
             spans = _layout(durations)
 
-            # 补充后检查：若有相邻 step 间隔 < _MIN_TRANSITION_MINUTES，
-            # 说明某段被拉长后挤压了通勤，把该段时长收缩回来
+            # 补充后检查：若相邻间隔被挤压到 < _MIN_TRANSITION_MINUTES，收缩该段
             changed = True
             while changed:
                 changed = False
@@ -271,13 +339,32 @@ def _assign_step_times(
                             changed = True
                             break
 
-    # ── 4. 超时压缩：末段超出 end_time 超过 15 分钟才压缩 ─────────────────────
-    # 用户不是机器人，15 分钟内的超时可以自行提前结束，不需要系统强制压缩
+    # ── 4. dinner 超时压缩：dinner 超出窗口上限则压缩前序下午活动 ────────────
+    dinner_idx = next((i for i, s in enumerate(steps) if s.get("phase") == "dinner"), None)
+    if dinner_idx is not None and spans[dinner_idx][0] > _DINNER_WINDOW[1]:
+        overshoot = spans[dinner_idx][0] - _DINNER_WINDOW[1]
+        for i in range(dinner_idx - 1, -1, -1):
+            if steps[i].get("phase") not in ("morning", "lunch", "afternoon"):
+                continue
+            lo, _ = _tier_range(steps[i])
+            shrink = min(durations[i] - lo, overshoot)
+            if shrink > 0:
+                print(
+                    f"[Candidate Planning Node] dinner超时压缩: "
+                    f"{steps[i].get('label')} {durations[i]}min → {durations[i]-shrink}min"
+                )
+                durations[i] -= shrink
+                overshoot -= shrink
+            if overshoot <= 0:
+                break
+        spans = _layout(durations)
+        # 压缩不动（活动已全在下限、overshoot 仍 > 0）→ 不强扭，
+        # dinner 仍超窗，由 rule_validation 报 dinner_too_late 让模型减少下午活动
+
+    # ── 5. 末段超时压缩 ──────────────────────────────────────────────────────
     _COMPRESS_THRESHOLD = 15
     if plan_end is not None and spans[-1][1] > plan_end + _COMPRESS_THRESHOLD:
         last_start = spans[-1][0]
-        # 超时压缩：直接用可用时间，不强制 _MIN_STEP_DURATION 下限
-        # 宁可最后一段短一点，也不能让行程超出用户的结束时间
         squeezed = max(1, plan_end - last_start)
         if squeezed != durations[-1]:
             print(
@@ -287,14 +374,14 @@ def _assign_step_times(
         durations[-1] = squeezed
         spans = _layout(durations)
 
-    # ── 5. 写回 ─────────────────────────────────────────────────────────────
+    # ── 6. 写回 ─────────────────────────────────────────────────────────────
     result = []
     for i, step in enumerate(steps):
         step = dict(step)
         s, e = spans[i]
         step["start_time"] = _minutes_to_hhmm(s)
         step["end_time"] = _minutes_to_hhmm(e)
-        step["duration_minutes"] = durations[i]  # 回填实际换算时长，供下游展示
+        step["duration_minutes"] = durations[i]
         result.append(step)
     return result
 
@@ -358,10 +445,6 @@ def _build_step_index(
 
 
 def candidate_planning_node(state: AgentState) -> AgentState:
-    """
-    Candidate Planning Node（最小化验证版）：
-    以用户原话为主输入生成 3 个候选方案，再计算每个 step 的实际时刻。
-    """
     print("[Candidate Planning Node] 基于真实候选池生成 3 个结构化候选方案...")
 
     plan          = state.get("plan_context") or {}
@@ -394,11 +477,24 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     activities_by_id  = {a["id"]: a for a in activities  if isinstance(a, dict) and a.get("id")}
     restaurants_by_id = {r["id"]: r for r in restaurants if isinstance(r, dict) and r.get("id")}
 
-    # 提取用户明确点名的活动，作为硬约束传给 planner
+    waypoints: list[dict] = facts.get("waypoints") or []
+    waypoints_by_id = {w["id"]: w for w in waypoints if isinstance(w, dict) and w.get("id") and not w.get("not_found")}
+
+    if waypoints:
+        wp_lines = []
+        for w in waypoints:
+            if w.get("not_found"):
+                wp_lines.append(f"- 用户想要「{w.get('waypoint_raw')}」，附近未找到，请在 reasoning 中说明已跳过")
+            else:
+                hint = f"（时间提示：{w['waypoint_time_hint']}）" if w.get("waypoint_time_hint") else ""
+                wp_lines.append(f"- 用户想要「{w.get('waypoint_raw')}」{hint}，可用 POI：{w.get('name')}（id={w.get('id')}），请插入方案中合适位置，duration_tier=short，poi_type=activity")
+        waypoint_section = "\n".join(wp_lines)
+    else:
+        waypoint_section = "无途径小需求"
+
     activity_style: list = plan.get("activity_style") or []
     explicit = "、".join(activity_style) if activity_style else "（无明确点名，由你根据场景自由推荐）"
 
-    # ── user_message：raw_query 置顶且声明为权威；删除 diet_preference 污染字段 ──
     user_message = f"""\
 # 用户原始需求（唯一权威，请逐字理解，下面所有结构化字段仅供参考）
 「{raw_query}」
@@ -455,6 +551,9 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     for r in restaurants
 ], ensure_ascii=False, indent=2)}
 
+## 途径小需求（waypoints）
+{waypoint_section}
+
 请生成 3 个候选方案。每个 step 给出 phase、poi_id、label、duration_tier（short/medium/long），不要填写任何具体时刻或分钟数。
 {f'''
 ## 上一轮校验失败原因（必须修正）
@@ -496,14 +595,12 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 
             in_activities  = poi_id in activities_by_id
             in_restaurants = poi_id in restaurants_by_id
+            in_waypoints   = poi_id in waypoints_by_id
 
-            if not in_activities and not in_restaurants:
-                # poi_id 在两个池子都找不到，才是真幻觉
+            if not in_activities and not in_restaurants and not in_waypoints:
                 print(f"[Candidate Planning Node][WARN] plan_{i} 幻觉 poi_id={poi_id!r}，已丢弃")
                 continue
 
-            # 自动修正 poi_type：模型给的类型和实际池子归属不一致时纠偏
-            # 常见场景：酒吧被模型标为 restaurant，但实际在 activities 池（高德 typecode 080304）
             if poi_type == "restaurant" and not in_restaurants and in_activities:
                 print(f"[Candidate Planning Node] poi_type 修正: {poi_id!r} restaurant→activity")
                 step = dict(step)
@@ -518,7 +615,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         timed_steps = _assign_step_times(
             valid_steps, start_time, plan.get("end_time") or "", facts.get("eta") or {}
         )
-        index_result = _build_step_index(timed_steps, activities_by_id, restaurants_by_id)
+        index_result = _build_step_index(timed_steps, {**activities_by_id, **waypoints_by_id}, restaurants_by_id)
         normalized.append({
             "id":        raw.get("id") or f"plan_{i}",
             "title":     raw.get("title") or f"候选方案 {i}",
