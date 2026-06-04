@@ -3,10 +3,7 @@ from __future__ import annotations
 import json
 import re
 from typing import Literal
-from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationError
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, Field, ValidationError
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
@@ -38,6 +35,12 @@ class PreferencesInfo(BaseModel):
     diet_preference: list[str] = Field(default_factory=list, description="饮食偏好关键词，如 ['火锅', '减脂']")
     activity_style: list[str] = Field(default_factory=list, description="活动风格偏好，如 ['亲子', '拍照']")
     must_avoid: list[str] = Field(default_factory=list, description="明确排除的内容，如 ['烧烤']")
+
+
+class WaypointRequest(BaseModel):
+    raw_text: str = Field(description="用户原文描述，如'吃DQ冰淇淋'")
+    keyword: str = Field(description="直接用于高德搜索的关键词，如'DQ''星巴克''冰淇淋'")
+    time_hint: str | None = Field(None, description="用户指定的时间，如'中途''下午'，没有则null")
 
 
 # ── 主输出模型 ─────────────────────────────────────────────────────────────────
@@ -72,6 +75,14 @@ class IntentResult(BaseModel):
         default_factory=list,
         description="用户明确说出的活动类型，没有则空列表",
     )
+    waypoint_requests: list[WaypointRequest] = Field(
+        default_factory=list,
+        description=(
+            "用户明确点名的途径需求，包括品牌/小吃/饮品等不属于主要活动或正餐的需求。"
+            "例如'吃DQ冰淇淋'→ keyword='DQ'，'顺路买杯星巴克'→ keyword='星巴克'，"
+            "'中途想吃个甜品'→ keyword='甜品'。没有则空列表。"
+        ),
+    )
 
     need_retrieval: bool = Field(description="是否需要调用外部 POI/餐厅检索")
     clarification_needed: bool = Field(description="是否需要向用户追问缺失信息")
@@ -96,17 +107,10 @@ class IntentResult(BaseModel):
 
 
 # ── System Prompt ─────────────────────────────────────────────────────────────
-#
-# 重新定位：意图模块是"分诊台 + 检索调度"，不是"语义翻译官"。
-#   - 路由判断（是否规划 / 场景 / 缺口）必须结构化，给控制流用。
-#   - 关键词只是"喂给高德检索"的输入，用来把一批多样的 POI 捞进池子，
-#     不是替规划节点预判行程。规划由下游模型读 raw_query 自己做。
-#   - 因此关键词生成的目标是【多样、覆盖场景】，不是【精确复述用户某个词】。
-#     用户点名的活动（如"喝酒"）只占其中一项、绑定到它出现的时段，绝不扩散到所有关键词。
-#
+
 _SYSTEM_PROMPT = """\
 你是一个本地休闲行程规划助手的意图解析模块。
-你的职责：理解用户输入，判断意图与场景、识别信息缺口、并为后续的 POI 检索准备一批多样的搜索关键词。为了形成准确的关键词，必须要进行命名实体识别，识别出诸如“DQ冰淇淋”，“老地方火锅”等特定名称，并将这些结果根据你的理解放入活动或者餐厅关键词
+你的职责：理解用户输入，判断意图与场景、识别信息缺口、并为后续的 POI 检索准备一批多样的搜索关键词。为了形成准确的关键词，必须要进行命名实体识别，识别出诸如"DQ冰淇淋"，"老地方火锅"等特定名称，并将这些结果根据你的理解放入活动或者餐厅关键词。
 严格按照给定 schema 的 JSON 格式返回，不添加任何多余解释。
 
 【必须严格遵循的 JSON Schema】
@@ -126,43 +130,45 @@ _SYSTEM_PROMPT = """\
 - "上午" → start_time: "09:00", end_time: "12:00"
 - "下午" → start_time: "13:00", end_time: "18:00"
 - "晚上" → start_time: "18:00", end_time: "21:00"
-**用户完全没有提到时间段时，start_time / end_time 均填 null，禁止脑补默认值。** 即使多轮对话，只要用户没明确说过时间，就保持 null。
+**用户完全没有提到时间段时，start_time / end_time 均填 null，禁止脑补默认值。**
 
-## 关键词生成（核心理念，请认真理解）
-关键词只是用来去地图 API 检索 POI、把一批**多样**的候选场所捞进池子，供后续规划模块挑选。
-它**不是**让你替用户决定行程，也**不是**精确复述用户说的某个词。所以：
+## waypoint_requests（途径需求，重要）
+用户有时会提到非主要活动、非正餐的小需求，如：
+- "中途想吃个DQ冰淇淋" → keyword="DQ"
+- "顺路买杯星巴克" → keyword="星巴克"
+- "想喝个奶茶" → keyword="奶茶"
+- "去买点甜品" → keyword="甜品"
 
-1. **按场景发挥推荐能力，生成多样的活动类型。**
-   就像有人问你"我和朋友周末想聚聚，有什么推荐"，你会自然想到桌游、剧本杀、台球、KTV、咖啡馆、livehouse、电影、密室、运动馆等多种可能——请把这种多样性体现在 activity_keywords 里（3-5 个，尽量覆盖不同类型，不要高度同质）。
-   - 不同场景的典型活动各不相同，请结合场景自行判断，不要套用固定模板。
+这类需求的特征：不是主要活动（不占用完整时段），不是正餐（不是午饭/晚饭），
+而是行程中的"顺路小事"。必须识别并填入 waypoint_requests，keyword 直接用于高德搜索。
+**用户需求至上，明确的品牌名（DQ/星巴克/麦当劳）或品类（奶茶/甜品/冰淇淋）都要识别。**
 
-2. **用户明确点名的活动，只占其中一项，并绑定到它出现的时段，绝不让它扩散污染整个列表。**
-   例如"晚上想喝点酒"——"喝酒"是**晚间的一项活动**，对应 activity_keywords 里**一个**词（如"清吧"或"小酒馆"），不要因此让 activity_keywords 变成"酒吧/小酒馆/夜市/餐吧"一整排都围着酒转，那样会把"和朋友聚聚"本该有的下午活动（桌游、台球等）全挤掉。
-   - 判断要点：用户"在某个时段想做某事"≠"整天的主题就是这件事"。点缀性的（喝点、顺便、随便）尤其不要放大成主题。
+## 关键词生成（核心理念）
+关键词只是用来去地图 API 检索 POI、把一批多样的候选场所捞进池子，供后续规划模块挑选。
 
-3. **餐厅关键词对应"吃饭那顿"，不要被酒类场所主导。**
-   - 合法示例：川菜、火锅、烤肉、日料、轻食、聚会餐厅、特色餐厅
-   - "晚上喝点酒"不应让 restaurant_keywords 变成"酒吧/居酒屋/清吧"——喝酒归活动（晚间），吃饭那顿仍应是正经餐厅类型（结合场景与地域，如成都朋友聚会可给"川菜/火锅/串串/特色餐厅"）。
-   - 用户明确点名的餐厅类型放入 restaurant_explicit_types 并保留在 restaurant_keywords 中。
-   - 明确排除项放入 preferences.must_avoid，不放入 keywords。
+1. **按场景发挥推荐能力，生成多样的活动类型。**（3-5 个，尽量覆盖不同类型）
 
-4. **关键词必须是可被地图按"类型/品类"搜索的名词**（如 火锅、桌游、公园、美术馆），
-   不要写"不辣的餐厅""适合聚会的地方""逛街""散步"这类无法直接检索的描述。
-   
+2. **用户明确点名的活动，只占其中一项，绑定到它出现的时段，不扩散污染整个列表。**
+
+3. **餐厅关键词对应"吃饭那顿"（川菜/火锅/日料/轻食等），不被酒类或小吃主导。**
+   - waypoint_requests 里的小需求（奶茶/冰淇淋）不要混入 restaurant_keywords
+
+4. **关键词必须是可被地图按类型搜索的名词**，不要写描述性语句或场景标签：
+   - ❌ 非法："情侣约会""朋友聚餐""家庭出游""适合情侣""休闲活动"——这些是场景描述，高德搜不出有效场地
+   - ✅ 合法："咖啡馆""美术馆""书店""花市""文创园""公园""电影院""桌游""台球""KTV"
+   - couple 场景典型示例：咖啡馆、美术馆、公园、电影院、书店（选3-5个，绝对不要出现"情侣约会"）
+   - friends 场景典型示例：桌游、剧本杀、台球、KTV、咖啡馆
+
 5. **关键词必须包含命名实体识别的结果，用户特别指定的内容需要根据你的理解加入到活动或者餐厅关键词中用于搜索**
    - 合法示例：DQ冰淇淋、银河九天KTV、老地方火锅...
-   - 类似“中途想吃DQ冰淇淋”这种输入就需要把‘DQ冰淇淋’放到活动关键词中，类似“中午/晚上想吃DQ冰淇淋”这种输入就需要把‘DQ冰淇淋’放到餐厅关键词中
+   - 类似"中途想吃DQ冰淇淋"这种输入就需要把'DQ冰淇淋'放到活动关键词中，类似"中午/晚上想吃DQ冰淇淋"这种输入就需要把'DQ冰淇淋'放到餐厅关键词中
 
 ## people_count 推断规则
-优先从上下文推断，不要轻易列为缺口：
-- "我和老婆孩子" / "一家三口" → 3
-- "带老婆" / "和女朋友" / "两个人" → 2
-- "和三个朋友" → 4（用户 + 3）
-- "我和朋友们" / "几个同事" → 仍未知，可列为缺口
-只有真正无法推断时，才将 people_count 列入 missing_slots。
+- "我和老婆孩子" / "一家三口" → 3；"带老婆" / "两个人" → 2；"和三个朋友" → 4
+- 真正无法推断时才列入 missing_slots
 
 ## missing_slots 与追问规则
-is_leisure_planning=true 时，按以下优先级检查缺口，所有缺失的都填入 missing_slots：
+is_leisure_planning=true 时，按优先级检查：
 1. scenario 为 unknown → "scenario"
 2. date_label 为 null → "time_day"
 3. date_label 不为 null 但 start_time 为 null → "time_window"
@@ -171,12 +177,7 @@ is_leisure_planning=true 时，按以下优先级检查缺口，所有缺失的�
 
 clarification_needed = (missing_slots 非空)
 current_asking_slot = missing_slots[0]
-follow_up_message = 只针对 current_asking_slot 的一句自然口语追问，例如：
-  - scenario    → "这次打算和谁一起出去？家人、朋友还是另一半？"
-  - time_day    → "你想安排在哪天呀？"
-  - time_window → "大概几点到几点呢？"
-  - origin_area → "你们大概从哪个区域出发？"
-  - people_count→ "这次一共几个人一起去？"
+follow_up_message = 只针对 current_asking_slot 的一句自然口语追问
 
 is_leisure_planning=false 时：clarification_needed=false，missing_slots=[]，follow_up_message=null
 """
@@ -208,7 +209,7 @@ class IntentAgent:
 ## 使用规则
 - 本轮用户原话永远优先于历史偏好。
 - 历史偏好只用于补充软偏好、活动/餐饮关键词和风格倾向。
-- 不要用历史偏好填充日期、时间、出发地、人数等硬槽位，除非用户明确说“照旧”“和上次一样”“老地方”。
+- 不要用历史偏好填充日期、时间、出发地、人数等硬槽位，除非用户明确说"照旧""和上次一样""老地方"。
 - 如果本轮需求与历史偏好冲突，以本轮需求为准。
 
 # 本轮用户原话（最高优先级）
@@ -232,7 +233,6 @@ class IntentAgent:
 
                 result = IntentResult.model_validate_json(raw)
 
-                # 强制同步：current_asking_slot 与 missing_slots 一致，不依赖 LLM 自觉
                 if result.missing_slots:
                     result.current_asking_slot = result.missing_slots[0]
                     result.clarification_needed = True
@@ -245,7 +245,8 @@ class IntentAgent:
 
                 print(
                     f"[IntentAgent] 完成：scenario={result.scenario}, "
-                    f"missing_slots={result.missing_slots}"
+                    f"missing_slots={result.missing_slots}, "
+                    f"waypoints={[w.keyword for w in result.waypoint_requests]}"
                 )
                 print(result.model_dump_json(indent=2))
                 return result

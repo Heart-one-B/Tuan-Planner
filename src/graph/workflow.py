@@ -69,7 +69,7 @@ def route_after_repair_loop_new(state: AgentState) -> str:
         count = 0
     if count >= 3:
         return "final_plan"  # 达到上限时，走 final_plan 降级兜底展示
-    return "constraint_build"
+    return "candidate_planning"
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +151,7 @@ def build_workflow(checkpointer=None):
         "repair_loop",
         route_after_repair_loop_new,
         {
-            "constraint_build": "constraint_build",
+            "candidate_planning": "candidate_planning",
             "final_plan": "final_plan",
         },
     )
