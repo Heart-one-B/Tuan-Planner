@@ -7,6 +7,7 @@ class AgentState(TypedDict, total=False):
     user_input: str
     conversation_turns: list[str]
     clarification_round: int
+    user_preference_profile: str
     
     # 🌟 新增：支持异步澄清交互的状态字段 🌟
     pending_clarification: str  # 挂起时输出给前端的追问消息
@@ -48,10 +49,12 @@ class AgentState(TypedDict, total=False):
     queue: dict[str, Any]
     crowd: dict[str, Any]
     fact_gathering_result: dict[str, Any]
+    activity_explicit_search: dict[str, Any]
 
     # --- planning and validation ---
     candidates: dict[str, Any]
     candidate_plans: dict[str, Any]
+    plan_poi_details: dict[str, Any]
     validation_result: dict[str, Any]
     rule_validation_result: dict[str, Any]
     repair_loop_result: dict[str, Any]

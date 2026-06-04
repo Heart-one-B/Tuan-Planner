@@ -1,4 +1,6 @@
-﻿from langchain_core.messages import HumanMessage, SystemMessage
+from __future__ import annotations
+
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.model.factory import get_chat_model
 
@@ -13,9 +15,9 @@ class PresentationAgent:
         for item in timeline:
             if not isinstance(item, dict):
                 continue
-            time_text = item.get("time") or "待确认"
-            place_text = item.get("item") or "待确认"
-            type_text = item.get("type") or "未知"
+            time_text = item.get("time") or item.get("start_time") or "待确认"
+            place_text = item.get("item") or item.get("label") or "待确认"
+            type_text = item.get("type") or item.get("poi_type") or "未知"
             if type_text == "departure" and date_label != "今天":
                 continue
             if time_text == last_time and type_text == "restaurant":
@@ -32,8 +34,92 @@ class PresentationAgent:
             last_time = time_text
         return "\n".join(lines)
 
+    @staticmethod
+    def _step_time_text(step: dict) -> str:
+        start = step.get("start_time") or step.get("time") or "待确认"
+        end = step.get("end_time") or ""
+        return f"{start}-{end}" if end else start
+
+    @staticmethod
+    def _price_text(value) -> str:
+        try:
+            price = int(value)
+        except (TypeError, ValueError):
+            return "待确认"
+        return f"约¥{price}/人" if price > 0 else "待确认"
+
+    @staticmethod
+    def _join_list(value, limit: int = 3) -> str:
+        if not isinstance(value, list):
+            return ""
+        items = [str(item) for item in value[:limit] if item]
+        return "、".join(items)
+
+    def _generate_poi_detail_display(self, plan: dict, intent: dict) -> str:
+        details = plan.get("plan_poi_details") or {}
+        steps = [step for step in plan.get("steps") or [] if isinstance(step, dict)]
+        title = plan.get("title") or "本次推荐方案"
+        final_score = plan.get("final_score")
+        selected_candidate_id = plan.get("selected_candidate_id") or plan.get("id") or ""
+
+        flow_lines = ["| 时间 | 安排 | 地点 |", "| :--- | :--- | :--- |"]
+        detail_sections = []
+
+        for idx, step in enumerate(steps, start=1):
+            poi_id = step.get("poi_id") or ""
+            detail = details.get(poi_id) if isinstance(details, dict) else None
+            if not isinstance(detail, dict):
+                detail = {}
+            name = detail.get("name") or step.get("label") or "待确认地点"
+            category = detail.get("category") or "通用"
+            business_area = detail.get("business_area") or "商圈待确认"
+            flow_lines.append(f"| {self._step_time_text(step)} | {step.get('label') or category} | {name} |")
+
+            tags = self._join_list(detail.get("tags"), 4)
+            highlights = self._join_list(detail.get("highlights"), 3)
+            reviews = self._join_list(detail.get("reviews"), 2)
+            rating = detail.get("rating") or "暂无"
+            distance = detail.get("distance") or "待确认"
+            rank_label = detail.get("rank_label") or "本地生活推荐"
+            address = detail.get("address") or "地址待确认"
+
+            lines = [
+                f"### {idx}. {name}",
+                f"- 类别：{category}｜商圈：{business_area}｜评分：{rating}｜距离：{distance}｜人均：{self._price_text(detail.get('avg_price'))}",
+                f"- 地址：{address}",
+                f"- 推荐标签：{rank_label}" + (f"｜{tags}" if tags else ""),
+            ]
+            if highlights:
+                lines.append(f"- 推荐理由：{highlights}")
+            if reviews:
+                lines.append(f"- 参考评论：{reviews}")
+            detail_sections.append("\n".join(lines))
+
+        if len(flow_lines) == 2:
+            flow_text = self._format_timeline(plan.get("timeline"))
+        else:
+            flow_text = "\n".join(flow_lines)
+
+        score_text = f"｜评分：{final_score}" if final_score not in (None, "") else ""
+        return f"""# {title}
+
+候选方案：{selected_candidate_id}{score_text}
+
+## 推荐游玩流程
+{flow_text}
+
+## 地点详情
+{chr(10).join(detail_sections) if detail_sections else "暂无可展示的地点详情。"}
+
+## 确认提示
+当前还是方案展示阶段，确认后才会继续执行预约或下单。
+"""
+
     def generate_plan_display(self, plan: dict, intent: dict) -> str:
         print("[Presentation Agent] 正在排版最终方案...")
+
+        if isinstance(plan.get("plan_poi_details"), dict) and plan.get("plan_poi_details"):
+            return self._generate_poi_detail_display(plan, intent)
 
         intervention_context = " ".join(plan.get("exceptions_handled", []))
         activities = plan.get("activities") or [{}]
@@ -63,13 +149,9 @@ class PresentationAgent:
             return self._generate_direct_display(
                 intent=intent,
                 timeline_text=timeline_text,
-                activity_name=activity_name,
-                activity_type=activity_type,
-                restaurant_name=restaurant_name,
                 final_score=final_score,
                 selected_candidate_id=selected_candidate_id,
                 intervention_context=intervention_context,
-                time_phrase=time_phrase,
             )
 
         prompt = f"""
@@ -91,10 +173,7 @@ class PresentationAgent:
         用简洁列表或表格展示，不要擅自补具体小时分钟。
         只能使用已给出的时间表达，例如"{time_phrase}" 或"{timeline}"。
         第二部分：方案说明
-        说明为什么这样安排，重点提到:
-        1. 时间窗口匹配
-        2. 饮食/亲子适配
-        3. 自动避让排队、天气或拥挤度风险
+        说明为什么这样安排，重点提到时间窗口匹配、饮食/亲子适配、风险避让。
         第三部分：确认提示
         明确告诉用户：当前只是方案展示，确认后才会执行预约或下单。
         """
@@ -115,13 +194,9 @@ class PresentationAgent:
         *,
         intent: dict,
         timeline_text: str,
-        activity_name: str,
-        activity_type: str,
-        restaurant_name: str,
         final_score,
         selected_candidate_id,
         intervention_context: str,
-        time_phrase: str,
     ) -> str:
         return f"""# 方案建议（{intent.get('scenario', 'family')} 场景）
 
@@ -132,6 +207,8 @@ class PresentationAgent:
 - 当前方案已根据时间窗口和通勤时间生成。
 - 已结合用户场景、天气风险和餐厅可用性做初步匹配。
 - 自动调整信息：{intervention_context or '无'}
+- 选中的候选：{selected_candidate_id}
+- 最终评分：{final_score}
 
 ## 第三部分：确认提示
 当前还是方案展示阶段，确认后才会继续执行预约或下单。

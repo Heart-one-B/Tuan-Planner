@@ -49,6 +49,7 @@ _SYSTEM_PROMPT = """\
       "steps": [
         {"step_id": "step_1", "phase": "dinner", "poi_type": "restaurant", "poi_id": "...", "label": "晚餐", "duration_tier": "medium"}
       ],
+      "recommendation_mode": "preference_fit",
       "reasoning": ["理由1", "理由2"]
     }
   ]
@@ -67,6 +68,8 @@ poi_type 值：activity / restaurant。
 - 只能使用候选池中提供的 poi_id，禁止编造
 - 3 个方案的活动组合要尽量不同
 - 相似活动类型视为同一类（剧本杀/密室逃脱/桌游属于同一类），同一方案内活动不重复
+- 如果提供了历史偏好，plan_1 和 plan_2 的 recommendation_mode 设为 "preference_fit"，可以参考历史偏好生成稳妥方案；plan_3 的 recommendation_mode 设为 "exploration"，必须满足本轮用户原话和硬约束，但可以合理偏离历史偏好，提供新鲜感。
+- 历史偏好只能启发候选生成，不能覆盖本轮用户原话，不能违反明确排除项、时间、天气、距离、安全等硬约束。
 
 ## 时间段规则（phase）—— 用"窗口重叠"判断，不要用单端点
 根据用户的开始/结束时间，判断时间窗真正覆盖了哪些时段，只为被覆盖的时段安排 step：
@@ -369,6 +372,9 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     errors        = list(state.get("errors") or [])
     start_time    = plan.get("start_time") or "10:00"
     replan_reason = state.get("replan_reason") or ""
+    preference_profile = state.get("user_preference_profile") or ""
+    if not isinstance(preference_profile, str):
+        preference_profile = ""
 
     raw_query = plan.get("raw_query") or state.get("user_input") or ""
 
@@ -384,6 +390,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         "activities_count": len(facts.get("activities") or []),
         "restaurants_count": len(facts.get("restaurants") or []),
         "eta_count":        len(facts.get("eta") or {}),
+        "has_preference_profile": bool(preference_profile.strip()),
     }, ensure_ascii=False, indent=2))
     print("=" * 108 + "\n")
 
@@ -397,6 +404,29 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     # 提取用户明确点名的活动，作为硬约束传给 planner
     activity_style: list = plan.get("activity_style") or []
     explicit = "、".join(activity_style) if activity_style else "（无明确点名，由你根据场景自由推荐）"
+    activity_explicit_types: list = plan.get("activity_explicit_types") or []
+    activity_explicit_search: dict = facts.get("activity_explicit_search") or {}
+    explicit = "、".join(activity_explicit_types) if activity_explicit_types else "（无明确点名，由你根据场景自由推荐）"
+    explicit_search_block = f"""\
+## 显式活动搜索结果
+{json.dumps(activity_explicit_search, ensure_ascii=False, indent=2)}
+
+规划规则：
+- 如果 matched 中有显式活动类型，候选方案不能全部忽略对应 POI。
+- 如果 missing 中有显式活动类型，说明真实搜索没有结果，可以不安排该类型。
+"""
+    preference_block = ""
+    if preference_profile.strip():
+        preference_block = f"""\
+## 历史偏好档案（只用于启发候选生成，不参与最终打分）
+{preference_profile.strip()}
+
+使用规则：
+- 本轮用户原话优先级最高。
+- plan_1 和 plan_2 可以参考历史偏好，生成稳妥方案。
+- plan_3 必须是 exploration，可以合理偏离历史偏好，提供新鲜感。
+- 历史偏好不能覆盖本轮明确需求，不能违反明确排除项、时间、天气、距离、安全等硬约束。
+"""
 
     # ── user_message：raw_query 置顶且声明为权威；删除 diet_preference 污染字段 ──
     user_message = f"""\
@@ -405,6 +435,9 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 
 请基于以上原话，判断用户想做几件事、各在什么时段、哪些是明确点名的，然后规划。
 不要预设要填满时间，段数由原话和时间窗自然决定。
+
+{preference_block}
+{explicit_search_block}
 
 ## 用户明确点名的活动（硬约束，必须全部安排）
 以下是从原话中识别出的明确点名活动，必须全部出现在 steps 中，不可遗漏：
@@ -442,6 +475,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         "id": a.get("id"), "name": a.get("name"), "type": a.get("type"),
         "environment": a.get("environment") or "unknown",
         "rating": a.get("rating"), "child_friendly": a.get("child_friendly"),
+        "explicit_activity_type": a.get("explicit_activity_type"),
     }
     for a in activities
 ], ensure_ascii=False, indent=2)}
@@ -519,9 +553,13 @@ def candidate_planning_node(state: AgentState) -> AgentState:
             valid_steps, start_time, plan.get("end_time") or "", facts.get("eta") or {}
         )
         index_result = _build_step_index(timed_steps, activities_by_id, restaurants_by_id)
+        recommendation_mode = raw.get("recommendation_mode")
+        if recommendation_mode not in {"preference_fit", "exploration"}:
+            recommendation_mode = "exploration" if i == 3 else "preference_fit"
         normalized.append({
             "id":        raw.get("id") or f"plan_{i}",
             "title":     raw.get("title") or f"候选方案 {i}",
+            "recommendation_mode": recommendation_mode,
             "steps":     timed_steps,
             "reasoning": [r for r in (raw.get("reasoning") or []) if isinstance(r, str)][:3],
             **index_result,
@@ -530,6 +568,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     while len(normalized) < 3:
         normalized.append({
             "id": f"plan_{len(normalized)+1}", "title": "", "steps": [], "timeline": [],
+            "recommendation_mode": "exploration" if len(normalized) == 2 else "preference_fit",
             "activity": {}, "secondary_activity": {}, "activities": [],
             "restaurant": {}, "restaurants": [], "reasoning": [],
         })

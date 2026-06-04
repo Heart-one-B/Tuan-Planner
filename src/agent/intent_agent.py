@@ -106,7 +106,7 @@ class IntentResult(BaseModel):
 #
 _SYSTEM_PROMPT = """\
 你是一个本地休闲行程规划助手的意图解析模块。
-你的职责：理解用户输入，判断意图与场景、识别信息缺口、并为后续的 POI 检索准备一批多样的搜索关键词。
+你的职责：理解用户输入，判断意图与场景、识别信息缺口、并为后续的 POI 检索准备一批多样的搜索关键词。为了形成准确的关键词，必须要进行命名实体识别，识别出诸如“DQ冰淇淋”，“老地方火锅”等特定名称，并将这些结果根据你的理解放入活动或者餐厅关键词
 严格按照给定 schema 的 JSON 格式返回，不添加任何多余解释。
 
 【必须严格遵循的 JSON Schema】
@@ -148,6 +148,10 @@ _SYSTEM_PROMPT = """\
 
 4. **关键词必须是可被地图按"类型/品类"搜索的名词**（如 火锅、桌游、公园、美术馆），
    不要写"不辣的餐厅""适合聚会的地方""逛街""散步"这类无法直接检索的描述。
+   
+5. **关键词必须包含命名实体识别的结果，用户特别指定的内容需要根据你的理解加入到活动或者餐厅关键词中用于搜索**
+   - 合法示例：DQ冰淇淋、银河九天KTV、老地方火锅...
+   - 类似“中途想吃DQ冰淇淋”这种输入就需要把‘DQ冰淇淋’放到活动关键词中，类似“中午/晚上想吃DQ冰淇淋”这种输入就需要把‘DQ冰淇淋’放到餐厅关键词中
 
 ## people_count 推断规则
 优先从上下文推断，不要轻易列为缺口：
@@ -185,15 +189,35 @@ class IntentAgent:
         self._model = get_chat_model()
         self._max_retries = max_retries
 
-    def parse(self, user_input: str) -> IntentResult:
+    def parse(
+        self,
+        user_input: str,
+        runtime_origin_area: str = "",
+        preference_context: str = "",
+    ) -> IntentResult:
         print(f"[IntentAgent] 解析中：{user_input!r}")
 
         schema_str = json.dumps(IntentResult.model_json_schema(), ensure_ascii=False, indent=2)
         system_content = _SYSTEM_PROMPT.format(schema=schema_str)
+        user_content = user_input
+        if preference_context.strip():
+            user_content = f"""\
+# 历史偏好档案（软参考，不是硬约束）
+{preference_context.strip()}
+
+## 使用规则
+- 本轮用户原话永远优先于历史偏好。
+- 历史偏好只用于补充软偏好、活动/餐饮关键词和风格倾向。
+- 不要用历史偏好填充日期、时间、出发地、人数等硬槽位，除非用户明确说“照旧”“和上次一样”“老地方”。
+- 如果本轮需求与历史偏好冲突，以本轮需求为准。
+
+# 本轮用户原话（最高优先级）
+{user_input}
+"""
 
         messages = [
             SystemMessage(content=system_content),
-            HumanMessage(content=user_input),
+            HumanMessage(content=user_content),
         ]
 
         last_response_content = ""
