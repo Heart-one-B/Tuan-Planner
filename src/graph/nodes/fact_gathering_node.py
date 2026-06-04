@@ -14,6 +14,7 @@ _RADIUS = {"near": "3000", "medium": "5000"}
 # 每个关键词最多贡献 _PER_KEYWORD_LIMIT 条，保证每个关键词都能进池子，
 # 池子总上限仍是 _POOL_LIMIT。这样下午聚会的"桌游/台球"不会被"酒吧"挤掉。
 _PER_KEYWORD_LIMIT = 3
+_EXPLICIT_KEYWORD_LIMIT = 3
 _POOL_LIMIT = 12
 
 
@@ -98,6 +99,107 @@ def _collect_pois_round_robin(
     return pool[:_POOL_LIMIT]
 
 
+def _clean_keyword_results(
+    pois: list[dict],
+    *,
+    exclude: list[str] | None = None,
+    post_process=None,
+    explicit_keyword: str = "",
+) -> list[dict]:
+    exclude = exclude or []
+    cleaned: list[dict] = []
+    for poi in pois:
+        if not isinstance(poi, dict):
+            continue
+        name = poi.get("name") or ""
+        if exclude and any(ex in name for ex in exclude):
+            continue
+        item = post_process(poi) if post_process else poi
+        if explicit_keyword:
+            item = {**item, "explicit_activity_type": explicit_keyword}
+        cleaned.append(item)
+    return cleaned
+
+
+def _search_keyword_with_city_fallback(
+    api: CachedAmapClient,
+    keyword: str,
+    *,
+    location: str,
+    city: str,
+    radius: str,
+    poi_type: str = "",
+) -> list[dict]:
+    try:
+        pois = api.search_pois(keyword, location=location, city=city, radius=radius, poi_type=poi_type)
+    except Exception:
+        pois = []
+    if pois or not city or not location:
+        return pois
+    try:
+        return api.search_pois(keyword, location="", city=city, radius=radius, poi_type=poi_type)
+    except Exception:
+        return []
+
+
+def _collect_explicit_activity_pois(
+    api: CachedAmapClient,
+    keywords: list[str],
+    *,
+    location: str,
+    city: str,
+    radius: str,
+    post_process=None,
+) -> tuple[list[dict], dict[str, list[str]]]:
+    pool: list[dict] = []
+    matched: list[str] = []
+    missing: list[str] = []
+
+    for keyword in keywords:
+        raw_results = _search_keyword_with_city_fallback(
+            api,
+            keyword,
+            location=location,
+            city=city,
+            radius=radius,
+        )
+        cleaned = _clean_keyword_results(
+            raw_results,
+            post_process=post_process,
+            explicit_keyword=keyword,
+        )
+        if cleaned:
+            matched.append(keyword)
+            pool.extend(cleaned[:_EXPLICIT_KEYWORD_LIMIT])
+        else:
+            missing.append(keyword)
+
+    return pool, {"keywords": keywords, "matched": matched, "missing": missing}
+
+
+def _merge_poi_pools(*pools: list[dict], limit: int = _POOL_LIMIT) -> list[dict]:
+    seen_ids: set[str] = set()
+    merged: list[dict] = []
+    for pool in pools:
+        for poi in pool:
+            if not isinstance(poi, dict):
+                continue
+            pid = poi.get("id") or ""
+            if pid and pid in seen_ids:
+                continue
+            if pid:
+                seen_ids.add(pid)
+            merged.append(poi)
+            if len(merged) >= limit:
+                return merged
+    return merged
+
+
+def _is_explicit_activity(poi: dict, explicit_ids: set[str]) -> bool:
+    pid = poi.get("id") or ""
+    return bool(poi.get("explicit_activity_type") or (pid and pid in explicit_ids))
+
+
 def fact_gathering_node(state: AgentState) -> AgentState:
     """
     Fact Gathering Node（最小化验证版）：检索循环改轮询，保证池子多样。
@@ -133,28 +235,60 @@ def fact_gathering_node(state: AgentState) -> AgentState:
 
     # ── 3. 活动搜索（轮询）────────────────────────────────────────────────────
     activities:  list[dict] = []
+    activity_explicit_search: dict[str, list[str]] = {"keywords": [], "matched": [], "missing": []}
     child_friendly: bool    = bool(plan.get("child_friendly"))
     weather_high:   bool    = (weather.get("risk_level") or "low") == "high"
     radius:         str     = _RADIUS.get(plan.get("search_radius") or "medium", "5000")
 
     if plan.get("need_activity") is not False:
         try:
-            activities = _collect_pois_round_robin(
+            explicit_keywords = [
+                item.strip()
+                for item in _safe_list(plan.get("activity_explicit_types"))
+                if isinstance(item, str) and item.strip()
+            ]
+            activity_keywords = [
+                item.strip()
+                for item in _safe_list(plan.get("activity_keywords"))
+                if isinstance(item, str) and item.strip()
+            ]
+            general_keywords = [kw for kw in activity_keywords if kw not in explicit_keywords]
+            post_process_activity = lambda p: {**p, "environment": CachedAmapClient.infer_environment(p)}
+
+            explicit_activities, activity_explicit_search = _collect_explicit_activity_pois(
                 api,
-                _safe_list(plan.get("activity_keywords")),
+                explicit_keywords,
                 location=coordinates,
                 city=city,
                 radius=radius,
-                post_process=lambda p: {**p, "environment": CachedAmapClient.infer_environment(p)},
+                post_process=post_process_activity,
             )
+            general_activities = _collect_pois_round_robin(
+                api,
+                general_keywords,
+                location=coordinates,
+                city=city,
+                radius=radius,
+                post_process=post_process_activity,
+            )
+            activities = _merge_poi_pools(explicit_activities, general_activities, limit=_POOL_LIMIT)
+            explicit_ids = {
+                item.get("id") or ""
+                for item in explicit_activities
+                if isinstance(item, dict) and item.get("id")
+            }
 
             if child_friendly:
                 cf = [a for a in activities
-                      if any(t in (a.get("name") or "") for t in _CHILD_KEYWORDS)]
+                      if _is_explicit_activity(a, explicit_ids)
+                      or any(t in (a.get("name") or "") for t in _CHILD_KEYWORDS)]
                 activities = cf or activities
 
             if weather_high:
-                indoor = [a for a in activities if a.get("environment") == "indoor"]
+                indoor = [
+                    a for a in activities
+                    if _is_explicit_activity(a, explicit_ids) or a.get("environment") == "indoor"
+                ]
                 if indoor:
                     activities = indoor
         except Exception as exc:
@@ -276,6 +410,7 @@ def fact_gathering_node(state: AgentState) -> AgentState:
     fact_gathering_result = {
         "weather":     weather,
         "activities":  activities,
+        "activity_explicit_search": activity_explicit_search,
         "restaurants": restaurants,
         "waypoints":   waypoints,
         "eta":         eta,
@@ -289,6 +424,7 @@ def fact_gathering_node(state: AgentState) -> AgentState:
         "fact_gathering_result": fact_gathering_result,
         "weather":               weather,
         "activities":            activities,
+        "activity_explicit_search": activity_explicit_search,
         "restaurants":           restaurants,
         "waypoints":             waypoints,
         "eta":                   eta,

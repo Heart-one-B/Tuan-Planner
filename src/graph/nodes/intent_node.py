@@ -1,5 +1,6 @@
 from src.agent.intent_agent import IntentAgent
 from src.graph.state import AgentState
+from src.utils.preference_profile import load_user_preference_profile
 from src.utils.state_utils import _append_error
 
 
@@ -19,7 +20,14 @@ def intent_node(state: AgentState) -> AgentState:
     print("[Intent Node] 开始解析意图...")
 
     try:
-        result = IntentAgent().parse(state["user_input"])
+        preference_profile = state.get("user_preference_profile")
+        if not isinstance(preference_profile, str):
+            preference_profile = load_user_preference_profile()
+
+        result = IntentAgent().parse(
+            state["user_input"],
+            preference_context=preference_profile,
+        )
         intent_dict = result.model_dump()
     except Exception as exc:
         print(f"[Intent Node][ERROR] 意图解析失败: {exc}")
@@ -32,4 +40,5 @@ def intent_node(state: AgentState) -> AgentState:
         "missing_slots": intent_dict.get("missing_slots", []),
         "current_asking_slot": intent_dict.get("current_asking_slot"),
         "follow_up_message": intent_dict.get("follow_up_message"),
+        "user_preference_profile": preference_profile,
     }

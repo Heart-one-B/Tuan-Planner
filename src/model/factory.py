@@ -36,7 +36,7 @@ class ChatModelFactory(BaseModelFactory):
     def generator(self) -> BaseChatModel:
         if model_conf.get("deepseek_api_key"):
             return ChatOpenAI(
-                model=model_conf["chat_model_name"],
+                model=model_conf["deepseek_model_name"],
                 api_key=model_conf["deepseek_api_key"],
                 base_url=model_conf.get("deepseek_base_url"),
                 extra_body={"thinking": {"type": "disabled"}},

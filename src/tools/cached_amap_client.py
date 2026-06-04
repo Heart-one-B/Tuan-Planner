@@ -244,6 +244,7 @@ class CachedAmapClient:
                 "rating":         entry.get("rating") or detail.get("rating") or "",
                 "distance":       "",
                 "tel":            detail.get("tel") or "",
+                "business_area":  detail.get("business_area") or detail.get("businessarea") or "",
                 "keyword_source": keywords,
                 "source":         "poi_detail_cache",
             })
@@ -264,7 +265,7 @@ class CachedAmapClient:
         有坐标时走 around_search（周边精准搜索）；否则走 text_search（城市范围）。
 
         返回标准化 POI 列表，每项包含：
-            {id, name, address, location, type, rating, distance, tel, keyword_source}
+            {id, name, address, location, type, rating, distance, tel, business_area, keyword_source}
         """
         loc_key = location or city
         key = self._key("search", keywords, loc_key, radius, poi_type)
@@ -310,6 +311,12 @@ class CachedAmapClient:
                     "rating":         (poi.get("biz_ext") or {}).get("rating") or poi.get("rating") or "",
                     "distance":       poi.get("distance") or "",
                     "tel":            poi.get("tel") or "",
+                    "business_area": (
+                        poi.get("business_area")
+                        or poi.get("businessarea")
+                        or (poi.get("biz_ext") or {}).get("business_area")
+                        or ""
+                    ),
                     "keyword_source": keywords,
                 })
         except Exception as exc:

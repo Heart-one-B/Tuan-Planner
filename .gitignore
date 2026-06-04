@@ -4,8 +4,9 @@ __pycache__/
 
 .env
 
-config/model.yml
-config/tools.yml
+./config/model.yml
+./config/tools.yml
+
 
 Agents.md
 
