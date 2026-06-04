@@ -49,10 +49,12 @@ class AgentState(TypedDict, total=False):
     queue: dict[str, Any]
     crowd: dict[str, Any]
     fact_gathering_result: dict[str, Any]
+    activity_explicit_search: dict[str, Any]
 
     # --- planning and validation ---
     candidates: dict[str, Any]
     candidate_plans: dict[str, Any]
+    plan_poi_details: dict[str, Any]
     validation_result: dict[str, Any]
     rule_validation_result: dict[str, Any]
     repair_loop_result: dict[str, Any]

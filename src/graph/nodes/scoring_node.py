@@ -5,14 +5,13 @@ import re
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from src.model.factory import get_chat_model
 from src.graph.state import AgentState
+from src.model.factory import get_chat_model
 from src.utils.state_utils import _append_error
 
 
 def _first_activity_eta(candidate: dict, eta: dict) -> int | None:
-    """返回出发地到第一个活动 POI 的 ETA（分钟），拿不到返回 None。"""
-    for step in (candidate.get("steps") or []):
+    for step in candidate.get("steps") or []:
         if not isinstance(step, dict):
             continue
         if step.get("poi_type") == "activity":
@@ -23,10 +22,9 @@ def _first_activity_eta(candidate: dict, eta: dict) -> int | None:
 
 
 def _total_eta(candidate: dict, eta: dict) -> int | None:
-    """所有 POI ETA 之和，作为二级排序的粗略代理。"""
     total = 0
     has_any = False
-    for step in (candidate.get("steps") or []):
+    for step in candidate.get("steps") or []:
         if not isinstance(step, dict):
             continue
         record = eta.get(step.get("poi_id") or "")
@@ -36,19 +34,31 @@ def _total_eta(candidate: dict, eta: dict) -> int | None:
     return total if has_any else None
 
 
-def _candidate_summary(candidate: dict) -> dict:
-    """提取给 LLM 看的候选方案摘要，避免把过多噪声直接塞进去。"""
+def _candidate_summary(candidate: dict, plan_poi_details: dict | None = None) -> dict:
+    plan_poi_details = plan_poi_details or {}
     steps = []
-    for step in (candidate.get("steps") or []):
+    for step in candidate.get("steps") or []:
         if not isinstance(step, dict):
             continue
+        poi_id = step.get("poi_id") or ""
+        detail = plan_poi_details.get(poi_id) if isinstance(plan_poi_details, dict) else None
+        if not isinstance(detail, dict):
+            detail = {}
         steps.append({
-            "label": step.get("label") or step.get("item") or step.get("poi_name") or "",
-            "poi_id": step.get("poi_id") or "",
+            "label": step.get("label") or step.get("item") or step.get("poi_name") or detail.get("name") or "",
+            "poi_id": poi_id,
             "poi_type": step.get("poi_type") or step.get("type") or "",
             "phase": step.get("phase") or "",
             "start_time": step.get("start_time") or "",
             "end_time": step.get("end_time") or "",
+            "poi_name": detail.get("name") or "",
+            "category": detail.get("category") or "",
+            "business_area": detail.get("business_area") or "",
+            "rating": detail.get("rating") or "",
+            "distance": detail.get("distance") or "",
+            "avg_price": detail.get("avg_price") or "",
+            "tags": (detail.get("tags") or [])[:5] if isinstance(detail.get("tags"), list) else [],
+            "highlights": (detail.get("highlights") or [])[:3] if isinstance(detail.get("highlights"), list) else [],
         })
 
     return {
@@ -61,28 +71,30 @@ def _candidate_summary(candidate: dict) -> dict:
 
 
 def _extract_json_block(text: str) -> dict:
-    """从模型输出中尽量提取 JSON 对象。"""
     match = re.search(r"\{.*\}", text, re.DOTALL)
     raw = match.group() if match else text
     return json.loads(raw)
 
 
-def _llm_relevance_scores(user_input: str, scored: list[dict]) -> dict[str, int]:
-    """让 LLM 按用户需求给候选方案打 0-100 分。"""
+def _llm_relevance_scores(
+    user_input: str,
+    scored: list[dict],
+    plan_poi_details: dict | None = None,
+) -> dict[str, int]:
     if not user_input.strip() or not scored:
         return {}
 
     model = get_chat_model()
     candidate_payload = [
-        _candidate_summary(item["candidate"])
+        _candidate_summary(item["candidate"], plan_poi_details)
         for item in scored
     ]
 
     system_prompt = (
         "你是一个本地生活方案打分器。你的任务是根据用户当前需求，"
-        "仅评估候选方案与需求的匹配程度。"
-        "请忽略通勤时间、ETA、价格、风格细节以外的无关信息。"
-        "分数范围必须是 0 到 100，分数越高代表越符合用户需求。"
+        "评估候选方案与本轮需求的匹配程度。可以参考 POI 类别、商圈、评分、距离、价格、标签和推荐理由。"
+        "不要参考用户历史偏好，也不要因为符合历史偏好而加分。"
+        "分数范围必须是 0 到 100，分数越高代表越符合用户当前需求。"
         "你必须只输出严格 JSON，不要输出任何额外解释。"
         "输出格式如下："
         "{\"scores\":[{\"candidate_id\":\"plan_1\",\"score\":90,\"reason\":\"...\"}]}"
@@ -91,7 +103,7 @@ def _llm_relevance_scores(user_input: str, scored: list[dict]) -> dict[str, int]
         f"用户当前需求：{user_input}\n\n"
         f"候选方案数据：{json.dumps(candidate_payload, ensure_ascii=False, indent=2)}\n\n"
         "请对每个 candidate_id 生成一个 score。"
-        "必须覆盖全部候选方案，且 scores 的数量要与候选方案数量一致。"
+        "必须覆盖全部候选方案，scores 的数量要与候选方案数量一致。"
     )
 
     response = model.invoke([
@@ -112,9 +124,8 @@ def _llm_relevance_scores(user_input: str, scored: list[dict]) -> dict[str, int]
         candidate_id = str(item.get("candidate_id") or "").strip()
         if not candidate_id:
             continue
-        score_value = item.get("score")
         try:
-            score_int = int(round(float(score_value)))
+            score_int = int(round(float(item.get("score"))))
         except (TypeError, ValueError):
             continue
         score_map[candidate_id] = max(0, min(100, score_int))
@@ -132,22 +143,15 @@ def _llm_relevance_scores(user_input: str, scored: list[dict]) -> dict[str, int]
 
 
 def _eta_score_by_rank(rank: int, has_eta: bool) -> int:
-    """保留原始 ETA 分的尺度，作为和 LLM 分数 1:1 融合的基准。"""
     return max(0, 100 - (rank - 1) * 20) if has_eta else 0
 
 
 def scoring_node(state: AgentState) -> AgentState:
-    """
-    Scoring Node：按「需求匹配 + 通勤时间」对合法候选方案排序。
-
-    主指标：LLM 评估的需求匹配分
-    次指标：出发地 → 第一个活动的 ETA（最影响体验的一段）
-    兼容：保留原始输出格式，不新增对外字段。
-    """
     print("[Scoring Node] 评估需求匹配分与通勤耗时并排序...")
     try:
         rule_validation_result = state.get("rule_validation_result") or {}
         eta: dict = (state.get("fact_gathering_result") or {}).get("eta") or {}
+        plan_poi_details: dict = state.get("plan_poi_details") or {}
         valid_plans: list[dict] = rule_validation_result.get("valid_plans") or []
         user_input = (state.get("user_input") or "").strip()
         if not user_input:
@@ -162,22 +166,22 @@ def scoring_node(state: AgentState) -> AgentState:
             first_eta = _first_activity_eta(candidate, eta)
             total_eta = _total_eta(candidate, eta)
             scored.append({
-                "candidate":      candidate,
-                "candidate_id":   candidate.get("id") or "unknown",
-                "first_eta":      first_eta,
-                "total_eta":      total_eta,
+                "candidate": candidate,
+                "candidate_id": candidate.get("id") or "unknown",
+                "first_eta": first_eta,
+                "total_eta": total_eta,
                 "original_index": idx,
             })
 
-        INF = float("inf")
-        scored.sort(key=lambda x: (
-            x["first_eta"] if x["first_eta"] is not None else INF,  # 主：第一段越短越好
-            x["total_eta"] if x["total_eta"] is not None else INF,  # 次：总 ETA 越短越好
-            x["original_index"],                                     # 三级：保持原顺序稳定
+        inf = float("inf")
+        scored.sort(key=lambda item: (
+            item["first_eta"] if item["first_eta"] is not None else inf,
+            item["total_eta"] if item["total_eta"] is not None else inf,
+            item["original_index"],
         ))
 
         try:
-            relevance_scores = _llm_relevance_scores(user_input, scored)
+            relevance_scores = _llm_relevance_scores(user_input, scored, plan_poi_details)
         except Exception as llm_exc:
             print(f"[Scoring Node][WARN] LLM 需求评分失败，回退到 ETA 评分：{llm_exc}")
             relevance_scores = {}
@@ -187,10 +191,7 @@ def scoring_node(state: AgentState) -> AgentState:
             has_eta = item["first_eta"] is not None
             eta_score = _eta_score_by_rank(rank, has_eta)
             llm_score = relevance_scores.get(item["candidate_id"])
-            if llm_score is None:
-                final_score = eta_score
-            else:
-                final_score = int(round(eta_score * 0.4 + llm_score * 0.6))
+            final_score = eta_score if llm_score is None else int(round(eta_score * 0.4 + llm_score * 0.6))
             scored_candidates.append({
                 "candidate_id": item["candidate_id"],
                 "final_score": final_score,
@@ -221,7 +222,7 @@ def scoring_node(state: AgentState) -> AgentState:
         return {
             "scoring_result": {
                 "plan_mode": rule_validation_result.get("plan_mode", "activity_plus_meal"),
-                "scoring_method": "llm_relevance_plus_first_activity_eta",
+                "scoring_method": "poi_detail_relevance_plus_first_activity_eta",
                 "scored_candidates": scored_candidates,
             }
         }

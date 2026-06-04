@@ -404,6 +404,17 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     # 提取用户明确点名的活动，作为硬约束传给 planner
     activity_style: list = plan.get("activity_style") or []
     explicit = "、".join(activity_style) if activity_style else "（无明确点名，由你根据场景自由推荐）"
+    activity_explicit_types: list = plan.get("activity_explicit_types") or []
+    activity_explicit_search: dict = facts.get("activity_explicit_search") or {}
+    explicit = "、".join(activity_explicit_types) if activity_explicit_types else "（无明确点名，由你根据场景自由推荐）"
+    explicit_search_block = f"""\
+## 显式活动搜索结果
+{json.dumps(activity_explicit_search, ensure_ascii=False, indent=2)}
+
+规划规则：
+- 如果 matched 中有显式活动类型，候选方案不能全部忽略对应 POI。
+- 如果 missing 中有显式活动类型，说明真实搜索没有结果，可以不安排该类型。
+"""
     preference_block = ""
     if preference_profile.strip():
         preference_block = f"""\
@@ -426,6 +437,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 不要预设要填满时间，段数由原话和时间窗自然决定。
 
 {preference_block}
+{explicit_search_block}
 
 ## 用户明确点名的活动（硬约束，必须全部安排）
 以下是从原话中识别出的明确点名活动，必须全部出现在 steps 中，不可遗漏：
@@ -463,6 +475,7 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         "id": a.get("id"), "name": a.get("name"), "type": a.get("type"),
         "environment": a.get("environment") or "unknown",
         "rating": a.get("rating"), "child_friendly": a.get("child_friendly"),
+        "explicit_activity_type": a.get("explicit_activity_type"),
     }
     for a in activities
 ], ensure_ascii=False, indent=2)}

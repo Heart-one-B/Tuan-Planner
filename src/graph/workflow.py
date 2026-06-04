@@ -7,6 +7,7 @@ from src.graph.nodes.llm_answer_node import llm_answer_node
 from src.graph.nodes.constraint_build_node import constraint_build_node
 from src.graph.nodes.fact_gathering_node import fact_gathering_node
 from src.graph.nodes.candidate_planning_node import candidate_planning_node
+from src.graph.nodes.plan_poi_detail_sync_node import plan_poi_detail_sync_node
 from src.graph.nodes.rule_validation_node import rule_validation_node
 from src.graph.nodes.repair_loop_node import repair_loop_node
 from src.graph.nodes.scoring_node import scoring_node
@@ -90,6 +91,7 @@ def build_workflow(checkpointer=None):
     graph.add_node("fact_gathering", fact_gathering_node)
 
     graph.add_node("candidate_planning", candidate_planning_node)
+    graph.add_node("plan_poi_detail_sync", plan_poi_detail_sync_node)
     graph.add_node("rule_validation", rule_validation_node)
     graph.add_node("repair_loop", repair_loop_node)
     graph.add_node("scoring", scoring_node)
@@ -130,8 +132,9 @@ def build_workflow(checkpointer=None):
     # 事实采集完毕 -> LLM规划初始方案
     graph.add_edge("fact_gathering", "candidate_planning")
 
-    # 候选生成直接送审合规校验
-    graph.add_edge("candidate_planning", "rule_validation")
+    # 候选生成后先同步本轮用到的 POI 详情，再送审合规校验
+    graph.add_edge("candidate_planning", "plan_poi_detail_sync")
+    graph.add_edge("plan_poi_detail_sync", "rule_validation")
 
     # 规则合规分流 (Enough Valid Plans?)
     graph.add_conditional_edges(
