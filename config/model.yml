@@ -1,4 +1,9 @@
+provider: deepseek
+
 chat_model_name: qwen3-8b
 embedding_model_name: text-embedding-v4
 dashscope_api_key:
 
+deepseek_model_name: deepseek-v4-flash
+deepseek_api_key: sk-5bf3de376304419fb7fc087f26699552
+deepseek_base_url: https://api.deepseek.com
