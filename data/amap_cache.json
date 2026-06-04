@@ -1192,34 +1192,34 @@
     }
   },
   "distance:fc6a7f8b57e5": {
-    "cached_at": "2026-06-03T13:40:10",
+    "cached_at": "2026-06-04T04:16:47",
     "data": {
       "distance_meters": "3687",
-      "duration_seconds": "586",
+      "duration_seconds": "581",
       "eta_minutes": 10
     }
   },
   "distance:e12aafa23e3a": {
-    "cached_at": "2026-06-03T13:40:11",
+    "cached_at": "2026-06-04T04:16:49",
     "data": {
       "distance_meters": "2784",
-      "duration_seconds": "563",
-      "eta_minutes": 9
+      "duration_seconds": "575",
+      "eta_minutes": 10
     }
   },
   "distance:f116819611b3": {
-    "cached_at": "2026-06-03T13:40:12",
+    "cached_at": "2026-06-04T04:16:50",
     "data": {
       "distance_meters": "3679",
-      "duration_seconds": "598",
+      "duration_seconds": "582",
       "eta_minutes": 10
     }
   },
   "distance:84f30f7e8cec": {
-    "cached_at": "2026-06-03T01:52:24",
+    "cached_at": "2026-06-04T04:16:57",
     "data": {
       "distance_meters": "3766",
-      "duration_seconds": "588",
+      "duration_seconds": "591",
       "eta_minutes": 10
     }
   },
@@ -3817,7 +3817,7 @@
         "id": "B0K3HR1ZYR",
         "name": "王氏美蛙鱼耗儿鱼肥肠鱼(蓝光·圣菲悦城一期店)",
         "address": "大件路白家段996号蓝光·圣菲悦城一期",
-        "location": "",
+        "location": "104.001920,30.566264",
         "type": "050100",
         "rating": "",
         "distance": "",
@@ -4643,50 +4643,50 @@
     }
   },
   "distance:240e0fdc9d38": {
-    "cached_at": "2026-06-04T02:09:23",
+    "cached_at": "2026-06-04T04:16:43",
     "data": {
       "distance_meters": "762",
-      "duration_seconds": "108",
+      "duration_seconds": "149",
       "eta_minutes": 2
     }
   },
   "distance:71907db930a2": {
-    "cached_at": "2026-06-04T02:09:24",
+    "cached_at": "2026-06-04T04:16:45",
     "data": {
       "distance_meters": "4290",
-      "duration_seconds": "706",
+      "duration_seconds": "692",
       "eta_minutes": 12
     }
   },
   "distance:91befa995122": {
-    "cached_at": "2026-06-04T02:09:25",
+    "cached_at": "2026-06-04T04:16:46",
     "data": {
       "distance_meters": "4468",
-      "duration_seconds": "856",
+      "duration_seconds": "845",
       "eta_minutes": 14
     }
   },
   "distance:a55aecb4ac7a": {
-    "cached_at": "2026-06-04T02:09:26",
+    "cached_at": "2026-06-04T04:16:33",
     "data": {
       "distance_meters": "1206",
-      "duration_seconds": "200",
-      "eta_minutes": 3
+      "duration_seconds": "279",
+      "eta_minutes": 5
     }
   },
   "distance:16f3ab57c584": {
-    "cached_at": "2026-06-04T02:09:27",
+    "cached_at": "2026-06-04T04:16:34",
     "data": {
       "distance_meters": "2818",
-      "duration_seconds": "602",
+      "duration_seconds": "586",
       "eta_minutes": 10
     }
   },
   "distance:36d863c5f92d": {
-    "cached_at": "2026-06-04T02:09:28",
+    "cached_at": "2026-06-04T04:16:36",
     "data": {
       "distance_meters": "3440",
-      "duration_seconds": "736",
+      "duration_seconds": "742",
       "eta_minutes": 12
     }
   },
@@ -4715,27 +4715,27 @@
     }
   },
   "distance:2ee267693b97": {
-    "cached_at": "2026-06-04T02:09:33",
+    "cached_at": "2026-06-04T04:16:40",
     "data": {
       "distance_meters": "791",
-      "duration_seconds": "198",
-      "eta_minutes": 3
+      "duration_seconds": "212",
+      "eta_minutes": 4
     }
   },
   "distance:85fa3dcce8cd": {
-    "cached_at": "2026-06-04T02:09:34",
+    "cached_at": "2026-06-04T04:16:41",
     "data": {
       "distance_meters": "2832",
-      "duration_seconds": "486",
-      "eta_minutes": 8
+      "duration_seconds": "447",
+      "eta_minutes": 7
     }
   },
   "distance:291f6ac837a0": {
-    "cached_at": "2026-06-04T02:09:35",
+    "cached_at": "2026-06-04T04:16:42",
     "data": {
       "distance_meters": "1452",
-      "duration_seconds": "267",
-      "eta_minutes": 4
+      "duration_seconds": "373",
+      "eta_minutes": 6
     }
   },
   "distance:823fc7cfb2e4": {
@@ -4747,11 +4747,11 @@
     }
   },
   "distance:75aa1668c5b2": {
-    "cached_at": "2026-06-04T02:10:07",
+    "cached_at": "2026-06-04T04:16:54",
     "data": {
       "distance_meters": "3371",
-      "duration_seconds": "600",
-      "eta_minutes": 10
+      "duration_seconds": "556",
+      "eta_minutes": 9
     }
   },
   "distance:8946fef7cb80": {
@@ -12873,6 +12873,2325 @@
       "distance_meters": "3509",
       "duration_seconds": "638",
       "eta_minutes": 11
+    }
+  },
+  "detail:e5f845ec60f6": {
+    "cached_at": "2026-06-04T03:39:13",
+    "data": {
+      "id": "B0LULZ7ZRG",
+      "name": "趣玩咖桌游电玩馆",
+      "location": "103.972601,30.567629",
+      "address": "瑞桉诊所西北侧60米",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "体育休闲服务;娱乐场所;游戏厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/08ea0e0968a93beac28b67aeecb93ac3"
+      },
+      "cost": "28.00",
+      "opentime2": "周一至周日 13:00-24:00",
+      "rating": "4.0",
+      "open_time": "13:00-24:00"
+    }
+  },
+  "distance:0ab6ce012e8c": {
+    "cached_at": "2026-06-04T03:39:14",
+    "data": {
+      "distance_meters": "8373",
+      "duration_seconds": "1214",
+      "eta_minutes": 20
+    }
+  },
+  "search:b04a6eca1576": {
+    "cached_at": "2026-06-04T04:08:02",
+    "data": [
+      {
+        "id": "B0LUUHBCAX",
+        "name": "板房老串串(泰山路店)",
+        "address": "泰山南路63号附32-34",
+        "location": "103.999957,30.566181",
+        "type": "070000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0FFI0R5EE",
+        "name": "五味缘钢管厂小郡肝串串香(蓝光圣菲悦城店)",
+        "address": "大件路白家段996号4栋附8号",
+        "location": "104.002011,30.566196",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0LDPC1EJU",
+        "name": "川小厨•猪油面",
+        "address": "泰山路59号",
+        "location": "103.999903,30.566492",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0LGF5NFN5",
+        "name": "刘小禾手提串串",
+        "address": "泰山路一街47号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0LGRSB6DJ",
+        "name": "嘴安逸旺苍酸辣粉串串香",
+        "address": "西航港街道泰山路63号附26号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0L1DCUK6N",
+        "name": "覃记冷锅串串",
+        "address": "西航港街道川大路三段108号3栋附一号",
+        "location": "",
+        "type": "070000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0H2BAJGG5",
+        "name": "秦嬢串串",
+        "address": "川大南路一段216号",
+        "location": "",
+        "type": "050117|050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0H1D1R8BA",
+        "name": "宋姐串串香店(川大路三段店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0KUGLL9SS",
+        "name": "蔡记串串(西航港黄河南路店)",
+        "address": "黄河南路二段77号",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0L0USVQZC",
+        "name": "签味缘鲜货串串(西航港新街店)",
+        "address": "花红小区下六街与西航港新街交叉口东南20米",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0L1K7UV3T",
+        "name": "临江油卤串串",
+        "address": "川大南路二段(友邻路19号)临江丽苑三期C区",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0GKYBF10L",
+        "name": "幺姑婆手提串串(川大路三段店)",
+        "address": "蜀星路52蜀星花园(文星地铁站B2口步行150米)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0FFGFX5F5",
+        "name": "歪串串(文星分店)",
+        "address": "文星镇光明小区对面(文星地铁站B2口步行160米)",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0M62DU04W",
+        "name": "小郡肝串串",
+        "address": "西航港新街与黄河南路交叉口东北60米",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0L3MUKU2N",
+        "name": "冯幺妹串串",
+        "address": "黄河南路一段121号",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0L3UCH4ZZ",
+        "name": "姐妹串串",
+        "address": "临港路四段200号14栋附113号",
+        "location": "",
+        "type": "070000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0H23HRKQ4",
+        "name": "情串串麻辣烫(白家店)",
+        "address": "宽景路36号",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0KDXMY6OA",
+        "name": "乡香串串(蓝光空港国际城T-MAX3期店)",
+        "address": "西航港街道临港路四段200号14栋附117号",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0LAOLR1UN",
+        "name": "吴老三煮局串串(航空港店)",
+        "address": "大件路白家段280号2栋附124号",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      },
+      {
+        "id": "B0FFKVJMDG",
+        "name": "让签签飞小郡肝串串香(文星店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "串串香"
+      }
+    ]
+  },
+  "search:ed8bd49fffbe": {
+    "cached_at": "2026-06-04T04:08:04",
+    "data": [
+      {
+        "id": "B0M65UK5IF",
+        "name": "熊猫说淄博烧烤(航空港店)",
+        "address": "大件路白家段926号1层",
+        "location": "104.002050,30.565088",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0L01AFJHN",
+        "name": "老北京炙烤牛肋条饭·炙子烤肉(双流店)",
+        "address": "泰山路与红樱路交叉口西南200米",
+        "location": "103.995925,30.565875",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0KA9RPRNW",
+        "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+        "address": "西航港街道大件路白家段996号4栋附34号1层",
+        "location": "104.001326,30.566755",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0FFICNL2J",
+        "name": "晋氏烧烤(蓝光·圣菲悦城店)",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0L0ZAEAN2",
+        "name": "肖老板·碳火烧烤·江湖爆炒",
+        "address": "西航港街道大件路白家段996号4栋1层附42号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0M6FSYIYB",
+        "name": "朴社长地毯烤肉",
+        "address": "泰山南路与泰山路交叉口南40米",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0L3MRMW9M",
+        "name": "爸爸烧烤",
+        "address": "川大南路一段200号临江丽苑二期",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0HDTMKG7Y",
+        "name": "签签烧烤(临江丽苑二期店)",
+        "address": "川大南路一段186号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0FFK94M7F",
+        "name": "雪山资格烤羊肉串(蓝光·圣菲悦城一期店)",
+        "address": "蓝光·圣菲悦城一期2号门旁",
+        "location": "",
+        "type": "050121|050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0M63U9HUA",
+        "name": "乐山烧烤",
+        "address": "西航港黄河南路2段1号南城锦尚",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0LBTC3I5H",
+        "name": "炭火匠人·烧烤(航空港店)",
+        "address": "西航港街道川大路三段108号13栋附6号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0L37HLX7O",
+        "name": "炭公烧烤(泰山路店)",
+        "address": "泰山路60号附5号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0L0X9MGBD",
+        "name": "霄味烧烤",
+        "address": "泰山路与黄河中路二段交叉口西40米",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0L1DBSRJY",
+        "name": "美味烧烤",
+        "address": "花红小区",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0HURM4BXG",
+        "name": "胖妹烧烤(泰山路店)",
+        "address": "泰山路悦时光美食城60号附8号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0FFKPZDDQ",
+        "name": "耶生活烧烤店(临江丽苑二期店)",
+        "address": "川大南路一段222号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0K3M7N25R",
+        "name": "眉山烧烤",
+        "address": "花红小区",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0L1NDWFNW",
+        "name": "小树邻烧烤",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0J6YKTQLN",
+        "name": "乐山烧烤(西航港新街)",
+        "address": "花红小区下六街与西航港新街交叉口东北50米",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      },
+      {
+        "id": "B0FFLFNXX7",
+        "name": "东北烤冷面(金色校园店)",
+        "address": "长城路二段499号金色校园广场F1层",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "烧烤"
+      }
+    ]
+  },
+  "search:e145d3b09c49": {
+    "cached_at": "2026-06-04T04:08:05",
+    "data": [
+      {
+        "id": "B0FFI0R5EE",
+        "name": "五味缘钢管厂小郡肝串串香(蓝光圣菲悦城店)",
+        "address": "大件路白家段996号4栋附8号",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFK26ZM5",
+        "name": "熙蜀印象简朴菜(西航港店)",
+        "address": "泰山路54号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0KG9S5FTY",
+        "name": "黑土乡情铁锅炖(蜀星花园店)",
+        "address": "西航港街道蜀龙街160号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFIDC14R",
+        "name": "金东北海鲜烧烤大排档万州烤鱼",
+        "address": "临港路四段88号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0J3CSFV9X",
+        "name": "草庐火锅",
+        "address": "湖夹滩西四街与文星大道交叉口东北40米",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFKUQKGI",
+        "name": "方拙茶酒馆(航空港店)",
+        "address": "机场路近都段87号8栋附201号",
+        "location": "",
+        "type": "050100|050600",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0KAZ7BS9J",
+        "name": "刘一招豆花烤鱼",
+        "address": "珠江路600号附101号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0HG1UTFLB",
+        "name": "烤乐坊烧烤大排档(江安丽苑2期店)",
+        "address": "长城西街179号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFHBBRPY",
+        "name": "让鸭脑壳飞",
+        "address": "西航港珠江路600号蓝光国际城5幢1层",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFKR13LK",
+        "name": "重庆巴辣麻洪门美蛙鲜鱼府(双流店)",
+        "address": "珠江路6003栋附124号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFHDX1ZQ",
+        "name": "别院里音乐酒馆(成都购物中心北京华联店)",
+        "address": "锦华路二段166号北京华联(成都购物中心)B1层",
+        "location": "",
+        "type": "080304|050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0LAK6CZ3L",
+        "name": "融合小院花园餐厅",
+        "address": "近都社区二组3-4号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0J23Z3YDC",
+        "name": "南堂里(空港店)",
+        "address": "锦华路二段166号",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0JUC5350G",
+        "name": "小时候·外婆烧鸡公(空港店)",
+        "address": "仁道路30号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0K6PHPMFE",
+        "name": "融合印象·品质家宴(白家店)",
+        "address": "西航港街道大湖堰东路二段222号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0I1UA03Z0",
+        "name": "平肆江湖菜(航空港店)",
+        "address": "长江路三段17号附27号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0LD0RFXHP",
+        "name": "珠记重庆老火锅",
+        "address": "临港路一段与星月路交叉口西南100米",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFI54ZSV",
+        "name": "兰府庄园火锅",
+        "address": "黄荆路148号",
+        "location": "",
+        "type": "050117|080500",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0KAK5U8J8",
+        "name": "永和砂锅",
+        "address": "学府西路北一街99号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      },
+      {
+        "id": "B0FFI64WGQ",
+        "name": "刘记清汤黄牛肉",
+        "address": "天府二街1342号",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "聚会餐厅"
+      }
+    ]
+  },
+  "detail:aef3edfcb247": {
+    "cached_at": "2026-06-04T04:08:06",
+    "data": {
+      "id": "B0K3HR1ZYR",
+      "name": "王氏美蛙鱼耗儿鱼肥肠鱼(蓝光·圣菲悦城一期店)",
+      "location": "104.001920,30.566264",
+      "address": "大件路白家段996号蓝光·圣菲悦城一期",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/6a3e834646c6a959a9a737534cfdbc37"
+      },
+      "cost": "58.00",
+      "opentime2": "周一至周日 12:00-24:00",
+      "rating": "4.1",
+      "open_time": "12:00-24:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:52112e49fe44": {
+    "cached_at": "2026-06-04T04:08:08",
+    "data": {
+      "id": "B0M65UK5IF",
+      "name": "熊猫说淄博烧烤(航空港店)",
+      "location": "104.002050,30.565088",
+      "address": "大件路白家段926号1层",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;特色/地方风味餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/6b5a05c03ad3ffa24a59e587a5f6a798"
+      },
+      "cost": "39.00",
+      "opentime2": "周一至周日 00:00-24:00",
+      "rating": "4.1",
+      "open_time": "24小时营业",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:b495860e522b": {
+    "cached_at": "2026-06-04T04:08:09",
+    "data": {
+      "id": "B0L01AFJHN",
+      "name": "老北京炙烤牛肋条饭·炙子烤肉(双流店)",
+      "location": "103.995925,30.565875",
+      "address": "泰山路与红樱路交叉口西南200米",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": "2.7",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:1df2b9d3a582": {
+    "cached_at": "2026-06-04T04:08:10",
+    "data": {
+      "id": "B0KA9RPRNW",
+      "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+      "location": "104.001326,30.566755",
+      "address": "西航港街道大件路白家段996号4栋附34号1层",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "餐饮服务;餐饮相关场所;餐饮相关",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/2409c5197b4a49e75b6b6555376e8710"
+      },
+      "cost": "57.00",
+      "opentime2": "周一至周日 16:30-22:30",
+      "rating": "4.4",
+      "open_time": "16:30-22:30",
+      "meal_ordering": "0"
+    }
+  },
+  "distance:3ade32304ffb": {
+    "cached_at": "2026-06-04T04:08:11",
+    "data": {
+      "distance_meters": "2869",
+      "duration_seconds": "549",
+      "eta_minutes": 9
+    }
+  },
+  "distance:1401abdf58d5": {
+    "cached_at": "2026-06-04T04:08:12",
+    "data": {
+      "distance_meters": "2455",
+      "duration_seconds": "498",
+      "eta_minutes": 8
+    }
+  },
+  "distance:a6a53133a698": {
+    "cached_at": "2026-06-04T04:08:13",
+    "data": {
+      "distance_meters": "3286",
+      "duration_seconds": "672",
+      "eta_minutes": 11
+    }
+  },
+  "distance:5c904c3b9eac": {
+    "cached_at": "2026-06-04T04:08:14",
+    "data": {
+      "distance_meters": "2816",
+      "duration_seconds": "594",
+      "eta_minutes": 10
+    }
+  },
+  "geocode:a54e751d2a05": {
+    "cached_at": "2026-06-04T04:12:23",
+    "data": {
+      "city": "成都",
+      "coordinates": "103.923420,30.574884",
+      "district": "双流区",
+      "formatted_address": "双流区"
+    }
+  },
+  "search:871151f09a9b": {
+    "cached_at": "2026-06-04T04:12:24",
+    "data": [
+      {
+        "id": "B0L3M9PJM9",
+        "name": "文创公园C区6号",
+        "address": "楠桂路与塔桥路三段交叉口南280米",
+        "location": "",
+        "type": "120000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "文创园"
+      },
+      {
+        "id": "B0MDF9AD7Y",
+        "name": "高新文创园",
+        "address": "成双大道南段与龙桥路交叉口西南120米",
+        "location": "",
+        "type": "120100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "文创园"
+      },
+      {
+        "id": "B0MG9HPFOF",
+        "name": "嘉晟广厦汽车文创园公寓楼",
+        "address": "罗汉路与罗汉路南一段交叉口东160米",
+        "location": "",
+        "type": "120000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "文创园"
+      },
+      {
+        "id": "B0KANDYTB2",
+        "name": "嘉晟广厦汽车文创园",
+        "address": "罗汉路133号",
+        "location": "",
+        "type": "120100|020000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "文创园"
+      }
+    ]
+  },
+  "search:6c763aa336e0": {
+    "cached_at": "2026-06-04T04:12:26",
+    "data": [
+      {
+        "id": "B0L0UCW93Q",
+        "name": "蔓味轻食(双流东升店)",
+        "address": "一杆旗北街29号3栋附103号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0LRY7WHJ0",
+        "name": "林雨书堂",
+        "address": "东升街道藏卫路北一段136号附302号",
+        "location": "103.933066,30.579906",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0LA1A9V5E",
+        "name": "米墩墩紫米饭团(双流店)",
+        "address": "东升街道白河路一段25号",
+        "location": "103.919171,30.564042",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0M6HUB27Z",
+        "name": "浅奈咖喱蛋包饭(双流店)",
+        "address": "金河路三段257号附246号2层",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0LKC40N2J",
+        "name": "柠檬轻食生活",
+        "address": "西安路四段69号北大资源公园1898小区",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0IGDS8WKU",
+        "name": "喜赞·超级碗健康轻食(双流店)",
+        "address": "东升街道金河路三段257号附357号",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0J1N1GOZZ",
+        "name": "超牛堡·炙烤牛肉汉堡",
+        "address": "金河路三段与迎春路五段交叉口南160米",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0HDLKWL72",
+        "name": "木桑森林轻食健身沙拉(棠湖店)",
+        "address": "东升街道金河路三段257号附237号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0JRURS8S7",
+        "name": "食野·SAYYEAH·创意轻食(双流店)",
+        "address": "东升街道金河路三段257号附122号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0M6JUEEQA",
+        "name": "野生蓝莓三里坝体验店",
+        "address": "东升街道宜城大街二段122号",
+        "location": "",
+        "type": "060000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0K3JUCQ3D",
+        "name": "整一笼小笼包",
+        "address": "东升镇宜城大街三段61号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0KK2BDX45",
+        "name": "十分品质轻食",
+        "address": "双楠大道辅路与葛陌路交叉口东南100米",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0MGNAP1NT",
+        "name": "临榆炸鸡腿(龙桥小区店)",
+        "address": "成双大道南段986号13栋附138号",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0L1GLBJWN",
+        "name": "冰四囍(蛟龙港店)",
+        "address": "腾龙路16号",
+        "location": "",
+        "type": "050700",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0LR0XQLP8",
+        "name": "木桑森林·轻食健康餐(双流店)",
+        "address": "东升街向楠路133号7栋2层6号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0L32C4PXJ",
+        "name": "掌门土豆(誉景城店)",
+        "address": "东升街道向楠路133号2幢1层4号",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0FFIOVC79",
+        "name": "齐奇花溪牛羊肉米粉",
+        "address": "乌江路26号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0LRL5MPTL",
+        "name": "告一下冒菜",
+        "address": "彭镇交通路三段151号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      },
+      {
+        "id": "B0LAVC7EHH",
+        "name": "瓦上·82号(彭镇店)",
+        "address": "彭镇永丰街82号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食简餐"
+      }
+    ]
+  },
+  "detail:bbc783085a49": {
+    "cached_at": "2026-06-04T04:12:27",
+    "data": {
+      "id": "B0FFG1FTG4",
+      "name": "嗨喽酒店咖啡厅",
+      "location": "103.922289,30.576661",
+      "address": "西北街97号",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;咖啡厅;咖啡厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/1029d8b290d1069a29a0e720d87eed2c"
+      },
+      "cost": "71.00",
+      "opentime2": "周一至周日 09:00-24:00",
+      "rating": "3.9",
+      "open_time": "09:00-24:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:6fa4c7bbef8d": {
+    "cached_at": "2026-06-04T04:12:28",
+    "data": {
+      "id": "B0L3M9PJM9",
+      "name": "文创公园C区6号",
+      "location": "103.914175,30.561575",
+      "address": "楠桂路与塔桥路三段交叉口南280米",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "商务住宅;商务住宅相关;商务住宅相关",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": [],
+      "open_time": []
+    }
+  },
+  "detail:36d518b97d54": {
+    "cached_at": "2026-06-04T04:12:29",
+    "data": {
+      "id": "B0MDF9AD7Y",
+      "name": "高新文创园",
+      "location": "103.951612,30.591862",
+      "address": "成双大道南段与龙桥路交叉口西南120米",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "商务住宅;产业园区;产业园区",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": [],
+      "open_time": []
+    }
+  },
+  "detail:971862444b0f": {
+    "cached_at": "2026-06-04T04:12:30",
+    "data": {
+      "id": "B0MG9HPFOF",
+      "name": "嘉晟广厦汽车文创园公寓楼",
+      "location": "103.884225,30.585825",
+      "address": "罗汉路与罗汉路南一段交叉口东160米",
+      "business_area": [],
+      "city": "成都市",
+      "type": "商务住宅;商务住宅相关;商务住宅相关",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": [],
+      "open_time": []
+    }
+  },
+  "detail:fc35f51c8de6": {
+    "cached_at": "2026-06-04T04:12:52",
+    "data": null
+  },
+  "detail:c8aeb87e1091": {
+    "cached_at": "2026-06-04T04:12:53",
+    "data": {
+      "id": "B0LRY7WHJ0",
+      "name": "林雨书堂",
+      "location": "103.933066,30.579906",
+      "address": "东升街道藏卫路北一段136号附302号",
+      "business_area": "东升",
+      "city": "成都市",
+      "type": "科教文化服务;培训机构;培训机构",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/63a31852d8dc84f1d8ac759c04c7cfb8"
+      },
+      "cost": [],
+      "opentime2": "周一至周五 10:00-16:30",
+      "rating": "4.0",
+      "open_time": []
+    }
+  },
+  "detail:b3720e4721c4": {
+    "cached_at": "2026-06-04T04:12:54",
+    "data": {
+      "id": "B0LA1A9V5E",
+      "name": "米墩墩紫米饭团(双流店)",
+      "location": "103.919171,30.564042",
+      "address": "东升街道白河路一段25号",
+      "business_area": "东升",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/7576c7435679a35c0aaccb3cf7b0d737"
+      },
+      "cost": "14.00",
+      "opentime2": "周一至周日 09:00-21:00",
+      "rating": "3.8",
+      "open_time": "09:00-21:00",
+      "meal_ordering": "0"
+    }
+  },
+  "distance:52578f4000de": {
+    "cached_at": "2026-06-04T04:12:56",
+    "data": {
+      "distance_meters": "809",
+      "duration_seconds": "176",
+      "eta_minutes": 3
+    }
+  },
+  "distance:ff60374aed6b": {
+    "cached_at": "2026-06-04T04:12:57",
+    "data": {
+      "distance_meters": "2120",
+      "duration_seconds": "453",
+      "eta_minutes": 8
+    }
+  },
+  "distance:6afc98d21bd9": {
+    "cached_at": "2026-06-04T04:12:58",
+    "data": {
+      "distance_meters": "3492",
+      "duration_seconds": "533",
+      "eta_minutes": 9
+    }
+  },
+  "distance:d0c70d75a831": {
+    "cached_at": "2026-06-04T04:12:59",
+    "data": {
+      "distance_meters": "4599",
+      "duration_seconds": "785",
+      "eta_minutes": 13
+    }
+  },
+  "distance:e713a8e91ad3": {
+    "cached_at": "2026-06-04T04:13:00",
+    "data": {
+      "distance_meters": "1657",
+      "duration_seconds": "412",
+      "eta_minutes": 7
+    }
+  },
+  "distance:ee65da68c458": {
+    "cached_at": "2026-06-04T04:13:01",
+    "data": {
+      "distance_meters": "1550",
+      "duration_seconds": "379",
+      "eta_minutes": 6
+    }
+  },
+  "search:47a718a03e44": {
+    "cached_at": "2026-06-04T04:16:14",
+    "data": [
+      {
+        "id": "B0FFFOD7C1",
+        "name": "四川大学江安校区美术馆",
+        "address": "西航港街道川大路二段2号四川大学江安校区",
+        "location": "",
+        "type": "140400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0M6XCSYNH",
+        "name": "墨明堂艺术馆",
+        "address": "西航港街道大件路白家段996号3栋2层附2009号",
+        "location": "",
+        "type": "140000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFICXT1D",
+        "name": "天之音艺术学校.西航总校",
+        "address": "长城路二段499号金色校园广场3幢3楼16-20",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFM8S2T1",
+        "name": "七彩王国艺术培训学校",
+        "address": "长城路二段499号金色校园广场4栋312",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0IU7SLNBN",
+        "name": "金佳易钢琴艺术学校西航港校区(金色校园广场店)",
+        "address": "长城路二段499号金色校园广场",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFJ68HY7",
+        "name": "凤舞星晖艺术培训学校(金色校园广场店)",
+        "address": "长城路二段499号金色校园广场F2层",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFHQ0GT1",
+        "name": "艺原美术馆",
+        "address": "蓝光空港国际城一期7栋3单元3层",
+        "location": "",
+        "type": "140400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFJ81MLH",
+        "name": "悦匠艺术中心",
+        "address": "西航港新街789号景茂雍水岸俪府5栋",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0HUOHDWQ8",
+        "name": "雅琪舞蹈艺术中心",
+        "address": "大件路白家段280号7栋1单元8楼803室",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFL8LEP0",
+        "name": "诺雅美妆形象艺术学院",
+        "address": "西航港街道珠江路600号2栋一单元",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFISD88K",
+        "name": "名师艺念空间艺术培训学校",
+        "address": "临港路一段福通路35号4楼",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0I1JA8Z9K",
+        "name": "双流区人人艺术教育学院",
+        "address": "星月路96号",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0JGXC68PF",
+        "name": "成铭艺术(云尚花园店)",
+        "address": "双流区航空港长江路三段17号三楼",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0LGJ5S3EJ",
+        "name": "寻艺艺术艺术工作室",
+        "address": "长江路三段17号5栋附1号",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0G29HORBI",
+        "name": "风尚惠合艺术馆",
+        "address": "西航港街道空港首座",
+        "location": "",
+        "type": "061202|170200",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0FFLFGP11",
+        "name": "刘钢林艺术工作室",
+        "address": "簇桥新苗五组浓园囯际艺术村",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0L10UD869",
+        "name": "澄.艺术空间",
+        "address": "成都信息工程大学航空港校区资源环境学院附近浓园艺术园区A区D2-2",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0GRGZQ782",
+        "name": "吴学均艺术工作室",
+        "address": "金花桥街道新苗村五组12号浓园艺术国际村",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0I0HCVIND",
+        "name": "跃美术馆",
+        "address": "簇桥浓园国际艺术村",
+        "location": "",
+        "type": "140400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      },
+      {
+        "id": "B0J6PHYPKP",
+        "name": "块茎艺术",
+        "address": "艺术村路g4201号",
+        "location": "",
+        "type": "140400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "艺术馆"
+      }
+    ]
+  },
+  "search:327b014ad54f": {
+    "cached_at": "2026-06-04T04:16:15",
+    "data": [
+      {
+        "id": "B0I1JB8KZ7",
+        "name": "天府芙蓉园CEA潮流文化展",
+        "address": "簇马路一段与簇马路二段交叉口东280米",
+        "location": "",
+        "type": "140200",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "文化展馆"
+      }
+    ]
+  },
+  "search:77cce5cab7e5": {
+    "cached_at": "2026-06-04T04:16:16",
+    "data": []
+  },
+  "search:2f62b10dfc8c": {
+    "cached_at": "2026-06-04T04:16:18",
+    "data": [
+      {
+        "id": "B0MB6UO1O9",
+        "name": "木桑森林·轻食健康餐(川大进校店)",
+        "address": "西航港街道川大路三段108号8栋附4号",
+        "location": "103.989894,30.552428",
+        "type": "060000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0M6MZU72H",
+        "name": "馒大师",
+        "address": "西航港街道大件路白家段996号3栋1层附4-5号",
+        "location": "104.000933,30.567420",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0IAVPB2ER",
+        "name": "鲸落十里·健康餐轻食(川大店)",
+        "address": "西航港街道川大路三段108号13栋附20号",
+        "location": "103.988900,30.553205",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KUYKRAB1",
+        "name": "柠檬鸡鲜椒冷锅冒菜",
+        "address": "光明苑6栋9号(文星地铁站B1口步行180米)",
+        "location": "103.989604,30.552004",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0K2NP1IJM",
+        "name": "MURVEY·LF·蔓味轻食(川大店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050201",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0JKM1AUXK",
+        "name": "修修娃轻食店(光明苑店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0MBFD5A7P",
+        "name": "芊纤轻食店",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0M65SHHTM",
+        "name": "顺源轻食店",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0K3UDVK1A",
+        "name": "张甜甜控卡轻食(川大店)",
+        "address": "西航港街道川大路三段108号22栋附28号(自主申报)",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0IULCQIZ0",
+        "name": "素颜轻食LowCalorie",
+        "address": "川大路三段108号32栋附8号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0L2HCBDEO",
+        "name": "胃有福",
+        "address": "光明苑29栋附23号(文星地铁站B2口步行240米)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0L0SGHX8C",
+        "name": "双流区王芳芳轻食店",
+        "address": "长城路二段499号金色校园广场",
+        "location": "",
+        "type": "050201",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0L31SVABE",
+        "name": "木多森中式健康菜·低脂轻油餐(川大店)",
+        "address": "川大路三段108号46栋附4号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0LK0D7ZW5",
+        "name": "超牛堡·炙烤牛肉汉堡(川大店)",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KAFCHK21",
+        "name": "小满轻食店",
+        "address": "西航港街道韩国城一期一栋1单元",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KUAN038M",
+        "name": "禧厨稻香轻食",
+        "address": "湖夹滩西五街与蜀星路交叉口西120米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0KG4SMJGM",
+        "name": "冒一冒轻食店(百家苑店)",
+        "address": "文化街一段65号百家苑二期",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0JRT14MJI",
+        "name": "掌门土豆(双流茂业天地店)",
+        "address": "茂业天地(双流店)",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0MB5RKJKN",
+        "name": "木桑森林轻食健康餐(花天锦地店)",
+        "address": "西航港街道临港路四段88号2栋附105、106号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      },
+      {
+        "id": "B0IBYH1YAI",
+        "name": "喜赞·超级碗健康轻食(航空港店)",
+        "address": "珠江路599号3栋附79号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "轻食"
+      }
+    ]
+  },
+  "search:1097a247320c": {
+    "cached_at": "2026-06-04T04:16:19",
+    "data": []
+  },
+  "search:1399faa57d71": {
+    "cached_at": "2026-06-04T04:16:20",
+    "data": [
+      {
+        "id": "B0FFH7KTTL",
+        "name": "兄弟小厨家常菜馆(黄河中路店)",
+        "address": "黄河中路一段277号",
+        "location": "104.005657,30.562665",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0HD1A2C8H",
+        "name": "三汇缘家常菜",
+        "address": "黄河中路一段301-305号",
+        "location": "104.005200,30.563107",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0LDVR7ICE",
+        "name": "肉小胖现炒现吃的家常菜",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "104.001320,30.564898",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0LUZ7PL2M",
+        "name": "杨师傅风味家常菜",
+        "address": "黄河中路一段与泰新路交叉口西北260米",
+        "location": "104.006052,30.562666",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0IKLSR50H",
+        "name": "人民公社家常菜(蓝光·圣菲悦城一期店)",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0FFKW7WDI",
+        "name": "川香汇家常菜(航空港店)",
+        "address": "西航港街道大件路白家段996号1层",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0JUFZS5O9",
+        "name": "融合居土碗菜馆",
+        "address": "西航港街道泰山路63号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0FFK26ZM5",
+        "name": "熙蜀印象简朴菜(西航港店)",
+        "address": "泰山路54号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0L13R7IXC",
+        "name": "二姐家常炒菜",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0G3V4AXA5",
+        "name": "家常菜(光明苑店)",
+        "address": "川大路三段108号26栋附1号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0L0YA6GAZ",
+        "name": "川蓉家常菜馆",
+        "address": "花红小区",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0G13KY49G",
+        "name": "周记私房家常菜馆",
+        "address": "花红南街与西航港新街交叉口东南20米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0H0XZ3QP8",
+        "name": "东北菜馆(金色校园广场店)",
+        "address": "西航港街道金色校园广场三栋一层125号",
+        "location": "",
+        "type": "050102|050113",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0L31SVABE",
+        "name": "木多森中式健康菜·低脂轻油餐(川大店)",
+        "address": "川大路三段108号46栋附4号",
+        "location": "",
+        "type": "050120",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0FFGG5UFK",
+        "name": "味一品祝记家常菜(黄河南路店)",
+        "address": "西航港街道黄河南路34号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0FFGFU1GA",
+        "name": "柳记川菜馆(川大路三段店)",
+        "address": "川大路三段108号光明苑36栋一楼",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0H1X96VXD",
+        "name": "家常菜(顺风路)",
+        "address": "西航港街道大件路白家段280号1栋附134号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0FFFTI9YA",
+        "name": "锦荟家常菜(蜀星公寓店)",
+        "address": "成白路78号蜀星公寓",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0LUS4ZLIA",
+        "name": "老百家川菜馆",
+        "address": "西航港新街与成白路交叉口西南100米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      },
+      {
+        "id": "B0I3FRWNAC",
+        "name": "武姐家常菜",
+        "address": "黄河中路二段与江河东路交叉口东北220米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "家常菜"
+      }
+    ]
+  },
+  "search:89d9b119d167": {
+    "cached_at": "2026-06-04T04:16:22",
+    "data": [
+      {
+        "id": "B0FFGC7X5U",
+        "name": "汤锅王澳盟清汤鲜黄牛肉(文星分店)",
+        "address": "文星镇长城路187号",
+        "location": "103.988418,30.557062",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "清汤牛肉"
+      },
+      {
+        "id": "B001C8X0VL",
+        "name": "川椒鱼府(益嘉公寓店)",
+        "address": "白家黄河南路一段110号",
+        "location": "104.011822,30.549678",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "清汤牛肉"
+      },
+      {
+        "id": "B0GKDZQJZB",
+        "name": "红燊晓江楠·清汤黄牛肉",
+        "address": "西航港街道蜀龙街137号",
+        "location": "103.987645,30.547370",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "清汤牛肉"
+      },
+      {
+        "id": "B0FFI64WGQ",
+        "name": "刘记清汤黄牛肉",
+        "address": "天府二街1342号",
+        "location": "104.031698,30.551391",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "清汤牛肉"
+      },
+      {
+        "id": "B0J1CUCXHG",
+        "name": "红燊晓江楠清汤黄牛肉·涮烤一体(双华店)",
+        "address": "杨桥路149号(龙港地铁站C口步行430米)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "清汤牛肉"
+      },
+      {
+        "id": "B0K0A9M7Y4",
+        "name": "清汤黄牛肉涮烤一体(空港四路店)",
+        "address": "空港四路6号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "keyword_source": "清汤牛肉"
+      }
+    ]
+  },
+  "detail:8738e92f3ca0": {
+    "cached_at": "2026-06-04T04:16:23",
+    "data": {
+      "id": "B0FFICXT1D",
+      "name": "天之音艺术学校.西航总校",
+      "location": "103.990384,30.549026",
+      "address": "长城路二段499号金色校园广场3幢3楼16-20",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "科教文化服务;培训机构;培训机构",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/20dd025647d652ae7e5c990cc52a4168"
+      },
+      "cost": [],
+      "opentime2": "周一至周日 08:00-20:00",
+      "rating": "4.2",
+      "open_time": "08:00-20:00"
+    }
+  },
+  "detail:b6518f751fc3": {
+    "cached_at": "2026-06-04T04:16:24",
+    "data": {
+      "id": "B0LGJ5S3EJ",
+      "name": "寻艺艺术艺术工作室",
+      "location": "103.989626,30.576961",
+      "address": "长江路三段17号5栋附1号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "科教文化服务;培训机构;培训机构",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/03c8ccc6d13d63ae3c034e1673aab652"
+      },
+      "cost": [],
+      "opentime2": "周一至周日 09:00-21:00",
+      "rating": "3.0",
+      "open_time": "09:00-21:00"
+    }
+  },
+  "detail:0ed25e4ec6bf": {
+    "cached_at": "2026-06-04T04:16:25",
+    "data": {
+      "id": "B0G29HORBI",
+      "name": "风尚惠合艺术馆",
+      "location": "103.973540,30.569971",
+      "address": "西航港街道空港首座",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "购物服务;专卖店;珠宝首饰工艺品|公司企业;公司;公司",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0G29HORBI/comment/content_media_external_file_100009250_1758369763925_89449683.jpg"
+      },
+      "cost": [],
+      "opentime2": "09:00-22:00",
+      "rating": "4.3",
+      "open_time": "09:00-22:00"
+    }
+  },
+  "detail:130791105fd0": {
+    "cached_at": "2026-06-04T04:16:26",
+    "data": {
+      "id": "B0FFH7KTTL",
+      "name": "兄弟小厨家常菜馆(黄河中路店)",
+      "location": "104.005657,30.562665",
+      "address": "黄河中路一段277号",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0FFH7KTTL/comment/77CA7B8B_2A54_48B0_8A94_2AE1DBA73102_L0_001_2016_151_1766383777402_82861793.jpg"
+      },
+      "cost": "26.00",
+      "opentime2": "周一至周日 09:00-21:30",
+      "rating": "4.3",
+      "open_time": "09:00-21:30",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:7e9bb3f4fc72": {
+    "cached_at": "2026-06-04T04:16:27",
+    "data": {
+      "id": "B0HD1A2C8H",
+      "name": "三汇缘家常菜",
+      "location": "104.005200,30.563107",
+      "address": "黄河中路一段301-305号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0HD1A2C8H/comment/748C9CE0_3C58_411F_8C72_FA203FE7A1FF_L0_001_1500_200_1766383985980_37858964.jpg"
+      },
+      "cost": "60.00",
+      "opentime2": "周一至周日 10:00-22:00",
+      "rating": "4.1",
+      "open_time": "10:00-22:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:7a1b7c6ed471": {
+    "cached_at": "2026-06-04T04:16:28",
+    "data": {
+      "id": "B0LDVR7ICE",
+      "name": "肉小胖现炒现吃的家常菜",
+      "location": "104.001320,30.564898",
+      "address": "大件路白家段996号蓝光·圣菲悦城一期",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "cost": "36.00",
+      "opentime2": [],
+      "rating": "3.3",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:8b3e9d111188": {
+    "cached_at": "2026-06-04T04:16:29",
+    "data": {
+      "id": "B001C8X0VL",
+      "name": "川椒鱼府(益嘉公寓店)",
+      "location": "104.011822,30.549678",
+      "address": "白家黄河南路一段110号",
+      "business_area": "双流片区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;四川菜(川菜)",
+      "alias": "原味清汤牛肉",
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/11b3c3b39054df6e685777bcaea88ff0"
+      },
+      "cost": "59.00",
+      "opentime2": "周一至周日 09:30-22:00",
+      "rating": "4.4",
+      "open_time": "09:30-22:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:a1c26e632fa7": {
+    "cached_at": "2026-06-04T04:16:30",
+    "data": {
+      "id": "B0GKDZQJZB",
+      "name": "红燊晓江楠·清汤黄牛肉",
+      "location": "103.987645,30.547370",
+      "address": "西航港街道蜀龙街137号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;火锅店",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/f0c3176131294a90e68870ea7a037025"
+      },
+      "cost": "61.00",
+      "opentime2": "周一至周日 10:00-23:00",
+      "rating": "3.9",
+      "open_time": "10:00-23:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:06870f964d30": {
+    "cached_at": "2026-06-04T04:16:31",
+    "data": {
+      "id": "B0LUZ7PL2M",
+      "name": "杨师傅风味家常菜",
+      "location": "104.006052,30.562666",
+      "address": "黄河中路一段与泰新路交叉口西北260米",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;中餐厅",
+      "alias": [],
+      "cost": "32.00",
+      "opentime2": [],
+      "rating": "2.3",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "detail:e5181b924bb4": {
+    "cached_at": "2026-06-04T04:16:32",
+    "data": {
+      "id": "B0FFI64WGQ",
+      "name": "刘记清汤黄牛肉",
+      "location": "104.031698,30.551391",
+      "address": "天府二街1342号",
+      "business_area": "四川天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;火锅店",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0FFI64WGQ/comment/698E39ED_C0AE_4456_A31C_0782FB3565A0_L0_001_2000_112_1754308069810_61475379.jpg"
+      },
+      "cost": "68.00",
+      "opentime2": "周一至周日 11:00-22:30",
+      "rating": "4.5",
+      "open_time": "11:00-22:30",
+      "meal_ordering": "0"
+    }
+  },
+  "distance:a102432b3647": {
+    "cached_at": "2026-06-04T04:16:35",
+    "data": {
+      "distance_meters": "3042",
+      "duration_seconds": "583",
+      "eta_minutes": 10
+    }
+  },
+  "distance:87c3a2ef3674": {
+    "cached_at": "2026-06-04T04:16:38",
+    "data": {
+      "distance_meters": "6136",
+      "duration_seconds": "986",
+      "eta_minutes": 16
+    }
+  },
+  "distance:864467ae50ff": {
+    "cached_at": "2026-06-04T04:16:39",
+    "data": {
+      "distance_meters": "5916",
+      "duration_seconds": "986",
+      "eta_minutes": 16
+    }
+  },
+  "distance:70264652fe34": {
+    "cached_at": "2026-06-04T04:16:51",
+    "data": {
+      "distance_meters": "2615",
+      "duration_seconds": "510",
+      "eta_minutes": 8
+    }
+  },
+  "distance:fa4e72d48292": {
+    "cached_at": "2026-06-04T04:16:52",
+    "data": {
+      "distance_meters": "2549",
+      "duration_seconds": "498",
+      "eta_minutes": 8
+    }
+  },
+  "distance:51f1a6f2ffb0": {
+    "cached_at": "2026-06-04T04:16:53",
+    "data": {
+      "distance_meters": "2526",
+      "duration_seconds": "521",
+      "eta_minutes": 9
+    }
+  },
+  "distance:050eda45aaf7": {
+    "cached_at": "2026-06-04T04:16:55",
+    "data": {
+      "distance_meters": "1904",
+      "duration_seconds": "434",
+      "eta_minutes": 7
+    }
+  },
+  "distance:4d0820ff843c": {
+    "cached_at": "2026-06-04T04:16:56",
+    "data": {
+      "distance_meters": "3299",
+      "duration_seconds": "599",
+      "eta_minutes": 10
+    }
+  },
+  "distance:2898aac98697": {
+    "cached_at": "2026-06-04T04:16:59",
+    "data": {
+      "distance_meters": "1996",
+      "duration_seconds": "413",
+      "eta_minutes": 7
+    }
+  },
+  "distance:5a8573ef53c1": {
+    "cached_at": "2026-06-04T04:17:00",
+    "data": {
+      "distance_meters": "5086",
+      "duration_seconds": "909",
+      "eta_minutes": 15
     }
   }
 }

@@ -189,15 +189,35 @@ class IntentAgent:
         self._model = get_chat_model()
         self._max_retries = max_retries
 
-    def parse(self, user_input: str) -> IntentResult:
+    def parse(
+        self,
+        user_input: str,
+        runtime_origin_area: str = "",
+        preference_context: str = "",
+    ) -> IntentResult:
         print(f"[IntentAgent] 解析中：{user_input!r}")
 
         schema_str = json.dumps(IntentResult.model_json_schema(), ensure_ascii=False, indent=2)
         system_content = _SYSTEM_PROMPT.format(schema=schema_str)
+        user_content = user_input
+        if preference_context.strip():
+            user_content = f"""\
+# 历史偏好档案（软参考，不是硬约束）
+{preference_context.strip()}
+
+## 使用规则
+- 本轮用户原话永远优先于历史偏好。
+- 历史偏好只用于补充软偏好、活动/餐饮关键词和风格倾向。
+- 不要用历史偏好填充日期、时间、出发地、人数等硬槽位，除非用户明确说“照旧”“和上次一样”“老地方”。
+- 如果本轮需求与历史偏好冲突，以本轮需求为准。
+
+# 本轮用户原话（最高优先级）
+{user_input}
+"""
 
         messages = [
             SystemMessage(content=system_content),
-            HumanMessage(content=user_input),
+            HumanMessage(content=user_content),
         ]
 
         last_response_content = ""

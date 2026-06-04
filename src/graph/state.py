@@ -7,6 +7,7 @@ class AgentState(TypedDict, total=False):
     user_input: str
     conversation_turns: list[str]
     clarification_round: int
+    user_preference_profile: str
     
     # 🌟 新增：支持异步澄清交互的状态字段 🌟
     pending_clarification: str  # 挂起时输出给前端的追问消息
