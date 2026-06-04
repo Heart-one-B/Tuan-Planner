@@ -171,7 +171,7 @@ def build_workflow(checkpointer=None):
         route_after_confirmation,
         {
             "execute": "execution",
-            "replan": "repair_loop",
+            "terminate": END,
             "await_confirmation": END,
         },
     )

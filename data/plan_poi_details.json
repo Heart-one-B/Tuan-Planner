@@ -2518,5 +2518,283 @@
     ],
     "first_seen_at": "2026-06-04 17:52:43",
     "updated_at": "2026-06-04 17:52:43"
+  },
+  "B0JBOCOBF0": {
+    "poi_id": "B0JBOCOBF0",
+    "name": "超级IP儿童乐园(圣名国际购物广场店)",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "太平路中段25号圣名国际购物广场F3层",
+    "location": "104.740064,31.766485",
+    "distance": "",
+    "rating": "2.7",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "",
+    "avg_price": 57,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-04 21:16:59",
+    "updated_at": "2026-06-04 21:16:59"
+  },
+  "B0G0L9HY8L": {
+    "poi_id": "B0G0L9HY8L",
+    "name": "了了轻食(江油店)",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "太平镇北大街西段1栋1楼3号(创客空间楼下)",
+    "location": "104.732836,31.776317",
+    "distance": "",
+    "rating": "3.5",
+    "tel": "",
+    "environment": "",
+    "business_area": "",
+    "avg_price": 45,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-04 21:16:59",
+    "updated_at": "2026-06-04 21:16:59"
+  },
+  "B0MBMY6ISF": {
+    "poi_id": "B0MBMY6ISF",
+    "name": "智得优亲子游乐园",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "太平路中段25号圣名国际购物广场",
+    "location": "104.739369,31.766467",
+    "distance": "",
+    "rating": "2.5",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "",
+    "avg_price": 71,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-04 21:16:59",
+    "updated_at": "2026-06-04 21:16:59"
+  },
+  "B0K1CH9R2Z": {
+    "poi_id": "B0K1CH9R2Z",
+    "name": "涵贝乐园(江油店)",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "汇星百货7楼",
+    "location": "104.742668,31.773741",
+    "distance": "",
+    "rating": "3.6",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "",
+    "avg_price": 48,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-04 21:16:59",
+    "updated_at": "2026-06-04 21:16:59"
+  },
+  "B0HKACJ1EP": {
+    "poi_id": "B0HKACJ1EP",
+    "name": "可以轻食(南河花园店)",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "诗仙路中段156号南河花园",
+    "location": "104.735151,31.777863",
+    "distance": "",
+    "rating": "2.5",
+    "tel": "",
+    "environment": "",
+    "business_area": "",
+    "avg_price": 42,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-04 21:16:59",
+    "updated_at": "2026-06-04 21:16:59"
+  },
+  "B0M6VUJHYB": {
+    "poi_id": "B0M6VUJHYB",
+    "name": "趣赶海小太阳亲子馆",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "太平路中段25号圣名国际购物广场",
+    "location": "104.740075,31.766675",
+    "distance": "",
+    "rating": "2.3",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "",
+    "avg_price": 75,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-04 21:16:59",
+    "updated_at": "2026-06-04 21:16:59"
+  },
+  "B0LU2ZVDB4": {
+    "poi_id": "B0LU2ZVDB4",
+    "name": "知酱Zing-牛排-意面-焗饭",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "火炮街华丽广场10号",
+    "location": "104.744751,31.775441",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "",
+    "business_area": "",
+    "avg_price": 58,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-04 21:16:59",
+    "updated_at": "2026-06-04 21:16:59"
+  },
+  "B0LUFL4Q2H": {
+    "poi_id": "B0LUFL4Q2H",
+    "name": "露比鹿Park儿童乐园",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "锦华路一段与临港路一段交叉口西南100米",
+    "location": "103.986025,30.566575",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 66,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-04 21:22:37",
+    "updated_at": "2026-06-04 21:22:37"
+  },
+  "B0L19KFOAS": {
+    "poi_id": "B0L19KFOAS",
+    "name": "小兔乖乖乐园",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "临港路一段与锦华路一段交叉口西南100米",
+    "location": "103.986043,30.566720",
+    "distance": "",
+    "rating": "3.0",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 75,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-04 21:22:37",
+    "updated_at": "2026-06-04 21:22:37"
   }
 }
