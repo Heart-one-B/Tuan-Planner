@@ -343,11 +343,76 @@ def fact_gathering_node(state: AgentState) -> AgentState:
             except Exception:
                 continue
 
+    # ── 7. Waypoint 搜索 ─────────────────────────────────────────────────────
+    # 用户点名的途径需求（DQ/星巴克/奶茶等），单独搜索，结果存入 waypoints 池
+    waypoints: list[dict] = []
+    intent: dict = state.get("intent") or {}
+    waypoint_requests: list[dict] = intent.get("waypoint_requests") or []
+
+    if waypoint_requests and coordinates:
+        seen_waypoint_ids: set[str] = set()
+        for req in waypoint_requests:
+            kw = req.get("keyword") or req.get("raw_text") or ""
+            if not kw:
+                continue
+            try:
+                pois = api.search_pois(kw, location=coordinates, city=city, radius=radius)
+                found = []
+                for poi in pois[:3]:
+                    pid = poi.get("id") or ""
+                    if pid and pid not in seen_waypoint_ids:
+                        seen_waypoint_ids.add(pid)
+                        poi["waypoint_keyword"] = kw
+                        poi["waypoint_raw"] = req.get("raw_text") or kw
+                        poi["waypoint_time_hint"] = req.get("time_hint")
+                        found.append(poi)
+                if found:
+                    waypoints.extend(found)
+                    print(f"[Fact Gathering] waypoint '{kw}' 找到 {len(found)} 条")
+                else:
+                    # 搜不到时记录，告知用户
+                    waypoints.append({
+                        "id": "",
+                        "name": f"未找到：{kw}",
+                        "waypoint_keyword": kw,
+                        "waypoint_raw": req.get("raw_text") or kw,
+                        "waypoint_time_hint": req.get("time_hint"),
+                        "not_found": True,
+                    })
+                    print(f"[Fact Gathering] waypoint '{kw}' 附近无结果")
+            except Exception as exc:
+                errors.append(f"Waypoint search failed for '{kw}': {exc}")
+
+    # 补全 waypoint 坐标和 ETA
+    if coordinates:
+        for poi in waypoints:
+            if poi.get("not_found"):
+                continue
+            if not poi.get("location"):
+                pid = poi.get("id") or ""
+                if pid:
+                    try:
+                        detail = api.poi_detail(pid)
+                        if isinstance(detail, dict) and detail.get("location"):
+                            poi["location"] = detail["location"]
+                    except Exception:
+                        pass
+            pid = poi.get("id") or ""
+            dest = poi.get("location") or ""
+            if pid and dest:
+                try:
+                    result = api.distance(coordinates, dest)
+                    if result:
+                        eta[pid] = result
+                except Exception:
+                    pass
+
     fact_gathering_result = {
         "weather":     weather,
         "activities":  activities,
         "activity_explicit_search": activity_explicit_search,
         "restaurants": restaurants,
+        "waypoints":   waypoints,
         "eta":         eta,
     }
 
@@ -361,6 +426,7 @@ def fact_gathering_node(state: AgentState) -> AgentState:
         "activities":            activities,
         "activity_explicit_search": activity_explicit_search,
         "restaurants":           restaurants,
+        "waypoints":             waypoints,
         "eta":                   eta,
         "errors":                errors,
     }

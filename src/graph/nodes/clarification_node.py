@@ -66,7 +66,10 @@ def receive_clarification_node(state: AgentState) -> AgentState:
         if first:
             turns = [first]
 
-    turns.append(user_reply)
+    pending_q = (state.get("pending_clarification") or "").strip()
+    if pending_q:
+        turns.append(f"[系统追问]{pending_q}")
+    turns.append(f"[用户回复]{user_reply}")
     combined_input = "\n".join(t for t in turns if t.strip())
 
     print(f"[Clarification Node] 接收回复，合并输入（共 {len(turns)} 轮）")

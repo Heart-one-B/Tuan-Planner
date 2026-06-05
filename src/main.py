@@ -9,20 +9,11 @@ from langgraph.types import Command
 from src.graph.workflow import build_workflow
 
 _DEFAULT_USER_INPUT = "今天下午是空的，想和老婆孩子出去玩几个小时。老婆最近在减肥，孩子5岁。"
-_THREAD = {"configurable": {"thread_id": "cli-session"}}
 
 
-def main():
-    print("=" * 60)
-    print("Meituan Local Life Execution Agent - Hackathon Demo")
-    print("=" * 60 + "\n")
-
-    user_input = input("请输入您的需求(回车使用默认场景):\n> ")
-    if not user_input.strip():
-        user_input = _DEFAULT_USER_INPUT
-
-    # MemorySaver 让图在 interrupt 后能恢复状态
-    app = build_workflow(MemorySaver())
+def run_once(app, user_input: str, thread_id: str) -> None:
+    """单轮规划：从用户输入到最终输出，含 clarification 中断恢复。"""
+    thread = {"configurable": {"thread_id": thread_id}}
 
     initial_state = {
         "user_input": user_input,
@@ -32,34 +23,40 @@ def main():
         "errors": [],
     }
 
-    # 首次运行
-    app.invoke(initial_state, config=_THREAD)
+    app.invoke(initial_state, config=thread)
 
-    # interrupt 恢复循环：只要图还挂起就继续
+    # clarification / confirmation 中断恢复循环
     while True:
-        snapshot = app.get_state(_THREAD)
-
-        # 图已跑完
+        snapshot = app.get_state(thread)
         if not snapshot.next:
             break
 
-        # 读取追问消息
         pending = snapshot.values.get("pending_clarification", "")
-        if not pending:
-            break
+        if pending:
+            print(f"\n{pending}")
+            user_reply = input("> ").strip()
+            while not user_reply:
+                user_reply = input("> ").strip()
+            app.invoke(
+                Command(resume=None, update={"user_reply": user_reply}),
+                config=thread,
+            )
+            continue
 
-        print(f"\n{pending}")
+        # confirmation 中断
+        confirm_prompt = snapshot.values.get("confirmation_prompt", "")
+        if confirm_prompt:
+            print(f"\n{confirm_prompt}")
         user_reply = input("> ").strip()
         while not user_reply:
             user_reply = input("> ").strip()
-
         app.invoke(
-            Command(resume=None, update={"user_reply": user_reply}),
-            config=_THREAD,
+            Command(resume=None, update={"user_confirmation": user_reply}),
+            config=thread,
         )
 
-    # 读取最终状态输出结果
-    final_state = app.get_state(_THREAD).values
+    # 输出最终结果
+    final_state = app.get_state(thread).values
 
     llm_answer = final_state.get("llm_answer")
     if isinstance(llm_answer, str) and llm_answer.strip():
@@ -73,12 +70,53 @@ def main():
         print("\n[DONE] 搞定了！所有订单已处理完成。")
         print("[MOCK] 详细凭证已发送至您的手机（模拟），您可以随时出发！")
     else:
-        print("\n好的，您可以告诉我需要调整的地方，我重新为您规划。")
+        print("\n好的，您可以告诉我需要调整的地方。")
 
     if final_state.get("errors"):
         print("\n[错误信息]")
         for error in final_state["errors"]:
-            print(f"- {error}")
+            print(f"  - {error}")
+
+
+def main():
+    print("=" * 60)
+    print("Meituan Local Life Execution Agent - Hackathon Demo")
+    print("输入 'q' 或 'exit' 退出，直接回车使用默认场景")
+    print("=" * 60 + "\n")
+
+    session_count = 0
+
+    while True:
+        # 每轮对话用独立的 thread_id 和 MemorySaver，互不干扰
+        session_count += 1
+        thread_id = f"cli-session-{session_count}"
+        app = build_workflow(MemorySaver())
+
+        try:
+            user_input = input("请输入您的需求:\n> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n\n再见！")
+            break
+
+        if user_input.lower() in ("q", "exit", "quit", "退出"):
+            print("\n再见！")
+            break
+
+        if not user_input:
+            user_input = _DEFAULT_USER_INPUT
+            print(f"（使用默认场景：{user_input}）")
+
+        print()
+        try:
+            run_once(app, user_input, thread_id)
+        except KeyboardInterrupt:
+            print("\n\n（当前规划已中断）")
+            continue
+        except Exception as e:
+            print(f"\n[ERROR] 出现异常：{e}")
+            continue
+
+        print("\n" + "-" * 60 + "\n")
 
 
 if __name__ == "__main__":
