@@ -218,12 +218,12 @@
     "address": "金玉满堂2期西2门旁",
     "location": "104.005576,30.552785",
     "distance": "",
-    "rating": "",
+    "rating": "3.5",
     "tel": "",
     "environment": "unknown",
-    "business_area": "",
+    "business_area": "白家",
     "avg_price": 40,
-    "rank_label": "本地生活推荐",
+    "rank_label": "白家人气推荐",
     "photos": [],
     "tags": [
       "休闲",
@@ -248,12 +248,12 @@
     "address": "锦华路二段172号北京华联空港购物中心1F",
     "location": "103.986976,30.572055",
     "distance": "",
-    "rating": "",
+    "rating": "4.4",
     "tel": "",
     "environment": "unknown",
-    "business_area": "",
+    "business_area": "白家",
     "avg_price": 19,
-    "rank_label": "甜品饮品推荐",
+    "rank_label": "白家甜品饮品推荐",
     "photos": [],
     "tags": [
       "甜品",
@@ -278,12 +278,12 @@
     "address": "大件路白家段996号4栋附8号",
     "location": "104.002011,30.566196",
     "distance": "",
-    "rating": "",
+    "rating": "4.4",
     "tel": "",
     "environment": "",
-    "business_area": "",
+    "business_area": "白家",
     "avg_price": 31,
-    "rank_label": "本地生活推荐",
+    "rank_label": "白家人气推荐",
     "photos": [],
     "tags": [
       "休闲",
@@ -308,12 +308,12 @@
     "address": "蓝光·圣菲悦城一期4号门西110米",
     "location": "104.001393,30.564933",
     "distance": "",
-    "rating": "",
+    "rating": "3.8",
     "tel": "",
     "environment": "unknown",
-    "business_area": "",
+    "business_area": "四川天府新区成都直管区",
     "avg_price": 35,
-    "rank_label": "本地生活推荐",
+    "rank_label": "四川天府新区成都直管区人气推荐",
     "photos": [],
     "tags": [
       "休闲",
@@ -399,12 +399,12 @@
     "address": "川大路二段341号",
     "location": "104.001025,30.552525",
     "distance": "",
-    "rating": "",
+    "rating": "3.5",
     "tel": "",
     "environment": "",
-    "business_area": "",
+    "business_area": "四川天府新区成都直管区",
     "avg_price": 68,
-    "rank_label": "本地生活推荐",
+    "rank_label": "四川天府新区成都直管区人气推荐",
     "photos": [],
     "tags": [
       "休闲",
@@ -2519,233 +2519,1113 @@
     "first_seen_at": "2026-06-04 17:52:43",
     "updated_at": "2026-06-04 17:52:43"
   },
-  "B0JBOCOBF0": {
-    "poi_id": "B0JBOCOBF0",
-    "name": "超级IP儿童乐园(圣名国际购物广场店)",
+  "B0J1RSPBOI": {
+    "poi_id": "B0J1RSPBOI",
+    "name": "九号桌游探案馆(金色校园广场店)",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "西航港街道长城路二段499号4栋3楼321号",
+    "location": "103.990022,30.549160",
+    "distance": "",
+    "rating": "4.3",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "双流片区",
+    "avg_price": 39,
+    "rank_label": "双流片区桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚",
+      "室内"
+    ],
+    "highlights": [
+      "位于双流片区，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "互动感比较强，适合朋友一起玩。",
+      "停留时间灵活，可以按现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:56",
+    "updated_at": "2026-06-05 11:15:56"
+  },
+  "B0KDVCSVWU": {
+    "poi_id": "B0KDVCSVWU",
+    "name": "喜赞·轻食沙拉·健康餐(卢卡新天地店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "北京城区立汤路181号卢卡新天地",
+    "location": "116.412392,40.059605",
+    "distance": "",
+    "rating": 4.6,
+    "tel": "",
+    "environment": "",
+    "business_area": "立水桥",
+    "avg_price": 82,
+    "rank_label": "立水桥餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于立水桥，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体用餐节奏轻松，适合边吃边聊。",
+      "菜品选择比较丰富，适合作为行程里的正餐。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:56",
+    "updated_at": "2026-06-05 11:15:56"
+  },
+  "B0LASA1FH0": {
+    "poi_id": "B0LASA1FH0",
+    "name": "蜜野清风潮玩馆",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "5栋二单元706号",
+    "location": "104.008981,30.572130",
+    "distance": "",
+    "rating": "2.8",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 60,
+    "rank_label": "四川天府新区成都直管区桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚",
+      "室内"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留时间灵活，可以按现场状态调整。",
+      "互动感比较强，适合朋友一起玩。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:56",
+    "updated_at": "2026-06-05 11:15:56"
+  },
+  "B0LDXM736H": {
+    "poi_id": "B0LDXM736H",
+    "name": "曹家巷老火锅(曹家巷店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "曹家巷23号附8号",
+    "location": "104.085940,30.673786",
+    "distance": "",
+    "rating": 4.7,
+    "tel": "",
+    "environment": "",
+    "business_area": "",
+    "avg_price": 101,
+    "rank_label": "餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "菜品选择比较丰富，适合作为行程里的正餐。",
+      "整体用餐节奏轻松，适合边吃边聊。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0LUCKS2KT": {
+    "poi_id": "B0LUCKS2KT",
+    "name": "总府皇冠罗马假日KTV夜总会",
+    "poi_role": "activity",
+    "category": "KTV",
+    "address": "商业广场街1-附75号",
+    "location": "104.077875,30.659225",
+    "distance": "",
+    "rating": 4.4,
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "梓潼",
+    "avg_price": 75,
+    "rank_label": "梓潼KTV推荐",
+    "photos": [],
+    "tags": [
+      "KTV",
+      "唱歌",
+      "朋友小聚",
+      "室内"
+    ],
+    "highlights": [
+      "位于梓潼，适合与周边安排组合。",
+      "KTV类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "包间私密性较好，适合朋友小聚。",
+      "下午档安排比较轻松，唱歌聊天都合适。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0LB9ZXQ99": {
+    "poi_id": "B0LB9ZXQ99",
+    "name": "千寻探案馆·剧本杀·桌游",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "西航港街道大件路白家段280号7栋2单元9层910-911-912号",
+    "location": "104.009523,30.570458",
+    "distance": "",
+    "rating": "4.2",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "天府新区",
+    "avg_price": 47,
+    "rank_label": "天府新区桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚",
+      "室内"
+    ],
+    "highlights": [
+      "位于天府新区，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "互动感比较强，适合朋友一起玩。",
+      "停留时间灵活，可以按现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0FFKT3J95": {
+    "poi_id": "B0FFKT3J95",
+    "name": "林木探案馆(银泰花园店)",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "银泰花园14栋2单元",
+    "location": "103.976250,30.567696",
+    "distance": "",
+    "rating": "3.9",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "双流片区",
+    "avg_price": 37,
+    "rank_label": "双流片区桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚",
+      "室内"
+    ],
+    "highlights": [
+      "位于双流片区，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "互动感比较强，适合朋友一起玩。",
+      "停留时间灵活，可以按现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0M65UK5IF": {
+    "poi_id": "B0M65UK5IF",
+    "name": "熊猫说淄博烧烤(航空港店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "大件路白家段926号1层",
+    "location": "104.002050,30.565088",
+    "distance": "",
+    "rating": "4.1",
+    "tel": "",
+    "environment": "",
+    "business_area": "白家",
+    "avg_price": 64,
+    "rank_label": "白家餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体用餐节奏轻松，适合边吃边聊。",
+      "菜品选择比较丰富，适合作为行程里的正餐。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0FFLDT45X": {
+    "poi_id": "B0FFLDT45X",
+    "name": "魅KTV·AI辅唱(春熙路店)",
+    "poi_role": "activity",
+    "category": "KTV",
+    "address": "总府路8号鸿德春熙中心F5层",
+    "location": "104.079397,30.657394",
+    "distance": "",
+    "rating": 4.0,
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "梓潼",
+    "avg_price": 76,
+    "rank_label": "梓潼KTV推荐",
+    "photos": [],
+    "tags": [
+      "KTV",
+      "唱歌",
+      "朋友小聚"
+    ],
+    "highlights": [
+      "位于梓潼，适合与周边安排组合。",
+      "KTV类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "下午档安排比较轻松，唱歌聊天都合适。",
+      "包间私密性较好，适合朋友小聚。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0HK3CQ6G6": {
+    "poi_id": "B0HK3CQ6G6",
+    "name": "μ's house缪斯公馆",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "保利心语上府八栋一单元801",
+    "location": "104.042863,30.542567",
+    "distance": "",
+    "rating": "1.5",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "天府新区",
+    "avg_price": 51,
+    "rank_label": "天府新区桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚",
+      "室内"
+    ],
+    "highlights": [
+      "位于天府新区，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "互动感比较强，适合朋友一起玩。",
+      "停留时间灵活，可以按现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0L2UAE8Y7": {
+    "poi_id": "B0L2UAE8Y7",
+    "name": "屋尤岛桌游私影CLUB",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "珠江路与临港路四段交叉口西北360米",
+    "location": "104.003425,30.572675",
+    "distance": "",
+    "rating": "2.7",
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "白家",
+    "avg_price": 35,
+    "rank_label": "白家桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "互动感比较强，适合朋友一起玩。",
+      "停留时间灵活，可以按现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0FFFAHRO3": {
+    "poi_id": "B0FFFAHRO3",
+    "name": "潮粥荟·潮汕砂锅粥(新世界店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "东兴隆街新怡商务楼A座1层底商(新世界1期后身)",
+    "location": "116.416931,39.897626",
+    "distance": "",
+    "rating": 4.4,
+    "tel": "",
+    "environment": "",
+    "business_area": "崇文门",
+    "avg_price": 66,
+    "rank_label": "崇文门餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于崇文门，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体用餐节奏轻松，适合边吃边聊。",
+      "菜品选择比较丰富，适合作为行程里的正餐。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0L3LSPNET": {
+    "poi_id": "B0L3LSPNET",
+    "name": "唱乐颂KTV(春熙茂业百货店)",
+    "poi_role": "activity",
+    "category": "KTV",
+    "address": "总府路12号茂业百货F5层",
+    "location": "104.078956,30.657411",
+    "distance": "",
+    "rating": 4.5,
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "东大街",
+    "avg_price": 67,
+    "rank_label": "东大街KTV推荐",
+    "photos": [],
+    "tags": [
+      "KTV",
+      "唱歌",
+      "朋友小聚"
+    ],
+    "highlights": [
+      "位于东大街，适合与周边安排组合。",
+      "KTV类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "包间私密性较好，适合朋友小聚。",
+      "下午档安排比较轻松，唱歌聊天都合适。"
+    ],
+    "first_seen_at": "2026-06-05 11:15:58",
+    "updated_at": "2026-06-05 11:15:58"
+  },
+  "B0LDPC1EJU": {
+    "poi_id": "B0LDPC1EJU",
+    "name": "川小厨•猪油面",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "泰山路59号",
+    "location": "103.999903,30.566492",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区",
+    "avg_price": 57,
+    "rank_label": "四川天府新区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0KA91MCV1": {
+    "poi_id": "B0KA91MCV1",
+    "name": "酒遇知己小酒馆",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "大件路白家段996号附2029号",
+    "location": "104.001475,30.566825",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 78,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0LGF5NFN5": {
+    "poi_id": "B0LGF5NFN5",
+    "name": "刘小禾手提串串",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "泰山路一街47号",
+    "location": "103.999813,30.566836",
+    "distance": "",
+    "rating": "3.9",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 32,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0FFK1F1DP": {
+    "poi_id": "B0FFK1F1DP",
+    "name": "DQ·蛋糕·冰淇淋(成都高新伊藤)",
+    "poi_role": "activity",
+    "category": "甜品饮品",
+    "address": "天府二街999号伊藤洋华堂负一楼",
+    "location": "104.044034,30.550082",
+    "distance": "",
+    "rating": "4.3",
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "大源",
+    "avg_price": 23,
+    "rank_label": "大源甜品饮品推荐",
+    "photos": [],
+    "tags": [
+      "甜品",
+      "饮品",
+      "轻松"
+    ],
+    "highlights": [
+      "位于大源，适合与周边安排组合。",
+      "甜品饮品类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "适合短暂停留，给行程增加一点轻松感。",
+      "甜品饮品补充方便，不会占用太长时间。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0L395S051": {
+    "poi_id": "B0L395S051",
+    "name": "AJ79·KTV(韩国城店)",
+    "poi_role": "activity",
+    "category": "KTV",
+    "address": "西航港街道大件路白家段280号空港国际城一期2栋二单元2楼207号",
+    "location": "104.008075,30.568575",
+    "distance": "",
+    "rating": "4.5",
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "白家",
+    "avg_price": 60,
+    "rank_label": "白家KTV推荐",
+    "photos": [],
+    "tags": [
+      "KTV",
+      "唱歌",
+      "朋友小聚"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "KTV类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "下午档安排比较轻松，唱歌聊天都合适。",
+      "包间私密性较好，适合朋友小聚。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0KG9S5FTY": {
+    "poi_id": "B0KG9S5FTY",
+    "name": "黑土乡情铁锅炖(蜀星花园店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "西航港街道蜀龙街160号",
+    "location": "103.987766,30.547799",
+    "distance": "",
+    "rating": "4.3",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 66,
+    "rank_label": "四川天府新区成都直管区餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体用餐节奏轻松，适合边吃边聊。",
+      "菜品选择比较丰富，适合作为行程里的正餐。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0L0MR9M0R": {
+    "poi_id": "B0L0MR9M0R",
+    "name": "蓝光bar",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "蓝光BRC圣菲TOWN城1号门旁",
+    "location": "104.002775,30.566375",
+    "distance": "",
+    "rating": "2.1",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 63,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0FFJCXRN6": {
+    "poi_id": "B0FFJCXRN6",
+    "name": "重庆鸡公煲(宋氏川大店)",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "区川大路二段333号",
+    "location": "104.000777,30.552467",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "",
+    "business_area": "白家",
+    "avg_price": 49,
+    "rank_label": "白家人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0J3THJ68W": {
+    "poi_id": "B0J3THJ68W",
+    "name": "盒子Club",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "川大南路一段27号",
+    "location": "104.005554,30.552509",
+    "distance": "",
+    "rating": "4.5",
+    "tel": "",
+    "environment": "",
+    "business_area": "双流片区",
+    "avg_price": 46,
+    "rank_label": "双流片区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于双流片区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 11:25:43",
+    "updated_at": "2026-06-05 11:25:43"
+  },
+  "B0I15DUL0O": {
+    "poi_id": "B0I15DUL0O",
+    "name": "夜语KTV酒吧",
+    "poi_role": "activity",
+    "category": "KTV",
+    "address": "蜀星路与蜀龙街交叉口北80米",
+    "location": "103.989737,30.548943",
+    "distance": "",
+    "rating": "3.9",
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 45,
+    "rank_label": "四川天府新区成都直管区KTV推荐",
+    "photos": [],
+    "tags": [
+      "KTV",
+      "唱歌",
+      "朋友小聚"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "KTV类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "包间私密性较好，适合朋友小聚。",
+      "下午档安排比较轻松，唱歌聊天都合适。"
+    ],
+    "first_seen_at": "2026-06-05 16:35:01",
+    "updated_at": "2026-06-05 16:35:01"
+  },
+  "B0FFH7KTM5": {
+    "poi_id": "B0FFH7KTM5",
+    "name": "柏氏盐都干锅王(川大店)",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "西航港街道川大路二段339号2栋1层附1号",
+    "location": "104.000852,30.552469",
+    "distance": "",
+    "rating": "4.2",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 45,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-05 16:35:01",
+    "updated_at": "2026-06-05 16:35:01"
+  },
+  "B0GKCNQGUK": {
+    "poi_id": "B0GKCNQGUK",
+    "name": "宋记重庆鸡公煲(川大店)",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "川大路2段287号",
+    "location": "104.002438,30.552828",
+    "distance": "",
+    "rating": "2.2",
+    "tel": "",
+    "environment": "",
+    "business_area": "白家",
+    "avg_price": 59,
+    "rank_label": "白家人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 16:38:30",
+    "updated_at": "2026-06-05 16:38:30"
+  },
+  "B0FFG1VE4D": {
+    "poi_id": "B0FFG1VE4D",
+    "name": "四川大学江安校区健坤羽毛球馆",
     "poi_role": "activity",
     "category": "通用",
-    "address": "太平路中段25号圣名国际购物广场F3层",
-    "location": "104.740064,31.766485",
+    "address": "西航港街道川大路二段2号四川大学江安校区",
+    "location": "104.006002,30.558249",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "天府新区",
+    "avg_price": 72,
+    "rank_label": "天府新区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "位于天府新区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 16:40:54",
+    "updated_at": "2026-06-05 16:40:54"
+  },
+  "B0LDPUVMY8": {
+    "poi_id": "B0LDPUVMY8",
+    "name": "薰风·羽曜空间羽毛球馆(长城路校区)",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "长城路一段187号附21号",
+    "location": "103.986253,30.555441",
+    "distance": "",
+    "rating": "4.5",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "双流片区",
+    "avg_price": 40,
+    "rank_label": "双流片区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "位于双流片区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 16:40:56",
+    "updated_at": "2026-06-05 16:40:56"
+  },
+  "B0FFGPR46X": {
+    "poi_id": "B0FFGPR46X",
+    "name": "重庆鸡公煲(金色校园广场店)",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "长城路二段499号金色校园广场2栋102",
+    "location": "103.990336,30.549420",
+    "distance": "",
+    "rating": "3.7",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 45,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-05 16:41:00",
+    "updated_at": "2026-06-05 16:41:00"
+  },
+  "B0KAVRF3RL": {
+    "poi_id": "B0KAVRF3RL",
+    "name": "文星羽毛球馆",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "文星正街与学苑路交叉口南220米",
+    "location": "103.983203,30.543140",
+    "distance": "",
+    "rating": "4.4",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "双流片区",
+    "avg_price": 70,
+    "rank_label": "双流片区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "位于双流片区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-05 16:41:02",
+    "updated_at": "2026-06-05 16:41:02"
+  },
+  "B0L01AFJHN": {
+    "poi_id": "B0L01AFJHN",
+    "name": "老北京炙烤牛肋条饭·炙子烤肉(双流店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "泰山路与红樱路交叉口西南200米",
+    "location": "103.995925,30.565875",
+    "distance": "",
+    "rating": "2.7",
+    "tel": "",
+    "environment": "",
+    "business_area": "白家",
+    "avg_price": 61,
+    "rank_label": "白家餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "菜品选择比较丰富，适合作为行程里的正餐。",
+      "整体用餐节奏轻松，适合边吃边聊。"
+    ],
+    "first_seen_at": "2026-06-05 16:48:18",
+    "updated_at": "2026-06-05 16:48:18"
+  },
+  "B0KA9RPRNW": {
+    "poi_id": "B0KA9RPRNW",
+    "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "西航港街道大件路白家段996号4栋附34号1层",
+    "location": "104.001326,30.566755",
+    "distance": "",
+    "rating": "4.4",
+    "tel": "",
+    "environment": "",
+    "business_area": "白家",
+    "avg_price": 98,
+    "rank_label": "白家餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体用餐节奏轻松，适合边吃边聊。",
+      "菜品选择比较丰富，适合作为行程里的正餐。"
+    ],
+    "first_seen_at": "2026-06-05 16:48:18",
+    "updated_at": "2026-06-05 16:48:18"
+  },
+  "B0HUAD2EZX": {
+    "poi_id": "B0HUAD2EZX",
+    "name": "重庆鸡公煲(川大店)",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "西航港街道川大路二段255号1层",
+    "location": "104.002981,30.552941",
+    "distance": "",
+    "rating": "3.2",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区",
+    "avg_price": 60,
+    "rank_label": "四川天府新区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 17:24:04",
+    "updated_at": "2026-06-05 17:24:04"
+  },
+  "B0LULZ7ZRG": {
+    "poi_id": "B0LULZ7ZRG",
+    "name": "趣玩咖桌游电玩馆",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "瑞桉诊所西北侧60米",
+    "location": "103.972601,30.567629",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 55,
+    "rank_label": "四川天府新区成都直管区桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚",
+      "室内"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "互动感比较强，适合朋友一起玩。",
+      "停留时间灵活，可以按现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 17:47:12",
+    "updated_at": "2026-06-05 17:47:12"
+  },
+  "B0L0RS5GFQ": {
+    "poi_id": "B0L0RS5GFQ",
+    "name": "星恋·桌游·私影",
+    "poi_role": "activity",
+    "category": "桌游",
+    "address": "荣华北路与盛治街交叉口西南60米",
+    "location": "104.043375,30.553025",
+    "distance": "",
+    "rating": "1.8",
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "四川天府新区",
+    "avg_price": 57,
+    "rank_label": "四川天府新区桌游推荐",
+    "photos": [],
+    "tags": [
+      "桌游",
+      "互动",
+      "朋友小聚"
+    ],
+    "highlights": [
+      "位于四川天府新区，适合与周边安排组合。",
+      "桌游类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "互动感比较强，适合朋友一起玩。",
+      "停留时间灵活，可以按现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 17:47:12",
+    "updated_at": "2026-06-05 17:47:12"
+  },
+  "B0L31OX09V": {
+    "poi_id": "B0L31OX09V",
+    "name": "天艺博物馆",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "武侯大道三河段20号天艺村休闲庄",
+    "location": "104.006475,30.587675",
+    "distance": "",
+    "rating": "2.9",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "",
+    "avg_price": 65,
+    "rank_label": "本地生活推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-05 17:51:13",
+    "updated_at": "2026-06-05 17:51:13"
+  },
+  "B0L3SK1UUD": {
+    "poi_id": "B0L3SK1UUD",
+    "name": "大气探测博物馆(航空港校区)",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "学府路与黄河北路交叉口西北340米",
+    "location": "103.992695,30.582768",
     "distance": "",
     "rating": "2.7",
     "tel": "",
     "environment": "indoor",
-    "business_area": "",
-    "avg_price": 57,
-    "rank_label": "本地生活推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松",
-      "室内"
-    ],
-    "highlights": [
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "整体安排比较稳妥，适合放进行程中衔接。",
-      "停留节奏灵活，可以根据现场状态调整。"
-    ],
-    "first_seen_at": "2026-06-04 21:16:59",
-    "updated_at": "2026-06-04 21:16:59"
-  },
-  "B0G0L9HY8L": {
-    "poi_id": "B0G0L9HY8L",
-    "name": "了了轻食(江油店)",
-    "poi_role": "restaurant",
-    "category": "通用",
-    "address": "太平镇北大街西段1栋1楼3号(创客空间楼下)",
-    "location": "104.732836,31.776317",
-    "distance": "",
-    "rating": "3.5",
-    "tel": "",
-    "environment": "",
-    "business_area": "",
-    "avg_price": 45,
-    "rank_label": "本地生活推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松"
-    ],
-    "highlights": [
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "整体安排比较稳妥，适合放进行程中衔接。",
-      "停留节奏灵活，可以根据现场状态调整。"
-    ],
-    "first_seen_at": "2026-06-04 21:16:59",
-    "updated_at": "2026-06-04 21:16:59"
-  },
-  "B0MBMY6ISF": {
-    "poi_id": "B0MBMY6ISF",
-    "name": "智得优亲子游乐园",
-    "poi_role": "activity",
-    "category": "通用",
-    "address": "太平路中段25号圣名国际购物广场",
-    "location": "104.739369,31.766467",
-    "distance": "",
-    "rating": "2.5",
-    "tel": "",
-    "environment": "indoor",
-    "business_area": "",
-    "avg_price": 71,
-    "rank_label": "本地生活推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松",
-      "室内"
-    ],
-    "highlights": [
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "停留节奏灵活，可以根据现场状态调整。",
-      "整体安排比较稳妥，适合放进行程中衔接。"
-    ],
-    "first_seen_at": "2026-06-04 21:16:59",
-    "updated_at": "2026-06-04 21:16:59"
-  },
-  "B0K1CH9R2Z": {
-    "poi_id": "B0K1CH9R2Z",
-    "name": "涵贝乐园(江油店)",
-    "poi_role": "activity",
-    "category": "通用",
-    "address": "汇星百货7楼",
-    "location": "104.742668,31.773741",
-    "distance": "",
-    "rating": "3.6",
-    "tel": "",
-    "environment": "indoor",
-    "business_area": "",
-    "avg_price": 48,
-    "rank_label": "本地生活推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松",
-      "室内"
-    ],
-    "highlights": [
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "停留节奏灵活，可以根据现场状态调整。",
-      "整体安排比较稳妥，适合放进行程中衔接。"
-    ],
-    "first_seen_at": "2026-06-04 21:16:59",
-    "updated_at": "2026-06-04 21:16:59"
-  },
-  "B0HKACJ1EP": {
-    "poi_id": "B0HKACJ1EP",
-    "name": "可以轻食(南河花园店)",
-    "poi_role": "restaurant",
-    "category": "通用",
-    "address": "诗仙路中段156号南河花园",
-    "location": "104.735151,31.777863",
-    "distance": "",
-    "rating": "2.5",
-    "tel": "",
-    "environment": "",
-    "business_area": "",
-    "avg_price": 42,
-    "rank_label": "本地生活推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松"
-    ],
-    "highlights": [
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "停留节奏灵活，可以根据现场状态调整。",
-      "整体安排比较稳妥，适合放进行程中衔接。"
-    ],
-    "first_seen_at": "2026-06-04 21:16:59",
-    "updated_at": "2026-06-04 21:16:59"
-  },
-  "B0M6VUJHYB": {
-    "poi_id": "B0M6VUJHYB",
-    "name": "趣赶海小太阳亲子馆",
-    "poi_role": "activity",
-    "category": "通用",
-    "address": "太平路中段25号圣名国际购物广场",
-    "location": "104.740075,31.766675",
-    "distance": "",
-    "rating": "2.3",
-    "tel": "",
-    "environment": "indoor",
-    "business_area": "",
-    "avg_price": 75,
-    "rank_label": "本地生活推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松",
-      "室内"
-    ],
-    "highlights": [
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "整体安排比较稳妥，适合放进行程中衔接。",
-      "停留节奏灵活，可以根据现场状态调整。"
-    ],
-    "first_seen_at": "2026-06-04 21:16:59",
-    "updated_at": "2026-06-04 21:16:59"
-  },
-  "B0LU2ZVDB4": {
-    "poi_id": "B0LU2ZVDB4",
-    "name": "知酱Zing-牛排-意面-焗饭",
-    "poi_role": "restaurant",
-    "category": "通用",
-    "address": "火炮街华丽广场10号",
-    "location": "104.744751,31.775441",
-    "distance": "",
-    "rating": "4.0",
-    "tel": "",
-    "environment": "",
-    "business_area": "",
-    "avg_price": 58,
-    "rank_label": "本地生活推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松"
-    ],
-    "highlights": [
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "整体安排比较稳妥，适合放进行程中衔接。",
-      "停留节奏灵活，可以根据现场状态调整。"
-    ],
-    "first_seen_at": "2026-06-04 21:16:59",
-    "updated_at": "2026-06-04 21:16:59"
-  },
-  "B0LUFL4Q2H": {
-    "poi_id": "B0LUFL4Q2H",
-    "name": "露比鹿Park儿童乐园",
-    "poi_role": "activity",
-    "category": "通用",
-    "address": "锦华路一段与临港路一段交叉口西南100米",
-    "location": "103.986025,30.566575",
-    "distance": "",
-    "rating": "4.0",
-    "tel": "",
-    "environment": "indoor",
     "business_area": "四川天府新区成都直管区",
-    "avg_price": 66,
+    "avg_price": 64,
     "rank_label": "四川天府新区成都直管区人气推荐",
     "photos": [],
     "tags": [
@@ -2762,23 +3642,23 @@
       "停留节奏灵活，可以根据现场状态调整。",
       "整体安排比较稳妥，适合放进行程中衔接。"
     ],
-    "first_seen_at": "2026-06-04 21:22:37",
-    "updated_at": "2026-06-04 21:22:37"
+    "first_seen_at": "2026-06-05 17:51:13",
+    "updated_at": "2026-06-05 17:51:13"
   },
-  "B0L19KFOAS": {
-    "poi_id": "B0L19KFOAS",
-    "name": "小兔乖乖乐园",
+  "B0KRNHKTNF": {
+    "poi_id": "B0KRNHKTNF",
+    "name": "龙钰博物馆",
     "poi_role": "activity",
     "category": "通用",
-    "address": "临港路一段与锦华路一段交叉口西南100米",
-    "location": "103.986043,30.566720",
+    "address": "簇锦街道鞋都南路139号附3栋3楼",
+    "location": "103.981932,30.597588",
     "distance": "",
-    "rating": "3.0",
+    "rating": "4.0",
     "tel": "",
     "environment": "indoor",
-    "business_area": "四川天府新区成都直管区",
-    "avg_price": 75,
-    "rank_label": "四川天府新区成都直管区人气推荐",
+    "business_area": "",
+    "avg_price": 43,
+    "rank_label": "本地生活推荐",
     "photos": [],
     "tags": [
       "休闲",
@@ -2787,14 +3667,13 @@
       "室内"
     ],
     "highlights": [
-      "位于四川天府新区成都直管区，适合与周边安排组合。",
       "通用类型适合放入本次休闲计划。"
     ],
     "reviews": [
-      "整体安排比较稳妥，适合放进行程中衔接。",
-      "停留节奏灵活，可以根据现场状态调整。"
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
     ],
-    "first_seen_at": "2026-06-04 21:22:37",
-    "updated_at": "2026-06-04 21:22:37"
+    "first_seen_at": "2026-06-05 17:51:15",
+    "updated_at": "2026-06-05 17:51:15"
   }
 }
