@@ -69,6 +69,13 @@ class AgentState(TypedDict, total=False):
     replan_count: int
     repair_round: int
 
+    # --- feedback routing ---
+    feedback_route: str
+    feedback_summary: str
+    incremental_activity_keywords: list[str]
+    incremental_restaurant_keywords: list[str]
+    incremental_waypoint_keywords: list[str]
+
     # --- compatibility display/execution view ---
     plan: dict[str, Any]
     display_text: str

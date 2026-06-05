@@ -9,13 +9,13 @@
     }
   },
   "weather:14bf5c897776": {
-    "cached_at": "2026-06-04T08:24:53",
+    "cached_at": "2026-06-05T09:19:26",
     "data": {
       "city": "成都",
-      "day_weather": "阴",
-      "day_temp": "31",
-      "day_wind": "南风",
-      "humidity": "51"
+      "day_weather": "多云",
+      "day_temp": "33",
+      "day_wind": "西南风",
+      "humidity": "39"
     }
   },
   "search:943e8819494e": {
@@ -1264,7 +1264,7 @@
     }
   },
   "search:826f9c0217fd": {
-    "cached_at": "2026-06-03T13:39:33",
+    "cached_at": "2026-06-05T09:52:40",
     "data": [
       {
         "id": "B0FFFODEOP",
@@ -1275,6 +1275,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "公园"
       },
       {
@@ -1286,6 +1287,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "公园"
       },
       {
@@ -1297,6 +1299,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "公园"
       },
       {
@@ -1308,6 +1311,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "公园"
       },
       {
@@ -1319,6 +1323,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "公园"
       },
       {
@@ -1330,6 +1335,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "公园"
       },
       {
@@ -1341,6 +1347,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "公园"
       }
     ]
@@ -2554,51 +2561,51 @@
     }
   },
   "distance:1881e1cbc4a0": {
-    "cached_at": "2026-06-04T07:09:04",
+    "cached_at": "2026-06-05T08:34:02",
     "data": {
       "distance_meters": "2812",
-      "duration_seconds": "419",
-      "eta_minutes": 7
+      "duration_seconds": "454",
+      "eta_minutes": 8
     }
   },
   "distance:75059dc014b7": {
-    "cached_at": "2026-06-04T09:52:19",
+    "cached_at": "2026-06-05T08:34:04",
     "data": {
       "distance_meters": "2788",
-      "duration_seconds": "435",
-      "eta_minutes": 7
+      "duration_seconds": "456",
+      "eta_minutes": 8
     }
   },
   "distance:4874a8b6822a": {
-    "cached_at": "2026-06-04T07:09:07",
+    "cached_at": "2026-06-05T08:34:06",
     "data": {
       "distance_meters": "2795",
-      "duration_seconds": "418",
-      "eta_minutes": 7
+      "duration_seconds": "455",
+      "eta_minutes": 8
     }
   },
   "distance:bff6542b1486": {
-    "cached_at": "2026-06-04T09:52:16",
+    "cached_at": "2026-06-05T08:34:14",
     "data": {
-      "distance_meters": "2568",
-      "duration_seconds": "601",
-      "eta_minutes": 10
+      "distance_meters": "2569",
+      "duration_seconds": "510",
+      "eta_minutes": 8
     }
   },
   "distance:35d19e507828": {
-    "cached_at": "2026-06-04T09:52:17",
+    "cached_at": "2026-06-05T08:34:16",
     "data": {
       "distance_meters": "1457",
-      "duration_seconds": "350",
-      "eta_minutes": 6
+      "duration_seconds": "290",
+      "eta_minutes": 5
     }
   },
   "distance:2ce0732911b3": {
-    "cached_at": "2026-06-04T09:52:18",
+    "cached_at": "2026-06-05T08:34:18",
     "data": {
-      "distance_meters": "2962",
-      "duration_seconds": "720",
-      "eta_minutes": 12
+      "distance_meters": "2963",
+      "duration_seconds": "593",
+      "eta_minutes": 10
     }
   },
   "distance:7f0e4b120fac": {
@@ -3542,7 +3549,7 @@
     ]
   },
   "search:fdb61a14a051": {
-    "cached_at": "2026-06-04T02:09:01",
+    "cached_at": "2026-06-05T03:23:57",
     "data": [
       {
         "id": "B0G1BP8UNW",
@@ -3553,6 +3560,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3564,6 +3572,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3575,17 +3584,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
         "id": "B0GKCNQGUK",
         "name": "宋记重庆鸡公煲(川大店)",
         "address": "川大路2段287号",
-        "location": "104.002438,30.552828",
+        "location": "",
         "type": "050102",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3597,6 +3608,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3608,6 +3620,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3619,6 +3632,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3630,6 +3644,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3641,6 +3656,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3652,6 +3668,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3663,6 +3680,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3674,6 +3692,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3685,6 +3704,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3696,6 +3716,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
+        "keyword_source": "川菜"
+      },
+      {
+        "id": "B0KDVCRINT",
+        "name": "陈十叁鸡杂(圣菲店)",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3707,6 +3740,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3718,6 +3752,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3729,6 +3764,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3740,6 +3776,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       },
       {
@@ -3751,23 +3788,13 @@
         "rating": "",
         "distance": "",
         "tel": "",
-        "keyword_source": "川菜"
-      },
-      {
-        "id": "B0FFK26ZM5",
-        "name": "熙蜀印象简朴菜(西航港店)",
-        "address": "泰山路54号",
-        "location": "",
-        "type": "050100",
-        "rating": "",
-        "distance": "",
-        "tel": "",
+        "business_area": "",
         "keyword_source": "川菜"
       }
     ]
   },
   "search:000aaa7f1e02": {
-    "cached_at": "2026-06-04T02:09:02",
+    "cached_at": "2026-06-05T03:23:59",
     "data": [
       {
         "id": "B0JUVHFG5H",
@@ -3778,6 +3805,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3789,6 +3817,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3800,6 +3829,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3811,6 +3841,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3822,6 +3853,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3833,6 +3865,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3844,6 +3877,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3855,6 +3889,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3866,6 +3901,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3877,6 +3913,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3888,6 +3925,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3899,6 +3937,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3910,6 +3949,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3921,6 +3961,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3932,6 +3973,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
+        "keyword_source": "火锅"
+      },
+      {
+        "id": "B0KDVCRINT",
+        "name": "陈十叁鸡杂(圣菲店)",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3943,6 +3997,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3954,6 +4009,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3965,6 +4021,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       },
       {
@@ -3976,17 +4033,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
-        "keyword_source": "火锅"
-      },
-      {
-        "id": "B0M6T75S6D",
-        "name": "鲜牛杂火锅",
-        "address": "大件路白家段996号蓝光·圣菲悦城一期",
-        "location": "",
-        "type": "050117",
-        "rating": "",
-        "distance": "",
-        "tel": "",
+        "business_area": "",
         "keyword_source": "火锅"
       }
     ]
@@ -4715,11 +4762,11 @@
     }
   },
   "distance:2ee267693b97": {
-    "cached_at": "2026-06-04T09:19:20",
+    "cached_at": "2026-06-05T03:24:32",
     "data": {
       "distance_meters": "791",
-      "duration_seconds": "214",
-      "eta_minutes": 4
+      "duration_seconds": "193",
+      "eta_minutes": 3
     }
   },
   "distance:85fa3dcce8cd": {
@@ -7078,7 +7125,7 @@
     }
   },
   "search:8b1245740a4a": {
-    "cached_at": "2026-06-04T02:21:49",
+    "cached_at": "2026-06-05T03:23:52",
     "data": [
       {
         "id": "B0J2YSPIVS",
@@ -7089,6 +7136,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7100,6 +7148,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7111,6 +7160,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7122,6 +7172,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7133,6 +7184,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7144,6 +7196,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7155,6 +7208,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7166,6 +7220,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7177,6 +7232,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7188,17 +7244,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
         "id": "B0K367F44G",
         "name": "库迪咖啡(蓝光空港喆啡酒店大堂店)",
-        "address": "黄河中路二段272号(珠江路地铁站A口步行480米)",
+        "address": "西航港街道珠江路600号蓝光空港国际城1期5栋喆啡酒店1层大堂",
         "location": "",
         "type": "050000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7210,6 +7268,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7221,6 +7280,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7232,6 +7292,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7243,6 +7304,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7254,6 +7316,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7265,6 +7328,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7276,6 +7340,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7287,6 +7352,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       },
       {
@@ -7298,6 +7364,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "咖啡馆"
       }
     ]
@@ -10386,7 +10453,7 @@
     ]
   },
   "search:62fd6bf67d43": {
-    "cached_at": "2026-06-04T02:54:30",
+    "cached_at": "2026-06-05T03:23:50",
     "data": [
       {
         "id": "B0I15DUL0O",
@@ -10397,6 +10464,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10408,6 +10476,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10419,6 +10488,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10430,6 +10500,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10441,6 +10512,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10452,6 +10524,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10463,6 +10536,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10474,6 +10548,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10485,6 +10560,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10496,6 +10572,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10507,6 +10584,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       },
       {
@@ -10518,6 +10596,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "KTV"
       }
     ]
@@ -11256,76 +11335,72 @@
     }
   },
   "distance:0c591a8704f8": {
-    "cached_at": "2026-06-04T07:08:55",
+    "cached_at": "2026-06-05T08:33:31",
     "data": {
       "distance_meters": "2891",
-      "duration_seconds": "524",
-      "eta_minutes": 9
-    }
-  },
-  "distance:9b5881bf90a7": {
-    "cached_at": "2026-06-04T07:08:56",
-    "data": {
-      "distance_meters": "3417",
-      "duration_seconds": "725",
-      "eta_minutes": 12
-    }
-  },
-  "distance:3d795a41bf70": {
-    "cached_at": "2026-06-04T07:08:58",
-    "data": {
-      "distance_meters": "3989",
-      "duration_seconds": "782",
-      "eta_minutes": 13
-    }
-  },
-  "distance:01a99e1e8b16": {
-    "cached_at": "2026-06-04T07:09:01",
-    "data": {
-      "distance_meters": "2878",
-      "duration_seconds": "503",
-      "eta_minutes": 8
-    }
-  },
-  "distance:852641f13ccf": {
-    "cached_at": "2026-06-04T07:09:02",
-    "data": {
-      "distance_meters": "2885",
       "duration_seconds": "579",
       "eta_minutes": 10
     }
   },
+  "distance:9b5881bf90a7": {
+    "cached_at": "2026-06-05T08:33:33",
+    "data": {
+      "distance_meters": "3417",
+      "duration_seconds": "775",
+      "eta_minutes": 13
+    }
+  },
+  "distance:3d795a41bf70": {
+    "cached_at": "2026-06-05T08:33:35",
+    "data": {
+      "distance_meters": "3989",
+      "duration_seconds": "851",
+      "eta_minutes": 14
+    }
+  },
+  "distance:01a99e1e8b16": {
+    "cached_at": "2026-06-05T08:33:50",
+    "data": {
+      "distance_meters": "2878",
+      "duration_seconds": "575",
+      "eta_minutes": 10
+    }
+  },
+  "distance:852641f13ccf": {
+    "cached_at": "2026-06-05T08:33:52",
+    "data": {
+      "distance_meters": "2885",
+      "duration_seconds": "627",
+      "eta_minutes": 10
+    }
+  },
   "distance:693d5a788825": {
-    "cached_at": "2026-06-04T07:09:03",
+    "cached_at": "2026-06-05T08:33:54",
     "data": {
       "distance_meters": "3818",
-      "duration_seconds": "734",
+      "duration_seconds": "743",
       "eta_minutes": 12
     }
   },
   "distance:a1f291b81891": {
-    "cached_at": "2026-06-04T07:08:51",
+    "cached_at": "2026-06-05T08:33:43",
     "data": {
       "distance_meters": "1637",
-      "duration_seconds": "347",
+      "duration_seconds": "381",
       "eta_minutes": 6
     }
   },
   "distance:1e32ae617777": {
-    "cached_at": "2026-06-04T07:08:53",
+    "cached_at": "2026-06-05T08:33:45",
     "data": {
-      "distance_meters": "2518",
-      "duration_seconds": "474",
+      "distance_meters": "2519",
+      "duration_seconds": "504",
       "eta_minutes": 8
     }
   },
   "distance:a54f3499f6c8": {
-    "cached_at": "2026-06-04T07:08:54",
-    "data": {
-      "distance_meters": "3029",
-      "duration_seconds": "568",
-      "eta_minutes": 9
-    }
+    "cached_at": "2026-06-05T03:14:59",
+    "data": null
   },
   "distance:e7ddbe558096": {
     "cached_at": "2026-06-04T02:54:57",
@@ -11352,31 +11427,31 @@
     }
   },
   "distance:affb70cf6af4": {
-    "cached_at": "2026-06-04T09:52:22",
+    "cached_at": "2026-06-05T08:33:56",
     "data": {
-      "distance_meters": "2929",
-      "duration_seconds": "784",
-      "eta_minutes": 13
+      "distance_meters": "2930",
+      "duration_seconds": "576",
+      "eta_minutes": 10
     }
   },
   "distance:5f8d9114dcdd": {
-    "cached_at": "2026-06-04T07:09:13",
+    "cached_at": "2026-06-05T08:47:10",
     "data": {
-      "distance_meters": "2926",
-      "duration_seconds": "542",
-      "eta_minutes": 9
+      "distance_meters": "2927",
+      "duration_seconds": "619",
+      "eta_minutes": 10
     }
   },
   "distance:93f3231bd696": {
-    "cached_at": "2026-06-04T07:09:14",
+    "cached_at": "2026-06-05T09:19:41",
     "data": {
-      "distance_meters": "2887",
-      "duration_seconds": "541",
-      "eta_minutes": 9
+      "distance_meters": "2888",
+      "duration_seconds": "759",
+      "eta_minutes": 13
     }
   },
   "search:7d7cd10374dd": {
-    "cached_at": "2026-06-04T03:17:10",
+    "cached_at": "2026-06-05T03:23:45",
     "data": [
       {
         "id": "B0J1RSPBOI",
@@ -11387,6 +11462,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11398,6 +11474,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11409,6 +11486,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11420,6 +11498,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11431,6 +11510,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11442,6 +11522,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11453,6 +11534,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11464,6 +11546,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11475,6 +11558,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11486,28 +11570,31 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
         "id": "B0HRGS8OZX",
         "name": "投号玩家明星剧本推理探案桌游馆(总店)",
-        "address": "高新区盛安街401号天合凯旋南城B座419-421号",
+        "address": "盛安街401号天合凯旋南城B座419-421号",
         "location": "",
         "type": "080000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
         "id": "B0FFHJX0RV",
         "name": "火星桌游吧(大源店)",
-        "address": "保利星座3栋1309号(大源地铁站C口步行340米)",
+        "address": "石羊街道天府三街保利星座3栋1309号",
         "location": "",
         "type": "080300",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11519,39 +11606,43 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
         "id": "B0L0NCSXYG",
         "name": "17桌游吧",
-        "address": "高新区保利星座4栋1318",
+        "address": "桂溪街道荣华南路366号保利星座4栋1318室",
         "location": "",
         "type": "080000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
         "id": "B0LD0RFXG0",
         "name": "Friday星期五电玩桌游吧",
-        "address": "保利星座5栋713(大源地铁站C口步行400米)",
+        "address": "石羊街道剑南大道中段1415号保利星座5栋713室",
         "location": "",
         "type": "080000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
         "id": "B0L0713GB3",
         "name": "山屿海狼人杀丶桌游",
-        "address": "保利星座5栋808",
+        "address": "荣华南路366号保利星座5栋1单元8楼808号",
         "location": "",
         "type": "080300",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
@@ -11563,23 +11654,25 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       },
       {
         "id": "B0LGU5AKNR",
         "name": "冒险岛桌游吧·阿瓦隆",
-        "address": "剑南大道中段佳年华-时代晶座1537号3栋906",
+        "address": "石羊街道剑南大道中段佳年华-时代晶座1537号3栋906室",
         "location": "",
         "type": "080300",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "桌游"
       }
     ]
   },
   "search:bac70f050780": {
-    "cached_at": "2026-06-04T03:17:11",
+    "cached_at": "2026-06-05T08:33:21",
     "data": [
       {
         "id": "B0J1RSPBOI",
@@ -11590,6 +11683,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
@@ -11601,17 +11695,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
         "id": "B0LASA1FH0",
         "name": "蜜野清风潮玩馆",
-        "address": "5栋二单元706号",
+        "address": "西航港街道珠江路600号5栋二单元706号",
         "location": "",
         "type": "080300",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
@@ -11623,28 +11719,31 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
         "id": "B0HK3CQ6G6",
         "name": "μ's house缪斯公馆",
-        "address": "保利心语上府八栋一单元801",
+        "address": "富华南路1606号保利心语上府8栋1单元801室",
         "location": "",
         "type": "070000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
         "id": "B0HRGS8OZX",
         "name": "投号玩家明星剧本推理探案桌游馆(总店)",
-        "address": "高新区盛安街401号天合凯旋南城B座419-421号",
+        "address": "盛安街401号天合凯旋南城B座419-421号",
         "location": "",
         "type": "080000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
@@ -11656,17 +11755,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
         "id": "B0FFHJX0RV",
         "name": "火星桌游吧(大源店)",
-        "address": "保利星座3栋1309号(大源地铁站C口步行340米)",
+        "address": "石羊街道天府三街保利星座3栋1309号",
         "location": "",
         "type": "080300",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
@@ -11678,6 +11779,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
@@ -11689,17 +11791,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
         "id": "B0L0713GB3",
         "name": "山屿海狼人杀丶桌游",
-        "address": "保利星座5栋808",
+        "address": "荣华南路366号保利星座5栋1单元8楼808号",
         "location": "",
         "type": "080300",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
@@ -11711,6 +11815,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       },
       {
@@ -11722,12 +11827,13 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "剧本杀"
       }
     ]
   },
   "search:4bf52effa4ee": {
-    "cached_at": "2026-06-04T03:17:13",
+    "cached_at": "2026-06-05T03:23:48",
     "data": [
       {
         "id": "B0KRF1GGWD",
@@ -11738,6 +11844,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11749,17 +11856,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
-        "keyword_source": "台球"
-      },
-      {
-        "id": "B0HAGRWFAI",
-        "name": "壹诺台球",
-        "address": "西航港街道泰山路117号机场社区菜市场综合楼4楼",
-        "location": "",
-        "type": "080000",
-        "rating": "",
-        "distance": "",
-        "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11771,6 +11868,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11782,6 +11880,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11793,6 +11892,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11804,6 +11904,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11815,6 +11916,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11826,6 +11928,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11837,6 +11940,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11848,6 +11952,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11859,6 +11964,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11870,6 +11976,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11881,6 +11988,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11892,6 +12000,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11903,6 +12012,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11914,6 +12024,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11925,6 +12036,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11936,6 +12048,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       },
       {
@@ -11947,6 +12060,19 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
+        "keyword_source": "台球"
+      },
+      {
+        "id": "B0L267F4MK",
+        "name": "JM台球器材·维修",
+        "address": "空港国际城7期1栋2层2030",
+        "location": "",
+        "type": "080100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
         "keyword_source": "台球"
       }
     ]
@@ -12337,43 +12463,43 @@
     }
   },
   "distance:639d9a74edf7": {
-    "cached_at": "2026-06-04T07:08:57",
+    "cached_at": "2026-06-05T08:33:37",
     "data": {
       "distance_meters": "3557",
-      "duration_seconds": "726",
-      "eta_minutes": 12
+      "duration_seconds": "763",
+      "eta_minutes": 13
     }
   },
   "distance:12841b003852": {
-    "cached_at": "2026-06-04T03:17:26",
+    "cached_at": "2026-06-05T08:33:39",
     "data": {
-      "distance_meters": "5432",
-      "duration_seconds": "898",
-      "eta_minutes": 15
+      "distance_meters": "5651",
+      "duration_seconds": "982",
+      "eta_minutes": 16
     }
   },
   "distance:a0f40a406823": {
-    "cached_at": "2026-06-04T03:17:27",
+    "cached_at": "2026-06-05T08:33:41",
     "data": {
       "distance_meters": "6382",
-      "duration_seconds": "1011",
-      "eta_minutes": 17
+      "duration_seconds": "1106",
+      "eta_minutes": 18
     }
   },
   "distance:1c15988fa49f": {
-    "cached_at": "2026-06-04T07:12:22",
+    "cached_at": "2026-06-05T08:47:16",
     "data": {
       "distance_meters": "5193",
-      "duration_seconds": "878",
-      "eta_minutes": 15
+      "duration_seconds": "990",
+      "eta_minutes": 16
     }
   },
   "distance:f41d98072903": {
-    "cached_at": "2026-06-04T07:12:23",
+    "cached_at": "2026-06-05T08:47:19",
     "data": {
       "distance_meters": "6331",
-      "duration_seconds": "1011",
-      "eta_minutes": 17
+      "duration_seconds": "1138",
+      "eta_minutes": 19
     }
   },
   "distance:8fe1f688c650": {
@@ -12385,7 +12511,7 @@
     }
   },
   "search:b813476c76ce": {
-    "cached_at": "2026-06-04T03:23:10",
+    "cached_at": "2026-06-05T03:23:42",
     "data": [
       {
         "id": "B0FFIIQMGI",
@@ -12396,6 +12522,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "DQ冰淇淋"
       },
       {
@@ -12407,6 +12534,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "DQ冰淇淋"
       }
     ]
@@ -12897,15 +13025,15 @@
     }
   },
   "distance:0ab6ce012e8c": {
-    "cached_at": "2026-06-04T07:08:59",
+    "cached_at": "2026-06-05T09:46:43",
     "data": {
       "distance_meters": "8373",
-      "duration_seconds": "1205",
-      "eta_minutes": 20
+      "duration_seconds": "1934",
+      "eta_minutes": 32
     }
   },
   "search:b04a6eca1576": {
-    "cached_at": "2026-06-04T04:08:02",
+    "cached_at": "2026-06-05T08:47:08",
     "data": [
       {
         "id": "B0LUUHBCAX",
@@ -12916,6 +13044,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -12927,6 +13056,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -12938,6 +13068,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -12949,6 +13080,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -12960,6 +13092,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -12971,6 +13104,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -12982,6 +13116,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -12993,6 +13128,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13004,6 +13140,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13015,6 +13152,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13026,6 +13164,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13037,6 +13176,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13048,6 +13188,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13059,6 +13200,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13070,6 +13212,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13081,6 +13224,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13092,6 +13236,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13103,6 +13248,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13114,6 +13260,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       },
       {
@@ -13125,12 +13272,13 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串香"
       }
     ]
   },
   "search:ed8bd49fffbe": {
-    "cached_at": "2026-06-04T04:08:04",
+    "cached_at": "2026-06-05T08:33:26",
     "data": [
       {
         "id": "B0M65UK5IF",
@@ -13141,6 +13289,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13152,6 +13301,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13163,39 +13313,43 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
         "id": "B0FFICNL2J",
         "name": "晋氏烧烤(蓝光·圣菲悦城店)",
         "address": "大件路白家段996号蓝光·圣菲悦城一期",
-        "location": "",
+        "location": "104.001262,30.566833",
         "type": "050000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
         "id": "B0L0ZAEAN2",
         "name": "肖老板·碳火烧烤·江湖爆炒",
         "address": "西航港街道大件路白家段996号4栋1层附42号",
-        "location": "",
+        "location": "104.001262,30.567030",
         "type": "050118",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
         "id": "B0M6FSYIYB",
         "name": "朴社长地毯烤肉",
         "address": "泰山南路与泰山路交叉口南40米",
-        "location": "",
+        "location": "103.999649,30.567209",
         "type": "050000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13207,6 +13361,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13218,6 +13373,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13229,6 +13385,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13240,6 +13397,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13251,6 +13409,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13262,6 +13421,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13273,6 +13433,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13284,6 +13445,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13295,6 +13457,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13306,6 +13469,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13317,6 +13481,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13328,6 +13493,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13339,6 +13505,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       },
       {
@@ -13350,22 +13517,24 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "烧烤"
       }
     ]
   },
   "search:e145d3b09c49": {
-    "cached_at": "2026-06-04T04:08:05",
+    "cached_at": "2026-06-05T08:33:24",
     "data": [
       {
         "id": "B0FFI0R5EE",
         "name": "五味缘钢管厂小郡肝串串香(蓝光圣菲悦城店)",
         "address": "大件路白家段996号4栋附8号",
-        "location": "",
+        "location": "104.002011,30.566196",
         "type": "050117",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13377,6 +13546,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13388,6 +13558,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13399,6 +13570,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13410,6 +13582,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13421,6 +13594,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13432,6 +13606,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13443,6 +13618,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13454,6 +13630,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13465,6 +13642,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13476,6 +13654,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13487,6 +13666,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13498,6 +13678,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13509,6 +13690,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13520,6 +13702,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13531,6 +13714,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13542,6 +13726,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13553,6 +13738,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13564,6 +13750,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       },
       {
@@ -13575,6 +13762,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "聚会餐厅"
       }
     ]
@@ -13664,34 +13852,34 @@
     }
   },
   "distance:3ade32304ffb": {
-    "cached_at": "2026-06-04T07:48:36",
+    "cached_at": "2026-06-05T08:47:12",
     "data": {
-      "distance_meters": "2869",
-      "duration_seconds": "546",
-      "eta_minutes": 9
+      "distance_meters": "2870",
+      "duration_seconds": "588",
+      "eta_minutes": 10
     }
   },
   "distance:1401abdf58d5": {
-    "cached_at": "2026-06-04T04:08:12",
+    "cached_at": "2026-06-05T08:34:08",
     "data": {
-      "distance_meters": "2455",
-      "duration_seconds": "498",
+      "distance_meters": "2456",
+      "duration_seconds": "488",
       "eta_minutes": 8
     }
   },
   "distance:a6a53133a698": {
-    "cached_at": "2026-06-04T04:08:13",
+    "cached_at": "2026-06-05T08:34:10",
     "data": {
-      "distance_meters": "3286",
-      "duration_seconds": "672",
+      "distance_meters": "3287",
+      "duration_seconds": "673",
       "eta_minutes": 11
     }
   },
   "distance:5c904c3b9eac": {
-    "cached_at": "2026-06-04T04:08:14",
+    "cached_at": "2026-06-05T08:34:12",
     "data": {
-      "distance_meters": "2816",
-      "duration_seconds": "594",
+      "distance_meters": "2817",
+      "duration_seconds": "595",
       "eta_minutes": 10
     }
   },
@@ -15274,35 +15462,35 @@
     }
   },
   "distance:423fe081e345": {
-    "cached_at": "2026-06-04T07:09:00",
+    "cached_at": "2026-06-05T09:46:45",
     "data": {
       "distance_meters": "5486",
-      "duration_seconds": "987",
-      "eta_minutes": 16
+      "duration_seconds": "1192",
+      "eta_minutes": 20
     }
   },
   "distance:19e2f4d9670f": {
-    "cached_at": "2026-06-04T09:52:21",
+    "cached_at": "2026-06-05T08:33:58",
     "data": {
-      "distance_meters": "2769",
-      "duration_seconds": "673",
-      "eta_minutes": 11
-    }
-  },
-  "distance:78e419910821": {
-    "cached_at": "2026-06-04T07:09:17",
-    "data": {
-      "distance_meters": "3117",
-      "duration_seconds": "548",
+      "distance_meters": "2770",
+      "duration_seconds": "561",
       "eta_minutes": 9
     }
   },
+  "distance:78e419910821": {
+    "cached_at": "2026-06-05T08:34:00",
+    "data": {
+      "distance_meters": "3117",
+      "duration_seconds": "621",
+      "eta_minutes": 10
+    }
+  },
   "distance:879d18609294": {
-    "cached_at": "2026-06-04T07:09:18",
+    "cached_at": "2026-06-05T08:47:14",
     "data": {
       "distance_meters": "3395",
-      "duration_seconds": "689",
-      "eta_minutes": 11
+      "duration_seconds": "807",
+      "eta_minutes": 13
     }
   },
   "detail:502874fc8d0c": {
@@ -17062,10 +17250,10 @@
     }
   },
   "distance:16e23f484795": {
-    "cached_at": "2026-06-04T07:48:35",
+    "cached_at": "2026-06-05T08:33:47",
     "data": {
-      "distance_meters": "3029",
-      "duration_seconds": "606",
+      "distance_meters": "3030",
+      "duration_seconds": "610",
       "eta_minutes": 10
     }
   },
@@ -19538,7 +19726,7 @@
     ]
   },
   "search:90b89fd79fab": {
-    "cached_at": "2026-06-04T09:25:30",
+    "cached_at": "2026-06-05T09:52:33",
     "data": [
       {
         "id": "B0LD1CMQ5K",
@@ -19589,18 +19777,6 @@
         "keyword_source": "儿童乐园"
       },
       {
-        "id": "B0LUFL4Q2H",
-        "name": "露比鹿Park儿童乐园",
-        "address": "锦华路一段与临港路一段交叉口西南100米",
-        "location": "",
-        "type": "080501",
-        "rating": "",
-        "distance": "",
-        "tel": "",
-        "business_area": "",
-        "keyword_source": "儿童乐园"
-      },
-      {
         "id": "B0L19KFOAS",
         "name": "小兔乖乖乐园",
         "address": "临港路一段与锦华路一段交叉口西南100米",
@@ -19628,18 +19804,6 @@
         "id": "B0LKF1UM7F",
         "name": "泰迪来了",
         "address": "珠江路与临港路四段交叉口西北220米",
-        "location": "",
-        "type": "080501",
-        "rating": "",
-        "distance": "",
-        "tel": "",
-        "business_area": "",
-        "keyword_source": "儿童乐园"
-      },
-      {
-        "id": "B0J16H0FTV",
-        "name": "乖比兔潮玩部落(北京华联空港购物中心锦华路店)",
-        "address": "锦华路二段166号北京华联(成都购物中心)F4层F4-ZD-05",
         "location": "",
         "type": "080501",
         "rating": "",
@@ -22560,7 +22724,7 @@
     }
   },
   "search:1d85b73b2416": {
-    "cached_at": "2026-06-04T09:39:43",
+    "cached_at": "2026-06-05T09:52:38",
     "data": [
       {
         "id": "B0LD1CMQ5K",
@@ -22611,18 +22775,6 @@
         "keyword_source": "游乐园"
       },
       {
-        "id": "B0LUFL4Q2H",
-        "name": "露比鹿Park儿童乐园",
-        "address": "锦华路一段与临港路一段交叉口西南100米",
-        "location": "",
-        "type": "080501",
-        "rating": "",
-        "distance": "",
-        "tel": "",
-        "business_area": "",
-        "keyword_source": "游乐园"
-      },
-      {
         "id": "B0L19KFOAS",
         "name": "小兔乖乖乐园",
         "address": "临港路一段与锦华路一段交叉口西南100米",
@@ -22638,18 +22790,6 @@
         "id": "B0LKF1UM7F",
         "name": "泰迪来了",
         "address": "珠江路与临港路四段交叉口西北220米",
-        "location": "",
-        "type": "080501",
-        "rating": "",
-        "distance": "",
-        "tel": "",
-        "business_area": "",
-        "keyword_source": "游乐园"
-      },
-      {
-        "id": "B0J16H0FTV",
-        "name": "乖比兔潮玩部落(北京华联空港购物中心锦华路店)",
-        "address": "锦华路二段166号北京华联(成都购物中心)F4层F4-ZD-05",
         "location": "",
         "type": "080501",
         "rating": "",
@@ -24523,5 +24663,2305 @@
       "duration_seconds": "685",
       "eta_minutes": 11
     }
+  },
+  "distance:fda79f54f5a8": {
+    "cached_at": "2026-06-05T03:15:00",
+    "data": null
+  },
+  "distance:e7658030d9f6": {
+    "cached_at": "2026-06-05T03:15:01",
+    "data": null
+  },
+  "distance:08960edb154d": {
+    "cached_at": "2026-06-05T03:15:03",
+    "data": null
+  },
+  "distance:78991fcf5299": {
+    "cached_at": "2026-06-05T03:15:04",
+    "data": null
+  },
+  "distance:a6b328ac2b43": {
+    "cached_at": "2026-06-05T03:15:05",
+    "data": null
+  },
+  "distance:1c461aa71f02": {
+    "cached_at": "2026-06-05T03:15:07",
+    "data": null
+  },
+  "distance:0c9c95a0841a": {
+    "cached_at": "2026-06-05T03:15:08",
+    "data": null
+  },
+  "distance:bd324a03da75": {
+    "cached_at": "2026-06-05T03:15:09",
+    "data": null
+  },
+  "distance:9e45147f6d31": {
+    "cached_at": "2026-06-05T03:15:11",
+    "data": null
+  },
+  "distance:fad48e9eb4a0": {
+    "cached_at": "2026-06-05T03:15:12",
+    "data": null
+  },
+  "distance:61cee81b18bf": {
+    "cached_at": "2026-06-05T03:15:13",
+    "data": null
+  },
+  "distance:59a2d5de6cc0": {
+    "cached_at": "2026-06-05T03:15:15",
+    "data": null
+  },
+  "detail:d46224a6cced": {
+    "cached_at": "2026-06-05T03:15:58",
+    "data": null
+  },
+  "distance:0a37ac2ec3dc": {
+    "cached_at": "2026-06-05T03:16:06",
+    "data": null
+  },
+  "distance:a61422ab2435": {
+    "cached_at": "2026-06-05T03:16:08",
+    "data": null
+  },
+  "distance:a6abc48bce9e": {
+    "cached_at": "2026-06-05T03:16:09",
+    "data": null
+  },
+  "distance:62cee6398a61": {
+    "cached_at": "2026-06-05T03:16:10",
+    "data": null
+  },
+  "distance:90760a23bd12": {
+    "cached_at": "2026-06-05T03:16:11",
+    "data": null
+  },
+  "search:7ab5f61ac25b": {
+    "cached_at": "2026-06-05T03:23:55",
+    "data": [
+      {
+        "id": "B0J3THJ68W",
+        "name": "盒子Club",
+        "address": "川大南路一段27号",
+        "location": "104.005554,30.552509",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0L0MR9M0R",
+        "name": "蓝光bar",
+        "address": "蓝光BRC圣菲TOWN城1号门旁",
+        "location": "104.002775,30.566375",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0KA91MCV1",
+        "name": "酒遇知己小酒馆",
+        "address": "大件路白家段996号附2029号",
+        "location": "104.001475,30.566825",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0LA59SSMI",
+        "name": "浪语小酒馆",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0LK5LVC8T",
+        "name": "漫夜音乐酒吧",
+        "address": "泰山路与红樱路交叉口东20米",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0IKO7765U",
+        "name": "酿佰汇酒库",
+        "address": "泰山路60号附33号(谢家渡地铁站A1口步行370米)",
+        "location": "",
+        "type": "061210",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0KRBXSDS9",
+        "name": "谜底·江安酒馆",
+        "address": "川大路三段2号新世纪假日酒店7层(文星地铁站B1口旁)",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0LDA7MAWE",
+        "name": "醺谷Bar",
+        "address": "川大路三段108号26栋附8号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0LKKLP49Y",
+        "name": "CONTINUE",
+        "address": "川大路三段与蜀星路交叉口北260米",
+        "location": "",
+        "type": "080000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0J1VM8764",
+        "name": "酒肆人间小酒馆(金色校园广场店)",
+        "address": "西航港街道长城路二段499号金色校园广场4栋302室",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0LBZCOLIP",
+        "name": "夕阳醉了酒馆",
+        "address": "西航港街道临港路三段58号附五号一层",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0IU3AJAIT",
+        "name": "川G精酿啤酒(航空港店)",
+        "address": "临港路四段200号15栋附106号",
+        "location": "",
+        "type": "050600",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0IUJZFN9J",
+        "name": "谣小屋民谣酒馆(空港店)",
+        "address": "临港路四段200号14栋附119号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0L6AA03VO",
+        "name": "若初见·音乐酒吧(双流空港店)",
+        "address": "西航港街道大件路白家段280号3栋4层",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0K0MRG5T5",
+        "name": "ADC CLUB(成都旗舰店)",
+        "address": "大件路白家段280号韩国城购物中心",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0KU2DYDK2",
+        "name": "集体失眠·夜咖啡&鸡尾酒吧(蓝光空港T-MAX店)",
+        "address": "西航港街道临港路四段200号10栋附112号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0JUZL6TBC",
+        "name": "FUN肆·营地酒吧",
+        "address": "西航港街道锦华路一段111号1栋-3号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0I6A724YC",
+        "name": "优布劳精酿酒馆(韩国城店)",
+        "address": "临港路四段88号2栋附104号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0LAK7L8JT",
+        "name": "酒别重逢小酒馆",
+        "address": "临港路四段88号一栋附211号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      },
+      {
+        "id": "B0LR5AAK0C",
+        "name": "酒点半小酒馆",
+        "address": "临港路88号1栋附136号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "小酒馆"
+      }
+    ]
+  },
+  "detail:68828e300f30": {
+    "cached_at": "2026-06-05T03:24:02",
+    "data": {
+      "id": "B0J3THJ68W",
+      "name": "盒子Club",
+      "location": "104.005554,30.552509",
+      "address": "川大南路一段27号",
+      "business_area": "双流片区",
+      "city": "成都市",
+      "type": "体育休闲服务;娱乐场所;酒吧",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/0426c2f6bfbcdfc7810adab9bf12ac79"
+      },
+      "cost": "73.00",
+      "opentime2": "周一至周日 10:30-02:00",
+      "rating": "4.5",
+      "open_time": "10:30-02:00"
+    }
+  },
+  "detail:9bb56e2eefcb": {
+    "cached_at": "2026-06-05T03:24:04",
+    "data": {
+      "id": "B0L0MR9M0R",
+      "name": "蓝光bar",
+      "location": "104.002775,30.566375",
+      "address": "蓝光BRC圣菲TOWN城1号门旁",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "体育休闲服务;娱乐场所;酒吧",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": "2.1",
+      "open_time": []
+    }
+  },
+  "detail:8cf8d89e3a52": {
+    "cached_at": "2026-06-05T03:24:06",
+    "data": {
+      "id": "B0KA91MCV1",
+      "name": "酒遇知己小酒馆",
+      "location": "104.001475,30.566825",
+      "address": "大件路白家段996号附2029号",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "体育休闲服务;娱乐场所;酒吧",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/23e09698d47e185ab61c5aac47653816"
+      },
+      "cost": "51.00",
+      "opentime2": "周一至周日 19:00-04:00",
+      "rating": "4.0",
+      "open_time": "19:00-04:00"
+    }
+  },
+  "distance:2a99a3b740c2": {
+    "cached_at": "2026-06-05T09:19:33",
+    "data": {
+      "distance_meters": "1606",
+      "duration_seconds": "654",
+      "eta_minutes": 11
+    }
+  },
+  "distance:641665f9ef0a": {
+    "cached_at": "2026-06-05T09:19:36",
+    "data": {
+      "distance_meters": "2485",
+      "duration_seconds": "664",
+      "eta_minutes": 11
+    }
+  },
+  "distance:981485dbfbb8": {
+    "cached_at": "2026-06-05T09:19:38",
+    "data": {
+      "distance_meters": "2820",
+      "duration_seconds": "799",
+      "eta_minutes": 13
+    }
+  },
+  "search:4617f0e07a54": {
+    "cached_at": "2026-06-05T03:25:01",
+    "data": [
+      {
+        "id": "B0FFIIQMGI",
+        "name": "DQ·蛋糕·冰淇淋(成都北京华联空港店)",
+        "address": "锦华路二段172号北京华联空港购物中心1F",
+        "location": "103.986976,30.572055",
+        "type": "050700",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "DQ",
+        "waypoint_keyword": "DQ",
+        "waypoint_raw": "想吃DQ",
+        "waypoint_time_hint": null
+      },
+      {
+        "id": "B0FFK1F1DP",
+        "name": "DQ·蛋糕·冰淇淋(成都高新伊藤)",
+        "address": "天府二街999号伊藤洋华堂负一楼",
+        "location": "104.044034,30.550082",
+        "type": "050800|050700",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "DQ",
+        "waypoint_keyword": "DQ",
+        "waypoint_raw": "想吃DQ",
+        "waypoint_time_hint": null
+      }
+    ]
+  },
+  "distance:a3d3349e5729": {
+    "cached_at": "2026-06-05T03:25:49",
+    "data": {
+      "distance_meters": "2763",
+      "duration_seconds": "472",
+      "eta_minutes": 8
+    }
+  },
+  "distance:0bf409f1e152": {
+    "cached_at": "2026-06-05T03:25:51",
+    "data": {
+      "distance_meters": "3889",
+      "duration_seconds": "708",
+      "eta_minutes": 12
+    }
+  },
+  "distance:0f016e87c1a8": {
+    "cached_at": "2026-06-05T09:29:55",
+    "data": {
+      "distance_meters": "3087",
+      "duration_seconds": "844",
+      "eta_minutes": 14
+    }
+  },
+  "distance:344f38c837ae": {
+    "cached_at": "2026-06-05T09:29:58",
+    "data": {
+      "distance_meters": "1904",
+      "duration_seconds": "550",
+      "eta_minutes": 9
+    }
+  },
+  "distance:3a21abcea098": {
+    "cached_at": "2026-06-05T03:25:58",
+    "data": {
+      "distance_meters": "2771",
+      "duration_seconds": "595",
+      "eta_minutes": 10
+    }
+  },
+  "search:7d1db3459f82": {
+    "cached_at": "2026-06-05T08:33:28",
+    "data": [
+      {
+        "id": "B0I3XA6A5D",
+        "name": "MotoSocial社-机车餐酒吧(航空港店)",
+        "address": "川齿路南五街40号东航·中心F1层",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "餐酒吧"
+      },
+      {
+        "id": "B0KALCBQT4",
+        "name": "航宸国际酒店餐厅爪嘛酒吧",
+        "address": "鞋都南一路与智达二路交叉口东南60米",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "餐酒吧"
+      }
+    ]
+  },
+  "distance:fdf37e5008cc": {
+    "cached_at": "2026-06-05T08:35:11",
+    "data": {
+      "distance_meters": "1412",
+      "duration_seconds": "272",
+      "eta_minutes": 5
+    }
+  },
+  "distance:59b50efeff55": {
+    "cached_at": "2026-06-05T08:35:13",
+    "data": {
+      "distance_meters": "3355",
+      "duration_seconds": "730",
+      "eta_minutes": 12
+    }
+  },
+  "distance:4dc2dc31544b": {
+    "cached_at": "2026-06-05T08:35:15",
+    "data": {
+      "distance_meters": "1379",
+      "duration_seconds": "394",
+      "eta_minutes": 7
+    }
+  },
+  "distance:6aeb32980eb3": {
+    "cached_at": "2026-06-05T08:35:17",
+    "data": {
+      "distance_meters": "3115",
+      "duration_seconds": "555",
+      "eta_minutes": 9
+    }
+  },
+  "search:16573436f355": {
+    "cached_at": "2026-06-05T08:37:49",
+    "data": [
+      {
+        "id": "B0G1BP8UNW",
+        "name": "宋府珍馐鸡公煲",
+        "address": "川大路二段341号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFJCXRN6",
+        "name": "重庆鸡公煲(宋氏川大店)",
+        "address": "区川大路二段333号",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0GKCNQGUK",
+        "name": "宋记重庆鸡公煲(川大店)",
+        "address": "川大路2段287号",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0HUAD2EZX",
+        "name": "重庆鸡公煲(川大店)",
+        "address": "西航港街道川大路二段255号1层",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0LD7M0X9Y",
+        "name": "李旋疯重庆鸡公煲",
+        "address": "泰山路与红樱路交叉口西南160米",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFGPR46X",
+        "name": "重庆鸡公煲(金色校园广场店)",
+        "address": "长城路二段499号金色校园广场2栋102",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0LBSHSH9Y",
+        "name": "周记重庆鸡公煲",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0J27BDI76",
+        "name": "邹记鸡公煲",
+        "address": "黄河北路77号13栋附9号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0J30DEL3W",
+        "name": "正宗重庆鸡公煲",
+        "address": "双流区西航港大道中二段333号7栋三单元15号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFFLJKOK",
+        "name": "正宗重庆鸡公煲",
+        "address": "西航港大道中二段333号七栋十九号",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFMEX1S3",
+        "name": "重庆鸡公煲(千百度公寓店)",
+        "address": "川齿路北4街36-38号",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFKHLZPD",
+        "name": "宋记鸡公煲(学府西路北一街店)",
+        "address": "学府西路北一街101号",
+        "location": "",
+        "type": "050102|050117",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFF3ADO9",
+        "name": "周记锅锅香鸡公煲(常乐小区北区店)",
+        "address": "学府西路常乐小区北一街107-109号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0LK6UL2HE",
+        "name": "许小满锅贴石锅鸡公煲",
+        "address": "学府西路北一街181号",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0I0GB41A1",
+        "name": "重庆鸡公煲(一品CG店)",
+        "address": "南华巷与303号",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFINICH0",
+        "name": "博宇重庆鸡公煲(华创路店)",
+        "address": "西航港街道华创路93号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0L0LA9B0T",
+        "name": "重庆鸡公煲",
+        "address": "腾龙二巷与兴业三街交叉口南140米",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0I3MSLZQ4",
+        "name": "重庆鸡公煲(杨桥路店)",
+        "address": "杨桥路283号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0FFHW6F3J",
+        "name": "重庆鸡公煲(现代学院店)",
+        "address": "华创路30号正东方向60米九龙湖社区综合市场",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      },
+      {
+        "id": "B0J225VZVH",
+        "name": "斗鸣鸡公煲·纸包鱼(清凤时代城店)",
+        "address": "荣华北路69号5栋1层附105号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "鸡公煲"
+      }
+    ]
+  },
+  "distance:1ce3d4a0e89c": {
+    "cached_at": "2026-06-05T08:38:38",
+    "data": {
+      "distance_meters": "1788",
+      "duration_seconds": "253",
+      "eta_minutes": 4
+    }
+  },
+  "distance:e5b359a079b1": {
+    "cached_at": "2026-06-05T08:38:41",
+    "data": {
+      "distance_meters": "3222",
+      "duration_seconds": "764",
+      "eta_minutes": 13
+    }
+  },
+  "distance:302db5eb1e79": {
+    "cached_at": "2026-06-05T08:38:43",
+    "data": {
+      "distance_meters": "1711",
+      "duration_seconds": "548",
+      "eta_minutes": 9
+    }
+  },
+  "distance:2d21caa8575f": {
+    "cached_at": "2026-06-05T08:38:45",
+    "data": {
+      "distance_meters": "3807",
+      "duration_seconds": "771",
+      "eta_minutes": 13
+    }
+  },
+  "search:884637bfbfd7": {
+    "cached_at": "2026-06-05T08:40:05",
+    "data": [
+      {
+        "id": "B0FFG1VE4D",
+        "name": "四川大学江安校区健坤羽毛球馆",
+        "address": "西航港街道川大路二段2号四川大学江安校区",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0LDPUVMY8",
+        "name": "薰风·羽曜空间羽毛球馆(长城路校区)",
+        "address": "长城路一段187号附21号",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0H1UCY7CO",
+        "name": "恰少年体育篮球羽毛球俱乐部",
+        "address": "每时篮球馆空港店",
+        "location": "",
+        "type": "140000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0MBD6ER79",
+        "name": "星旺羽毛球培训",
+        "address": "珠江路与临港路五段交叉口东100米",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0J66AZ6E3",
+        "name": "椰风羽毛球馆",
+        "address": "临港路五段268号韩国城喜乐齐4楼(从零食有鸣旁边电梯上去)",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0M6FSXPEY",
+        "name": "文星羽毛球馆",
+        "address": "文星正街与学苑路交叉口西80米",
+        "location": "",
+        "type": "080100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0KAVRF3RL",
+        "name": "文星羽毛球馆",
+        "address": "文星正街与学苑路交叉口南220米",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0KK25B5LV",
+        "name": "悟空羽毛球运动公园",
+        "address": "祥华路2910号",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0IAR79YWJ",
+        "name": "橘子羽毛球馆(薰风)",
+        "address": "锦城大道1号黄荆市民广场",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0I0GS660T",
+        "name": "向日葵羽毛球培训(橘子校区)",
+        "address": "G5京昆高速与白家立交交叉口西南160米",
+        "location": "",
+        "type": "141400",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0IUOS6R7R",
+        "name": "青羽羽毛球培训俱乐部",
+        "address": "G5京昆高速与白家立交交叉口西南160米",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0I1ND7W1B",
+        "name": "蒲公英运动馆",
+        "address": "锦城大道一号黄荆市民体育运动广场内",
+        "location": "",
+        "type": "080100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0FFLGPR77",
+        "name": "羽林一线羽毛球穿线工作室(建发·翡翠鹭洲店)",
+        "address": "天府四街南华路1033号建发翡翠鹭洲商业2楼",
+        "location": "",
+        "type": "060900",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0LR5RCFK2",
+        "name": "兄弟连华运动馆(篮球&羽毛球)",
+        "address": "西航港街道双华路三段800号",
+        "location": "",
+        "type": "080101",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0M6O1MGHV",
+        "name": "亥成体育篮球足球俱乐部(武侯芙蓉园店)",
+        "address": "金花桥街道新智一路5号",
+        "location": "",
+        "type": "080100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0H3574FWC",
+        "name": "城南羽宸羽毛球俱乐部",
+        "address": "",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0FFLJ2F6F",
+        "name": "晴天嗨球薰风羽毛球馆",
+        "address": "华府大道2段396号",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0L3AZQ45P",
+        "name": "小花羽毛球馆",
+        "address": "华府大道二段与老双中路交叉口东北220米",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0K6Y61LHI",
+        "name": "成都未来星羽毛球俱乐部(王者校区)",
+        "address": "怡心街道警校路二段辅路王者运动中心",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      },
+      {
+        "id": "B0J145YYSX",
+        "name": "王者运动中心",
+        "address": "警校路二段辅路",
+        "location": "",
+        "type": "080118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "羽毛球"
+      }
+    ]
+  },
+  "detail:29f821e6c69f": {
+    "cached_at": "2026-06-05T08:40:54",
+    "data": {
+      "id": "B0FFG1VE4D",
+      "name": "四川大学江安校区健坤羽毛球馆",
+      "location": "104.006002,30.558249",
+      "address": "西航港街道川大路二段2号四川大学江安校区",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "体育休闲服务;运动场馆;羽毛球场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/ce5bc59d1b2f23df228df6c59643c76c"
+      },
+      "cost": [],
+      "opentime2": "周一至周日 09:00-22:00",
+      "rating": "4.0",
+      "open_time": "09:00-22:00"
+    }
+  },
+  "detail:93576652ab94": {
+    "cached_at": "2026-06-05T08:40:56",
+    "data": {
+      "id": "B0LDPUVMY8",
+      "name": "薰风·羽曜空间羽毛球馆(长城路校区)",
+      "location": "103.986253,30.555441",
+      "address": "长城路一段187号附21号",
+      "business_area": "双流片区",
+      "city": "成都市",
+      "type": "体育休闲服务;运动场馆;羽毛球场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0LDPUVMY8/comment/F51E5B1B_C70E_4B6D_B172_9AD1AB848DFD_L0_001_1206_149_1771859977304_54193564.jpg"
+      },
+      "cost": "47.00",
+      "opentime2": "周一至周日 09:00-22:00",
+      "rating": "4.5",
+      "open_time": "09:00-22:00"
+    }
+  },
+  "detail:a285d9734806": {
+    "cached_at": "2026-06-05T08:41:00",
+    "data": {
+      "id": "B0FFGPR46X",
+      "name": "重庆鸡公煲(金色校园广场店)",
+      "location": "103.990336,30.549420",
+      "address": "长城路二段499号金色校园广场2栋102",
+      "business_area": "四川天府新区成都直管区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;四川菜(川菜)",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/ff9d90752b73842791c23d0d31d95bdf"
+      },
+      "cost": "30.00",
+      "opentime2": "周一至周日 10:00-22:00",
+      "rating": "3.7",
+      "open_time": "10:00-22:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:eb6b8da9529e": {
+    "cached_at": "2026-06-05T08:41:02",
+    "data": {
+      "id": "B0KAVRF3RL",
+      "name": "文星羽毛球馆",
+      "location": "103.983203,30.543140",
+      "address": "文星正街与学苑路交叉口南220米",
+      "business_area": "双流片区",
+      "city": "成都市",
+      "type": "体育休闲服务;运动场馆;羽毛球场",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0KAVRF3RL/comment/content_media_external_images_media_1000048447_ss__1731116130024_68977605.jpg"
+      },
+      "cost": "58.00",
+      "opentime2": "周一至周日 10:00-22:00",
+      "rating": "4.4",
+      "open_time": "10:00-22:00"
+    }
+  },
+  "distance:36682e25b7e6": {
+    "cached_at": "2026-06-05T08:41:08",
+    "data": {
+      "distance_meters": "3095",
+      "duration_seconds": "566",
+      "eta_minutes": 9
+    }
+  },
+  "distance:53a9cb8d3a9a": {
+    "cached_at": "2026-06-05T08:41:10",
+    "data": {
+      "distance_meters": "3198",
+      "duration_seconds": "754",
+      "eta_minutes": 13
+    }
+  },
+  "distance:c8335d347f82": {
+    "cached_at": "2026-06-05T08:41:11",
+    "data": {
+      "distance_meters": "1551",
+      "duration_seconds": "438",
+      "eta_minutes": 7
+    }
+  },
+  "distance:429854d290a9": {
+    "cached_at": "2026-06-05T08:41:14",
+    "data": {
+      "distance_meters": "3540",
+      "duration_seconds": "740",
+      "eta_minutes": 12
+    }
+  },
+  "distance:ef659ca0c064": {
+    "cached_at": "2026-06-05T08:48:30",
+    "data": {
+      "distance_meters": "4059",
+      "duration_seconds": "840",
+      "eta_minutes": 14
+    }
+  },
+  "distance:7e21412b6b21": {
+    "cached_at": "2026-06-05T08:48:33",
+    "data": {
+      "distance_meters": "2299",
+      "duration_seconds": "571",
+      "eta_minutes": 10
+    }
+  },
+  "distance:a39e15a24028": {
+    "cached_at": "2026-06-05T08:48:35",
+    "data": {
+      "distance_meters": "5797",
+      "duration_seconds": "1058",
+      "eta_minutes": 18
+    }
+  },
+  "distance:02345b561e4d": {
+    "cached_at": "2026-06-05T08:48:37",
+    "data": {
+      "distance_meters": "5430",
+      "duration_seconds": "1136",
+      "eta_minutes": 19
+    }
+  },
+  "distance:e4577c02fb4d": {
+    "cached_at": "2026-06-05T08:48:39",
+    "data": {
+      "distance_meters": "2421",
+      "duration_seconds": "484",
+      "eta_minutes": 8
+    }
+  },
+  "distance:6fd95fa165ee": {
+    "cached_at": "2026-06-05T08:51:56",
+    "data": {
+      "distance_meters": "1405",
+      "duration_seconds": "247",
+      "eta_minutes": 4
+    }
+  },
+  "distance:e2afa176b09a": {
+    "cached_at": "2026-06-05T08:51:58",
+    "data": {
+      "distance_meters": "976",
+      "duration_seconds": "268",
+      "eta_minutes": 4
+    }
+  },
+  "distance:09b2783ccd8a": {
+    "cached_at": "2026-06-05T08:52:00",
+    "data": {
+      "distance_meters": "274",
+      "duration_seconds": "78",
+      "eta_minutes": 1
+    }
+  },
+  "search:c1bbac67f02f": {
+    "cached_at": "2026-06-05T09:19:31",
+    "data": [
+      {
+        "id": "B0J3THJ68W",
+        "name": "盒子Club",
+        "address": "川大南路一段27号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0L0MR9M0R",
+        "name": "蓝光bar",
+        "address": "蓝光BRC圣菲TOWN城1号门旁",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0KA91MCV1",
+        "name": "酒遇知己小酒馆",
+        "address": "大件路白家段996号附2029号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0LA59SSMI",
+        "name": "浪语小酒馆",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0LK5LVC8T",
+        "name": "漫夜音乐酒吧",
+        "address": "泰山路与红樱路交叉口东20米",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0IKO7765U",
+        "name": "酿佰汇酒库",
+        "address": "泰山路60号附33号(谢家渡地铁站A1口步行370米)",
+        "location": "",
+        "type": "061210",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0KRBXSDS9",
+        "name": "谜底·江安酒馆",
+        "address": "川大路三段2号新世纪假日酒店7层(文星地铁站B1口旁)",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0LDA7MAWE",
+        "name": "醺谷Bar",
+        "address": "川大路三段108号26栋附8号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0LKKLP49Y",
+        "name": "CONTINUE",
+        "address": "川大路三段与蜀星路交叉口北260米",
+        "location": "",
+        "type": "080000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0J1VM8764",
+        "name": "酒肆人间小酒馆(金色校园广场店)",
+        "address": "西航港街道长城路二段499号金色校园广场4栋302室",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0I15DUL0O",
+        "name": "夜语KTV酒吧",
+        "address": "蜀星路与蜀龙街交叉口北80米",
+        "location": "",
+        "type": "080302",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0LBZCOLIP",
+        "name": "夕阳醉了酒馆",
+        "address": "西航港街道临港路三段58号附五号一层",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0IU3AJAIT",
+        "name": "川G精酿啤酒(航空港店)",
+        "address": "临港路四段200号15栋附106号",
+        "location": "",
+        "type": "050600",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0IUJZFN9J",
+        "name": "谣小屋民谣酒馆(空港店)",
+        "address": "临港路四段200号14栋附119号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0L6AA03VO",
+        "name": "若初见·音乐酒吧(双流空港店)",
+        "address": "西航港街道大件路白家段280号3栋4层",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0K0MRG5T5",
+        "name": "ADC CLUB(成都旗舰店)",
+        "address": "大件路白家段280号韩国城购物中心",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0KU2DYDK2",
+        "name": "集体失眠·夜咖啡&鸡尾酒吧(蓝光空港T-MAX店)",
+        "address": "西航港街道临港路四段200号10栋附112号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0JUZL6TBC",
+        "name": "FUN肆·营地酒吧",
+        "address": "西航港街道锦华路一段111号1栋-3号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0I6A724YC",
+        "name": "优布劳精酿酒馆(韩国城店)",
+        "address": "临港路四段88号2栋附104号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      },
+      {
+        "id": "B0LAK7L8JT",
+        "name": "酒别重逢小酒馆",
+        "address": "临港路四段88号一栋附211号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒吧"
+      }
+    ]
+  },
+  "distance:44bdc6531824": {
+    "cached_at": "2026-06-05T09:20:44",
+    "data": {
+      "distance_meters": "1922",
+      "duration_seconds": "498",
+      "eta_minutes": 8
+    }
+  },
+  "distance:d5c47c8f6369": {
+    "cached_at": "2026-06-05T09:20:47",
+    "data": {
+      "distance_meters": "2767",
+      "duration_seconds": "563",
+      "eta_minutes": 9
+    }
+  },
+  "distance:7ec385306f11": {
+    "cached_at": "2026-06-05T09:20:49",
+    "data": {
+      "distance_meters": "4545",
+      "duration_seconds": "1383",
+      "eta_minutes": 23
+    }
+  },
+  "distance:00c900246167": {
+    "cached_at": "2026-06-05T09:20:51",
+    "data": {
+      "distance_meters": "2313",
+      "duration_seconds": "613",
+      "eta_minutes": 10
+    }
+  },
+  "distance:8cde5e71dc85": {
+    "cached_at": "2026-06-05T09:20:53",
+    "data": {
+      "distance_meters": "512",
+      "duration_seconds": "258",
+      "eta_minutes": 4
+    }
+  },
+  "distance:9646d9540794": {
+    "cached_at": "2026-06-05T09:24:06",
+    "data": {
+      "distance_meters": "513",
+      "duration_seconds": "158",
+      "eta_minutes": 3
+    }
+  },
+  "distance:6f0d0f13f2e3": {
+    "cached_at": "2026-06-05T09:24:09",
+    "data": {
+      "distance_meters": "888",
+      "duration_seconds": "449",
+      "eta_minutes": 7
+    }
+  },
+  "search:00d056c79529": {
+    "cached_at": "2026-06-05T09:28:40",
+    "data": [
+      {
+        "id": "B0M65UK5IF",
+        "name": "熊猫说淄博烧烤(航空港店)",
+        "address": "大件路白家段926号1层",
+        "location": "104.002050,30.565088",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0L01AFJHN",
+        "name": "老北京炙烤牛肋条饭·炙子烤肉(双流店)",
+        "address": "泰山路与红樱路交叉口西南200米",
+        "location": "103.995925,30.565875",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0KA9RPRNW",
+        "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+        "address": "西航港街道大件路白家段996号4栋附34号1层",
+        "location": "104.001326,30.566755",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0FFICNL2J",
+        "name": "晋氏烧烤(蓝光·圣菲悦城店)",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0L0ZAEAN2",
+        "name": "肖老板·碳火烧烤·江湖爆炒",
+        "address": "西航港街道大件路白家段996号4栋1层附42号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0M6FSYIYB",
+        "name": "朴社长地毯烤肉",
+        "address": "泰山南路与泰山路交叉口南40米",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0L3MRMW9M",
+        "name": "爸爸烧烤",
+        "address": "川大南路一段200号临江丽苑二期",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0HDTMKG7Y",
+        "name": "签签烧烤(临江丽苑二期店)",
+        "address": "川大南路一段186号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0FFK94M7F",
+        "name": "雪山资格烤羊肉串(蓝光·圣菲悦城一期店)",
+        "address": "蓝光·圣菲悦城一期2号门旁",
+        "location": "",
+        "type": "050121|050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0M63U9HUA",
+        "name": "乐山烧烤",
+        "address": "西航港黄河南路2段1号南城锦尚",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0LBTC3I5H",
+        "name": "炭火匠人·烧烤(航空港店)",
+        "address": "西航港街道川大路三段108号13栋附6号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0L37HLX7O",
+        "name": "炭公烧烤(泰山路店)",
+        "address": "泰山路60号附5号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0L0X9MGBD",
+        "name": "霄味烧烤",
+        "address": "泰山路与黄河中路二段交叉口西40米",
+        "location": "",
+        "type": "050300",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0L1DBSRJY",
+        "name": "美味烧烤",
+        "address": "花红小区",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0HURM4BXG",
+        "name": "胖妹烧烤(泰山路店)",
+        "address": "泰山路悦时光美食城60号附8号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0FFKPZDDQ",
+        "name": "耶生活烧烤店(临江丽苑二期店)",
+        "address": "川大南路一段222号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0K3M7N25R",
+        "name": "眉山烧烤",
+        "address": "花红小区",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0L1NDWFNW",
+        "name": "小树邻烧烤",
+        "address": "川大路三段108号光明苑",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0J6YKTQLN",
+        "name": "乐山烧烤(西航港新街)",
+        "address": "花红小区下六街与西航港新街交叉口东北50米",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      },
+      {
+        "id": "B0K3A79V8O",
+        "name": "炭香巷烤肉蒜香炭烤牛五花",
+        "address": "光明苑小区33栋负9号(文星地铁站B2口步行100米)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "烤肉"
+      }
+    ]
+  },
+  "detail:bee5cbe21edd": {
+    "cached_at": "2026-06-05T09:28:43",
+    "data": {
+      "id": "B0FFICNL2J",
+      "name": "晋氏烧烤(蓝光·圣菲悦城店)",
+      "location": "104.001262,30.566833",
+      "address": "大件路白家段996号蓝光·圣菲悦城一期",
+      "business_area": "白家",
+      "city": "成都市",
+      "type": "餐饮服务;餐饮相关场所;餐饮相关",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/d768692cf769b8f3143a80aad5b7d303"
+      },
+      "cost": "75.00",
+      "opentime2": "周一至周日 17:00-04:00",
+      "rating": "4.3",
+      "open_time": "17:00-04:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:04006af1ee92": {
+    "cached_at": "2026-06-05T09:28:45",
+    "data": {
+      "id": "B0L0ZAEAN2",
+      "name": "肖老板·碳火烧烤·江湖爆炒",
+      "location": "104.001262,30.567030",
+      "address": "西航港街道大件路白家段996号4栋1层附42号",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;特色/地方风味餐厅",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://aos-comment.amap.com/B0L0ZAEAN2/comment/content_media_external_file_4477_1764069326897_40973237.jpg"
+      },
+      "cost": "65.00",
+      "opentime2": "周一至周日 17:00-03:00",
+      "rating": "4.6",
+      "open_time": "17:00-03:00",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:1904d204c95f": {
+    "cached_at": "2026-06-05T09:28:47",
+    "data": {
+      "id": "B0M6FSYIYB",
+      "name": "朴社长地毯烤肉",
+      "location": "103.999649,30.567209",
+      "address": "泰山南路与泰山路交叉口南40米",
+      "business_area": "四川天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;餐饮相关场所;餐饮相关",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": "1.8",
+      "open_time": [],
+      "meal_ordering": "0"
+    }
+  },
+  "distance:04d8a868bb55": {
+    "cached_at": "2026-06-05T09:28:50",
+    "data": {
+      "distance_meters": "2807",
+      "duration_seconds": "664",
+      "eta_minutes": 11
+    }
+  },
+  "distance:18f6e5c7b81b": {
+    "cached_at": "2026-06-05T09:28:52",
+    "data": {
+      "distance_meters": "2793",
+      "duration_seconds": "657",
+      "eta_minutes": 11
+    }
+  },
+  "distance:d270f83802b8": {
+    "cached_at": "2026-06-05T09:28:54",
+    "data": {
+      "distance_meters": "2860",
+      "duration_seconds": "657",
+      "eta_minutes": 11
+    }
+  },
+  "distance:c8f81d63d916": {
+    "cached_at": "2026-06-05T09:29:51",
+    "data": {
+      "distance_meters": "2753",
+      "duration_seconds": "700",
+      "eta_minutes": 12
+    }
+  },
+  "distance:d919480a0bd6": {
+    "cached_at": "2026-06-05T09:29:53",
+    "data": {
+      "distance_meters": "1936",
+      "duration_seconds": "471",
+      "eta_minutes": 8
+    }
+  },
+  "distance:674e949b00ef": {
+    "cached_at": "2026-06-05T09:30:00",
+    "data": {
+      "distance_meters": "851",
+      "duration_seconds": "311",
+      "eta_minutes": 5
+    }
+  },
+  "distance:1a3fc1b50a9b": {
+    "cached_at": "2026-06-05T09:32:33",
+    "data": {
+      "distance_meters": "3832",
+      "duration_seconds": "841",
+      "eta_minutes": 14
+    }
+  },
+  "search:40a8e986f866": {
+    "cached_at": "2026-06-05T09:46:41",
+    "data": [
+      {
+        "id": "B0FFH7KTTL",
+        "name": "兄弟小厨家常菜馆(黄河中路店)",
+        "address": "黄河中路一段277号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0L0ZAEAN2",
+        "name": "肖老板·碳火烧烤·江湖爆炒",
+        "address": "西航港街道大件路白家段996号4栋1层附42号",
+        "location": "",
+        "type": "050118",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0G13KY49G",
+        "name": "周记私房家常菜馆",
+        "address": "花红南街与西航港新街交叉口东南20米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0M6M7VV70",
+        "name": "江湖菜·烧烤·干锅(韩国城购物中心店)",
+        "address": "大件路白家段280号韩国城购物中心",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0HROCKTI4",
+        "name": "功夫小龙虾烧烤江湖菜(花天锦地店)",
+        "address": "临港路四段88号一栋附108号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0FFFW62DO",
+        "name": "宜宾江湖菜",
+        "address": "临港路四段88号花天锦地1层1-1-25室(近圣菲Town)",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0LD47Q75M",
+        "name": "食禾江湖菜馆",
+        "address": "西航港街道机场路近都段85号5栋附115号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0KAZ7BS9J",
+        "name": "刘一招豆花烤鱼",
+        "address": "珠江路600号附101号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0KRFXT7Y6",
+        "name": "星月社区食堂中餐江湖菜",
+        "address": "月星路66号12栋附12号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0JD5A5WMW",
+        "name": "金兰江湖菜(蓝光空港国际城2、3期店)",
+        "address": "珠江路600号9栋106",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0I1UA03Z0",
+        "name": "平肆江湖菜(航空港店)",
+        "address": "长江路三段17号附27号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0FFG7X2HV",
+        "name": "盐府风味中餐馆(烧烤)",
+        "address": "临港路1段25号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0L3Z51I5G",
+        "name": "炭叙江湖菜·鲜活烧烤·顺德干蒸",
+        "address": "西航港街道航空港临港路一段20号附13号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0LKM76QA7",
+        "name": "陈记江湖菜",
+        "address": "花样年家天下14栋附105号",
+        "location": "",
+        "type": "050102",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0IBFU18AG",
+        "name": "刘氏好吃嘴自贡江湖菜(邦泰·华府公馆店)",
+        "address": "泰华路184号",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0LUA7L23A",
+        "name": "江湖菜",
+        "address": "空港二路249号修正小区",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0IGU5Z6WF",
+        "name": "蛙兔鸡自贡风味·特色江湖菜(天府三街店)",
+        "address": "天府三街与南华路交叉口东120米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0MBSBDS4S",
+        "name": "荔紫苗苗鱼火锅·江湖菜(世豪广场店)",
+        "address": "南华路788号合能·璞丽",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0MB39GEMA",
+        "name": "云恒明烧烤江湖菜(石羊店)",
+        "address": "仁和街148号三元社区聚智苑",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      },
+      {
+        "id": "B0L3MULPIX",
+        "name": "莲宇砂锅江湖菜",
+        "address": "双华场一街与黄甲大道交叉口西北80米",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "江湖菜"
+      }
+    ]
+  },
+  "distance:c98e6c322f21": {
+    "cached_at": "2026-06-05T09:47:24",
+    "data": {
+      "distance_meters": "3062",
+      "duration_seconds": "856",
+      "eta_minutes": 14
+    }
+  },
+  "distance:1c19eee1b386": {
+    "cached_at": "2026-06-05T09:47:26",
+    "data": {
+      "distance_meters": "1403",
+      "duration_seconds": "560",
+      "eta_minutes": 9
+    }
+  },
+  "distance:7ae12f1d20fb": {
+    "cached_at": "2026-06-05T09:47:28",
+    "data": {
+      "distance_meters": "1397",
+      "duration_seconds": "487",
+      "eta_minutes": 8
+    }
+  },
+  "search:c31f4f612c20": {
+    "cached_at": "2026-06-05T09:50:04",
+    "data": [
+      {
+        "id": "B0L3SK1UUD",
+        "name": "大气探测博物馆(航空港校区)",
+        "address": "学府路与黄河北路交叉口西北340米",
+        "location": "",
+        "type": "140100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "博物馆"
+      },
+      {
+        "id": "B0L31OX09V",
+        "name": "天艺博物馆",
+        "address": "武侯大道三河段20号天艺村休闲庄",
+        "location": "",
+        "type": "140100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "博物馆"
+      },
+      {
+        "id": "B0KRNHKTNF",
+        "name": "龙钰博物馆",
+        "address": "簇锦街道鞋都南路139号附3栋3楼",
+        "location": "",
+        "type": "140100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "博物馆"
+      }
+    ]
+  },
+  "detail:1241beaa9fff": {
+    "cached_at": "2026-06-05T09:51:13",
+    "data": {
+      "id": "B0L31OX09V",
+      "name": "天艺博物馆",
+      "location": "104.006475,30.587675",
+      "address": "武侯大道三河段20号天艺村休闲庄",
+      "business_area": [],
+      "city": "成都市",
+      "type": "科教文化服务;博物馆;博物馆",
+      "alias": [],
+      "cost": [],
+      "opentime2": [],
+      "rating": "2.9",
+      "open_time": []
+    }
+  },
+  "detail:8a942ff165c5": {
+    "cached_at": "2026-06-05T09:51:15",
+    "data": {
+      "id": "B0KRNHKTNF",
+      "name": "龙钰博物馆",
+      "location": "103.981932,30.597588",
+      "address": "簇锦街道鞋都南路139号附3栋3楼",
+      "business_area": [],
+      "city": "成都市",
+      "type": "科教文化服务;博物馆;博物馆",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/0e799c47673182d6fe3eac2fd9fd1a82"
+      },
+      "cost": [],
+      "opentime2": [],
+      "rating": "4.0",
+      "open_time": []
+    }
+  },
+  "distance:6a73d1ddc71c": {
+    "cached_at": "2026-06-05T09:51:17",
+    "data": {
+      "distance_meters": "3272",
+      "duration_seconds": "1097",
+      "eta_minutes": 18
+    }
+  },
+  "distance:e27c255fccc1": {
+    "cached_at": "2026-06-05T09:51:20",
+    "data": {
+      "distance_meters": "2496",
+      "duration_seconds": "779",
+      "eta_minutes": 13
+    }
+  },
+  "search:b104df16b9f9": {
+    "cached_at": "2026-06-05T09:52:35",
+    "data": [
+      {
+        "id": "B0LG072FMB",
+        "name": "精灵岛主题儿童乐园",
+        "address": "大件路白家段280号韩国城购物中心",
+        "location": "",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "亲子主题乐园"
+      },
+      {
+        "id": "B0KGD7LJQD",
+        "name": "亲子主题乐园(蓝光CoCo可可摩B馆店)",
+        "address": "临港路五段与珠江路交叉口东南140米",
+        "location": "",
+        "type": "080501",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "亲子主题乐园"
+      }
+    ]
+  },
+  "search:ced363bc7eb2": {
+    "cached_at": "2026-06-05T09:52:42",
+    "data": []
   }
 }
