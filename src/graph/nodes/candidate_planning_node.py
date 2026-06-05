@@ -10,22 +10,6 @@ from src.graph.state import AgentState
 from src.model.factory import get_chat_model
 from src.utils.state_utils import _append_error
 
-# ──────────────────────────────────────────────────────────────────────────────
-# v3 重构：从"档位 + 求解器弹性填充"改为"模型估真实时长 + 求解器只收口"。
-#
-# 核心理念：
-#   - 模型对活动时长有可靠常识（剧本杀≈3h、咖啡≈1h、正餐≈1h），把这个常识用起来。
-#   - 活动：模型直接给 duration_minutes（真实估计）+ duration_flex（弹性区间）。
-#   - 餐饮：时长方差小、规则清晰，不交给模型，用固定区间 _MEAL_RANGE（按 meal_tier）。
-#   - 求解器不再"弹性拉伸填满时间"，只做三件事：
-#       1) 按模型给的时长顺序排布 + 真实通勤
-#       2) 餐饮窗口顺延（午饭 11:30~13:00、晚饭 17:30~19:00，活动顶则顺延）
-#       3) 超时收口（末段超出 end_time 时，在 flex 下限内压缩活动，再不行压末段）
-#   - "下午留了大空档"不再是求解器算不准，而是模型自己没把时段填合理 → 交 rule_validation
-#     上报 spare_gap，让模型重排（新架构下无系统偏差，repair 收敛）。
-#
-# 不变：waypoint 处理、poi_type 自动修正、幻觉 poi_id 过滤、_build_step_index、三方案兜底。
-# ──────────────────────────────────────────────────────────────────────────────
 
 _SYSTEM_PROMPT = """\
 你是本地生活行程规划助手，负责根据用户需求和候选 POI 池生成 3 个候选行程方案。
@@ -58,9 +42,8 @@ _SYSTEM_PROMPT = """\
       "title": "方案标题",
       "steps": [
         {"step_id": "step_1", "phase": "afternoon", "poi_type": "activity", "poi_id": "...", "label": "剧本杀", "duration_minutes": 180, "duration_flex": [150, 210]},
-        {"step_id": "step_2", "phase": "dinner", "poi_type": "restaurant", "poi_id": "...", "label": "晚餐", "meal_tier": "medium"}
+        {"step_id": "step_2", "phase": "dinner", "poi_type": "restaurant", "poi_id": "...", "label": "火锅晚餐", "duration_minutes": 75, "duration_flex": [60, 90]}
       ],
-      "recommendation_mode": "preference_fit",
       "reasoning": ["理由1", "理由2"]
     }
   ]
@@ -78,17 +61,15 @@ poi_type 值：activity / restaurant。
     商场逛街 90~180、酒吧/精酿小酌 60~120
 - 单个活动不要超过 240 分钟。
 
-**餐饮（poi_type=restaurant）**：分两种情况：
+**餐饮（poi_type=restaurant）**：和活动一样，填 duration_minutes + duration_flex，按你的常识估真实用餐时长（不填 meal_tier）：
+- 快餐、轻食、盖饭、面馆 → 20~45 分钟（吃得快），如 duration_minutes: 30
+- 普通正餐、家常菜 → 45~60 分钟
+- 火锅、烧烤、串串、烤肉等聚会餐 → 60~90 分钟（要坐下来涮烤聊天），如 duration_minutes: 75
+- 自助餐、大桌宴、火锅畅吃 → 90~120 分钟
+- 酒吧、小酒馆、清吧、精酿店（喝酒场所）→ 60~120 分钟，如 duration_minutes: 90
 
-普通餐厅（正餐/快餐/轻食）→ 只填 meal_tier，不填 duration_minutes：
-- "short"：快餐、轻食（约 20~45 分钟）
-- "medium"：普通正餐、火锅、串串（约 45~75 分钟）
-- "long"：自助餐、大桌宴（约 90~120 分钟）
-
-**酒吧、小酒馆、清吧、精酿店等喝酒场所** → 填 duration_minutes + duration_flex，不填 meal_tier：
-- 这类场所本质是"喝酒活动"，时长按活动估，不按快餐算
-- 典型时长：60~120 分钟，建议给 duration_minutes: 90，duration_flex: [60, 120]
-- 例：{"poi_type":"restaurant","poi_id":"...","label":"小酒馆","duration_minutes":90,"duration_flex":[60,120]}
+**重要：火锅、烧烤、串串这类聚会餐别估太短，至少 60 分钟。单顿餐饮不超过 150 分钟。**
+- 例：{"poi_type":"restaurant","poi_id":"...","label":"火锅晚餐","duration_minutes":75,"duration_flex":[60,90]}
 
 ## 你不需要计算具体时刻
 不要填 start_time / end_time。系统会根据真实通勤时间和上面的时长精确计算每个 step 的时刻。
@@ -97,8 +78,6 @@ poi_type 值：activity / restaurant。
 - 只能使用候选池中提供的 poi_id，禁止编造
 - 3 个方案的活动组合要尽量不同
 - 相似活动类型视为同一类（剧本杀/密室逃脱/桌游属于同一类），同一方案内活动不重复
-- 如果提供了历史偏好，plan_1 和 plan_2 的 recommendation_mode 设为 "preference_fit"，可以参考历史偏好生成稳妥方案；plan_3 的 recommendation_mode 设为 "exploration"，必须满足本轮用户原话和硬约束，但可以合理偏离历史偏好，提供新鲜感。
-- 历史偏好只能启发候选生成，不能覆盖本轮用户原话，不能违反明确排除项、时间、天气、距离、安全等硬约束。
 
 ## 时间段规则（phase）—— 用"窗口重叠"判断
 根据用户的开始/结束时间，判断时间窗真正覆盖了哪些时段，只为被覆盖的时段安排 step：
@@ -112,8 +91,9 @@ poi_type 值：activity / restaurant。
 ## 餐饮是必须项
 **午饭（lunch）**：时间窗跨越 11:30~13:00 时，必须安排 lunch 餐厅。用户没提午饭不代表不吃饭。
 **晚饭（dinner）**：时间窗跨越 17:30~19:00 时，必须安排 dinner 餐厅。同上。
-用户没有特别要求的情况下，午饭可以给 meal_tier="short"（快餐/轻食，节省时间）；
-晚饭通常给 meal_tier="medium" 或根据用户偏好选。
+餐厅档位按实际餐厅类型选：聚会场景的火锅/烧烤/串串用 social，
+普通正餐用 normal，只有明确的快餐轻食才用 quick。
+聚会类晚饭不要图省时间标成 quick，那样时长不合理。
 
 ## 时段覆盖自检（输出每个方案前必做，重要）
 
@@ -155,6 +135,14 @@ user_message 里会给出每个时段的可用分钟数（代码已算好）。
 - 若提供了 waypoint 但 not_found=true，在 reasoning 里说明"附近未找到XXX，已跳过"
 - waypoint step 的 phase 填它所在时段，poi_type 填 "activity"
 
+## adjust 模式（最小改动原则）
+当 user_message 包含"adjust 模式——最小改动原则"时：
+- **只改用户指定的步骤**，其余步骤的 poi_id / label / phase / duration_minutes 原样复制
+- 3 个候选方案只在被修改的那个步骤上给出不同选项（从候选池选3个不同 POI），其余步骤完全一致
+- 不要借机重排整个行程，不要替换用户没提到的步骤
+- 如果用户要新增步骤，在合适位置插入，其余不动
+- 如果用户要删除步骤，去掉对应 step，其余不动
+
 ## 其他
 - reasoning 只写 2-3 条简短理由，体现"为什么这样安排贴合用户原话"
 """
@@ -180,13 +168,10 @@ def _hhmm_to_minutes(t: str) -> int:
 
 _DEFAULT_TRAVEL = 12      # 拿不到 ETA 时的兜底通勤（分钟）
 
-# 餐饮固定时长区间（不交给模型估）。取值偏区间下限，符合"一顿饭不会太久"的直觉。
-_MEAL_RANGE: dict[str, tuple[int, int]] = {
-    "short":  (30,  45),   # 快餐/轻食/小酌
-    "medium": (45,  75),   # 普通正餐/火锅/串串
-    "long":   (90,  120),  # 自助/大桌宴
-}
-_DEFAULT_MEAL_TIER = "medium"
+# 餐饮时长 sanity 边界（餐饮和活动一样交给模型估 duration_minutes，这里只兜底裁剪离谱值）
+_MEAL_MIN = 20      # 最快的快餐也要 20min
+_MEAL_MAX = 150     # 最久的大桌宴/自助封顶 150min
+_MEAL_DEFAULT = 60  # 模型没给时长时的兜底（一顿普通正餐）
 
 # 活动时长 sanity 边界（裁剪模型给的离谱值）
 _ACTIVITY_MIN = 20
@@ -226,17 +211,13 @@ _OVERFLOW_TOLERANCE = 15   # 末段超出 end_time 15 分钟内不收口（用�
 
 def _meal_duration(step: dict) -> int:
     """
-    餐饮时长：
-    - 若 step 提供了 duration_minutes（如酒吧/小酒馆），直接用（裁剪到 sanity 边界）
-    - 否则按 meal_tier 取固定区间典型值（偏下，约下限 + 1/3 区间）
+    餐饮时长：和活动一样交给模型估 duration_minutes（模型对吃饭时长有可靠常识，
+    火锅久、快餐快），这里只做 sanity 裁剪，不再用固定档位表。
     """
-    if step.get("duration_minutes") is not None:
-        d = step["duration_minutes"]
-        if isinstance(d, (int, float)):
-            return max(_ACTIVITY_MIN, min(int(d), _ACTIVITY_MAX))
-    tier = step.get("meal_tier") or _DEFAULT_MEAL_TIER
-    lo, hi = _MEAL_RANGE.get(tier, _MEAL_RANGE[_DEFAULT_MEAL_TIER])
-    return lo + (hi - lo) // 3
+    d = step.get("duration_minutes")
+    if isinstance(d, (int, float)):
+        return max(_MEAL_MIN, min(int(d), _MEAL_MAX))
+    return _MEAL_DEFAULT
 
 
 def _activity_duration(step: dict) -> int:
@@ -272,7 +253,7 @@ def _assign_step_times(
     时刻求解器（v3）：模型给真实时长，这里只排布 + 餐饮顺延 + 超时收口，不再弹性拉伸。
 
     流程：
-      1. 确定每段时长：活动用模型的 duration_minutes（裁剪到 sanity），餐饮用 _MEAL_RANGE。
+      1. 确定每段时长：活动和餐饮都用模型给的 duration_minutes（各自裁剪到 sanity 边界）。
       2. 布局：按时长顺序排，加真实通勤；餐饮 cursor 不低于窗口下限（活动顶则顺延）；
          evening 不低于软地板 19:00。
       3. 超时收口：若末段结束超出 end_time 超过容忍值，从后往前在活动 flex 下限内压缩；
@@ -464,9 +445,6 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     errors        = list(state.get("errors") or [])
     start_time    = plan.get("start_time") or "10:00"
     replan_reason = state.get("replan_reason") or ""
-    preference_profile = state.get("user_preference_profile") or ""
-    if not isinstance(preference_profile, str):
-        preference_profile = ""
 
     raw_query = plan.get("raw_query") or state.get("user_input") or ""
 
@@ -482,7 +460,6 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         "activities_count": len(facts.get("activities") or []),
         "restaurants_count": len(facts.get("restaurants") or []),
         "eta_count":        len(facts.get("eta") or {}),
-        "has_preference_profile": bool(preference_profile.strip()),
     }, ensure_ascii=False, indent=2))
     print("=" * 108 + "\n")
 
@@ -494,6 +471,9 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     restaurants_by_id = {r["id"]: r for r in restaurants if isinstance(r, dict) and r.get("id")}
 
     waypoints: list[dict] = facts.get("waypoints") or []
+    # adjust 模式下 fact_gathering_result 可能不含 waypoints，从 state 顶层补充
+    if not waypoints:
+        waypoints = list(state.get("waypoints") or [])
     waypoints_by_id = {w["id"]: w for w in waypoints if isinstance(w, dict) and w.get("id") and not w.get("not_found")}
 
     if waypoints:
@@ -510,29 +490,6 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 
     activity_style: list = plan.get("activity_style") or []
     explicit = "、".join(activity_style) if activity_style else "（无明确点名，由你根据场景自由推荐）"
-    activity_explicit_types: list = plan.get("activity_explicit_types") or []
-    activity_explicit_search: dict = facts.get("activity_explicit_search") or {}
-    explicit = "、".join(activity_explicit_types) if activity_explicit_types else "（无明确点名，由你根据场景自由推荐）"
-    explicit_search_block = f"""\
-## 显式活动搜索结果
-{json.dumps(activity_explicit_search, ensure_ascii=False, indent=2)}
-
-规划规则：
-- 如果 matched 中有显式活动类型，候选方案不能全部忽略对应 POI。
-- 如果 missing 中有显式活动类型，说明真实搜索没有结果，可以不安排该类型。
-"""
-    preference_block = ""
-    if preference_profile.strip():
-        preference_block = f"""\
-## 历史偏好档案（只用于启发候选生成，不参与最终打分）
-{preference_profile.strip()}
-
-使用规则：
-- 本轮用户原话优先级最高。
-- plan_1 和 plan_2 可以参考历史偏好，生成稳妥方案。
-- plan_3 必须是 exploration，可以合理偏离历史偏好，提供新鲜感。
-- 历史偏好不能覆盖本轮明确需求，不能违反明确排除项、时间、天气、距离、安全等硬约束。
-"""
 
     # 计算各时段可用分钟数，传给模型用于选出时长匹配的活动
     _budgets = _calc_slot_budgets(start_time, plan.get("end_time") or "")
@@ -557,15 +514,29 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         _slot_lines.append(f"- {_lbl}（{_slot}）：可用 {_mins} 分钟 → {_gd}")
     slot_budget_hint = "\n".join(_slot_lines) if _slot_lines else "- 无需安排活动时段"
 
+    # ── adjust 模式：提取原方案供模型做最小改动 ─────────────────────────────
+    feedback_route   = state.get("feedback_route") or ""
+    feedback_summary = state.get("feedback_summary") or ""
+    original_steps_json = ""
+    if feedback_route == "adjust":
+        final_plan = state.get("final_plan_result") or {}
+        selected   = final_plan.get("selected_candidate") or {}
+        orig_steps = selected.get("steps") or []
+        if orig_steps:
+            # 只保留模型需要的字段，过滤掉 start_time/end_time（求解器会重算）
+            slim_steps = [
+                {k: v for k, v in s.items()
+                 if k not in ("start_time", "end_time")}
+                for s in orig_steps
+            ]
+            original_steps_json = json.dumps(slim_steps, ensure_ascii=False, indent=2)
+
     user_message = f"""\
 # 用户原始需求（唯一权威，请逐字理解，下面所有结构化字段仅供参考）
 「{raw_query}」
 
 请基于以上原话，判断用户想做几件事、各在什么时段、哪些是明确点名的，然后规划。
 不要预设要填满时间，段数由原话和时间窗自然决定；但完成"时段覆盖自检"，别留过大空档。
-
-{preference_block}
-{explicit_search_block}
 
 ## 用户明确点名的活动（硬约束，必须全部安排）
 - 点名活动：{explicit}
@@ -604,7 +575,6 @@ def candidate_planning_node(state: AgentState) -> AgentState:
         "id": a.get("id"), "name": a.get("name"), "type": a.get("type"),
         "environment": a.get("environment") or "unknown",
         "rating": a.get("rating"), "child_friendly": a.get("child_friendly"),
-        "explicit_activity_type": a.get("explicit_activity_type"),
     }
     for a in activities
 ], ensure_ascii=False, indent=2)}
@@ -622,12 +592,26 @@ def candidate_planning_node(state: AgentState) -> AgentState:
 {waypoint_section}
 
 请生成 3 个候选方案。活动 step 给出 duration_minutes 和 duration_flex（按你的时长常识估），
-餐饮 step 只给 meal_tier（short/medium/long）。不要填写任何具体时刻。
+餐饮 step 也给 duration_minutes 和 duration_flex（按用餐类型估，火锅/烧烤≥60分钟）。不要填写任何具体时刻。
 输出每个方案前，务必完成 system 中的"时段覆盖自检"。
 {f'''
 ## 上一轮校验失败原因（必须修正）
 {replan_reason}
-''' if replan_reason else ""}"""
+''' if replan_reason else ""}
+{f'''
+## adjust 模式——最小改动原则（重要）
+用户对当前方案的反馈：「{feedback_summary}」
+
+当前已有方案的步骤如下，请在此基础上做最小化修改：
+{original_steps_json}
+
+**规则：**
+1. 只替换用户明确指出要修改的步骤（如"把午饭换成鸡公煲"→只换 lunch 那个 step）
+2. 只新增用户明确要求新加的步骤（如"再加一个下午活动"→只插入一个新 step）
+3. 只删除用户明确要求去掉的步骤
+4. 其余所有步骤的 poi_id、label、phase、duration_minutes 原样保留，不要替换
+5. 3 个候选方案的差异只体现在被修改的那个步骤上（从候选池选不同的 POI），其余步骤完全相同
+''' if feedback_route == "adjust" and original_steps_json else ""}"""
 
     raw_candidates: list[dict] = []
     try:
@@ -686,14 +670,9 @@ def candidate_planning_node(state: AgentState) -> AgentState:
             valid_steps, start_time, plan.get("end_time") or "", facts.get("eta") or {}
         )
         index_result = _build_step_index(timed_steps, {**activities_by_id, **waypoints_by_id}, restaurants_by_id)
-        index_result = _build_step_index(timed_steps, activities_by_id, restaurants_by_id)
-        recommendation_mode = raw.get("recommendation_mode")
-        if recommendation_mode not in {"preference_fit", "exploration"}:
-            recommendation_mode = "exploration" if i == 3 else "preference_fit"
         normalized.append({
             "id":        raw.get("id") or f"plan_{i}",
             "title":     raw.get("title") or f"候选方案 {i}",
-            "recommendation_mode": recommendation_mode,
             "steps":     timed_steps,
             "reasoning": [r for r in (raw.get("reasoning") or []) if isinstance(r, str)][:3],
             **index_result,
@@ -702,7 +681,6 @@ def candidate_planning_node(state: AgentState) -> AgentState:
     while len(normalized) < 3:
         normalized.append({
             "id": f"plan_{len(normalized)+1}", "title": "", "steps": [], "timeline": [],
-            "recommendation_mode": "exploration" if len(normalized) == 2 else "preference_fit",
             "activity": {}, "secondary_activity": {}, "activities": [],
             "restaurant": {}, "restaurants": [], "reasoning": [],
         })

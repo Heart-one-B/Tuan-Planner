@@ -1,4 +1,6 @@
 #agent 工具的API
 weather_api_key: 8dc35af4bccb4ae894dd89d2bc82bffe
-amap_mcp_url: https://mcp.api-inference.modelscope.net/8b13ad9bfcde49/mcp
-default_weather_city: 北京
+amap_mcp_url: https://mcp.api-inference.modelscope.net/2676dee6db1d4e/mcp
+default_weather_city: 成都
+# true=只用本地缓存，false=调真实高德API
+amap_use_cache_only: false

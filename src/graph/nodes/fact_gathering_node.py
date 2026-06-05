@@ -200,11 +200,142 @@ def _is_explicit_activity(poi: dict, explicit_ids: set[str]) -> bool:
     return bool(poi.get("explicit_activity_type") or (pid and pid in explicit_ids))
 
 
+def _incremental_fact_gathering(state: AgentState) -> AgentState:
+    """
+    增量搜索：只搜索用户新增的关键词，结果追加到现有 POI 池，不重新搜索全量。
+    """
+    print("[Fact Gathering Node] 增量搜索模式（adjust）...")
+
+    plan = state.get("plan_context") or {}
+    errors = list(state.get("errors") or [])
+    api = CachedAmapClient()
+
+    # 复用已有的坐标和城市，不重新 geocode
+    prev_result = state.get("fact_gathering_result") or {}
+    coordinates = (plan.get("origin_coordinates") or
+                   (prev_result.get("eta") and "") or "")
+
+    # 从已有 fact_gathering_result 里拿 coordinates
+    # fact_gathering_result 里没直接存，从 eta 任意一个 poi 的 location 逆推不现实
+    # 所以重新 geocode（有缓存，几乎无开销）
+    origin_area = plan.get("origin_area") or ""
+    geo = {"city": "", "coordinates": ""}
+    try:
+        geo = api.geocode(origin_area)
+    except Exception as exc:
+        errors.append(f"Incremental geocode failed: {exc}")
+
+    city = geo.get("city") or ""
+    coordinates = geo.get("coordinates") or ""
+    radius = _RADIUS.get(plan.get("search_radius") or "medium", "5000")
+
+    # 现有池子
+    existing_activities = list(prev_result.get("activities") or state.get("activities") or [])
+    existing_restaurants = list(prev_result.get("restaurants") or state.get("restaurants") or [])
+    existing_waypoints = list(prev_result.get("waypoints") or state.get("waypoints") or [])
+    existing_eta = dict(prev_result.get("eta") or state.get("eta") or {})
+
+    existing_act_ids = {a.get("id") for a in existing_activities if a.get("id")}
+    existing_rest_ids = {r.get("id") for r in existing_restaurants if r.get("id")}
+    existing_wp_ids = {w.get("id") for w in existing_waypoints if w.get("id")}
+
+    # ── 搜索增量活动关键词 ──────────────────────────────────────────────────
+    new_act_kws = state.get("incremental_activity_keywords") or []
+    if new_act_kws and coordinates:
+        try:
+            new_acts = _collect_pois_round_robin(
+                api, new_act_kws,
+                location=coordinates, city=city, radius=radius,
+                post_process=lambda p: {**p, "environment": CachedAmapClient.infer_environment(p)},
+            )
+            added = [a for a in new_acts if a.get("id") and a["id"] not in existing_act_ids]
+            existing_activities.extend(added)
+            print(f"[Fact Gathering] 增量活动 +{len(added)} 条（关键词：{new_act_kws}）")
+        except Exception as exc:
+            errors.append(f"Incremental activity search failed: {exc}")
+
+    # ── 搜索增量餐厅关键词 ──────────────────────────────────────────────────
+    new_rest_kws = state.get("incremental_restaurant_keywords") or []
+    if new_rest_kws and coordinates:
+        try:
+            new_rests = _collect_pois_round_robin(
+                api, new_rest_kws,
+                location=coordinates, city=city, radius=radius,
+                poi_type="050000",
+            )
+            added = [r for r in new_rests if r.get("id") and r["id"] not in existing_rest_ids]
+            existing_restaurants.extend(added)
+            print(f"[Fact Gathering] 增量餐厅 +{len(added)} 条（关键词：{new_rest_kws}）")
+        except Exception as exc:
+            errors.append(f"Incremental restaurant search failed: {exc}")
+
+    # ── 搜索增量 waypoint 关键词 ────────────────────────────────────────────
+    new_wp_kws = state.get("incremental_waypoint_keywords") or []
+    if new_wp_kws and coordinates:
+        seen_wp: set[str] = set(existing_wp_ids)
+        for kw in new_wp_kws:
+            try:
+                pois = api.search_pois(kw, location=coordinates, city=city, radius=radius)
+                for poi in pois[:3]:
+                    pid = poi.get("id") or ""
+                    if pid and pid not in seen_wp:
+                        seen_wp.add(pid)
+                        poi["waypoint_keyword"] = kw
+                        poi["waypoint_raw"] = kw
+                        poi["waypoint_time_hint"] = None
+                        existing_waypoints.append(poi)
+                print(f"[Fact Gathering] 增量 waypoint '{kw}' 找到结果")
+            except Exception as exc:
+                errors.append(f"Incremental waypoint search failed for '{kw}': {exc}")
+
+    # ── 补充新 POI 的 ETA ──────────────────────────────────────────────────
+    all_new_pois = (
+            [a for a in existing_activities if a.get("id") not in existing_act_ids] +
+            [r for r in existing_restaurants if r.get("id") not in existing_rest_ids] +
+            [w for w in existing_waypoints if w.get("id") not in existing_wp_ids
+             and not w.get("not_found")]
+    )
+    if coordinates:
+        for poi in all_new_pois:
+            pid = poi.get("id") or ""
+            dest = poi.get("location") or ""
+            if not pid or not dest or pid in existing_eta:
+                continue
+            try:
+                result = api.distance(coordinates, dest)
+                if result:
+                    existing_eta[pid] = result
+            except Exception:
+                continue
+
+    # ── 更新 fact_gathering_result ─────────────────────────────────────────
+    new_fact = {
+        "weather": prev_result.get("weather") or {},
+        "activities": existing_activities,
+        "restaurants": existing_restaurants,
+        "waypoints": existing_waypoints,
+        "eta": existing_eta,
+    }
+
+    return {
+        "fact_gathering_result": new_fact,
+        "activities": existing_activities,
+        "restaurants": existing_restaurants,
+        "waypoints": existing_waypoints,
+        "eta": existing_eta,
+        "errors": errors,
+    }
+
+
 def fact_gathering_node(state: AgentState) -> AgentState:
     """
     Fact Gathering Node（最小化验证版）：检索循环改轮询，保证池子多样。
     """
     print("[Fact Gathering Node] 采集事实数据...")
+
+    feedback_route = state.get("feedback_route") or ""
+    if feedback_route == "adjust":
+        return _incremental_fact_gathering(state)
 
     plan   = state.get("plan_context") or {}
     errors = list(state.get("errors") or [])
@@ -416,9 +547,6 @@ def fact_gathering_node(state: AgentState) -> AgentState:
         "eta":         eta,
     }
 
-    print("\n" + "=" * 40 + " [FACT GATHERING RESULT] " + "=" * 40)
-    print(json.dumps(fact_gathering_result, ensure_ascii=False, indent=2))
-    print("=" * 105 + "\n")
 
     return {
         "fact_gathering_result": fact_gathering_result,
