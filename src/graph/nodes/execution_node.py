@@ -15,16 +15,7 @@ def execution_node(state: AgentState) -> AgentState:
 
     # 1. 读取确认状态，做出分路下单执行
     user_confirmed = state.get("user_confirmed", False)
-
-    # ── 修复：从 state["plan"] 取最终展示方案，而非整个 state ──
-    # state["activities"] / state["restaurant"] 是 fact_gathering 阶段的全量候选结果，
-    # 与经过评分筛选后写入 state["plan"] 的最终方案无关，直接使用 state 会导致
-    # 反馈里显示的地点与规划卡片里展示的地点不一致。
-    plan = state.get("plan") or {}
-    if not plan:
-        # 兜底：尝试从 final_plan_result.selected_candidate 取
-        final_plan_result = state.get("final_plan_result") or {}
-        plan = final_plan_result.get("selected_candidate") or {}
+    plan = state
 
     if user_confirmed is True:
         try:

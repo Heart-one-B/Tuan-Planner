@@ -239,5 +239,6 @@ def confirmation_node(state: AgentState) -> AgentState:
 
     return {
         "user_confirmed": False,
-        "final_message": "你刚才选择了不执行当前方案。本轮流程已结束；如果你愿意，我可以基于当前需求重新规划一版。",
+        "replan_reason": "用户未确认当前方案",
+        "replan_reason_type": "user_feedback",
     }

@@ -3675,5 +3675,131 @@
     ],
     "first_seen_at": "2026-06-05 17:51:15",
     "updated_at": "2026-06-05 17:51:15"
+  },
+  "B0FFHSK5NF": {
+    "poi_id": "B0FFHSK5NF",
+    "name": "巴国妹子毛肚火锅(蓝光·圣菲悦城店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "大件路白家段996号圣菲悦城4栋附27号",
+    "location": "104.001877,30.566475",
+    "distance": "",
+    "rating": "4.5",
+    "tel": "",
+    "environment": "",
+    "business_area": "天府新区",
+    "avg_price": 110,
+    "rank_label": "天府新区餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于天府新区，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体用餐节奏轻松，适合边吃边聊。",
+      "菜品选择比较丰富，适合作为行程里的正餐。"
+    ],
+    "first_seen_at": "2026-06-06 00:22:06",
+    "updated_at": "2026-06-06 00:22:06"
+  },
+  "B0LK5LVC8T": {
+    "poi_id": "B0LK5LVC8T",
+    "name": "漫夜音乐酒吧",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "泰山路与红樱路交叉口东20米",
+    "location": "103.997575,30.567075",
+    "distance": "",
+    "rating": "2.4",
+    "tel": "",
+    "environment": "outdoor",
+    "business_area": "白家",
+    "avg_price": 35,
+    "rank_label": "白家人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "户外"
+    ],
+    "highlights": [
+      "位于白家，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-06 00:22:09",
+    "updated_at": "2026-06-06 00:22:09"
+  },
+  "B0IGRMVNPJ": {
+    "poi_id": "B0IGRMVNPJ",
+    "name": "泸州酸菜豆花火锅(空港店)",
+    "poi_role": "restaurant",
+    "category": "餐饮",
+    "address": "西航港街道大件路996号4栋1层附15、16号",
+    "location": "104.001997,30.566293",
+    "distance": "",
+    "rating": "2.2",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区",
+    "avg_price": 108,
+    "rank_label": "四川天府新区餐饮推荐",
+    "photos": [],
+    "tags": [
+      "用餐",
+      "聚餐",
+      "本地餐饮"
+    ],
+    "highlights": [
+      "位于四川天府新区，适合与周边安排组合。",
+      "餐饮类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体用餐节奏轻松，适合边吃边聊。",
+      "菜品选择比较丰富，适合作为行程里的正餐。"
+    ],
+    "first_seen_at": "2026-06-06 00:22:11",
+    "updated_at": "2026-06-06 00:22:11"
+  },
+  "B0KRBXSDS9": {
+    "poi_id": "B0KRBXSDS9",
+    "name": "谜底·江安酒馆",
+    "poi_role": "activity",
+    "category": "通用",
+    "address": "川大路三段2号新世纪假日酒店7层(文星地铁站B1口旁)",
+    "location": "103.990219,30.551057",
+    "distance": "",
+    "rating": "4.0",
+    "tel": "",
+    "environment": "indoor",
+    "business_area": "双流片区",
+    "avg_price": 30,
+    "rank_label": "双流片区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松",
+      "室内"
+    ],
+    "highlights": [
+      "位于双流片区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "停留节奏灵活，可以根据现场状态调整。",
+      "整体安排比较稳妥，适合放进行程中衔接。"
+    ],
+    "first_seen_at": "2026-06-06 00:22:13",
+    "updated_at": "2026-06-06 00:22:13"
   }
 }
