@@ -329,6 +329,18 @@ def _render_html() -> str:
     .plan-prose .md-li::before{content:"·";position:absolute;left:2px;color:var(--accent);}
     .plan-prose .md-bold{font-weight:700;color:#3e3020;}
     .plan-prose .md-hr{border:none;border-top:1px solid var(--line);margin:8px 0;display:block;}
+    
+    /* ─── 推荐理由列表 ─── */
+    .reasoning-list{display:flex;flex-direction:column;gap:7px;}
+    .reasoning-item{
+      font-size:13.5px;color:#4a3d2e;line-height:1.72;
+      padding:9px 12px 9px 32px;position:relative;
+      background:rgba(185,129,47,.06);border-radius:10px;
+      border-left:3px solid rgba(185,129,47,.40);
+    }
+    .reasoning-item::before{
+      content:"💡";position:absolute;left:8px;top:9px;font-size:13px;
+    }
 
     /* ─── 确认按钮栏 ─── */
     .confirm-wrap{display:flex;flex-direction:column;gap:10px;}
@@ -768,8 +780,12 @@ def _render_html() -> str:
     const detailText = S['地点详情'] || '';
     // 方案说明
     const explainText= S['方案说明'] || '';
+    // 推荐理由来自 session.plan.reasoning（规划节点附带的选取理由列表）
+    const reasoningList = (session.plan && Array.isArray(session.plan.reasoning))
+      ? session.plan.reasoning.filter(r => typeof r === 'string' && r.trim())
+      : [];
 
-    if(!flowText && !detailText && !explainText){ appendAI(raw); return; }
+    if(!flowText && !detailText && !explainText && reasoningList.length === 0){ appendAI(raw); return; }
 
     let sn = 0;
     let html = '<div class="plan-wrap">';
@@ -792,6 +808,19 @@ def _render_html() -> str:
           <span class="plan-sec-title">推荐游玩流程</span>
         </div>
         ${renderTimeline(flowText)}
+      </div>`;
+    }
+
+    if(reasoningList.length > 0){
+      sn++;
+      html += `<div class="plan-sec">
+        <div class="plan-sec-hd">
+          <span class="plan-sec-badge">${sn}</span>
+          <span class="plan-sec-title">推荐理由</span>
+        </div>
+        <div class="reasoning-list">
+          ${reasoningList.map(r => `<div class="reasoning-item">${esc(r)}</div>`).join('')}
+        </div>
       </div>`;
     }
 
