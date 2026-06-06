@@ -171,7 +171,7 @@ _SYSTEM_PROMPT = """\
 is_leisure_planning=true 时，按优先级检查：
 1. scenario 为 unknown → "scenario"
 2. date_label 为 null → "time_day"
-3. date_label 不为 null 但 start_time 为 null → "time_window"
+3. date_label 不为 null 但 start_time 为 null 或 end_time 为 null → "time_window"
 4. origin_area_hint 为 null → "origin_area"
 5. people_count 经推断后仍为 null → "people_count"
 
