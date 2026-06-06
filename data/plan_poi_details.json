@@ -3676,6 +3676,68 @@
     "first_seen_at": "2026-06-05 17:51:15",
     "updated_at": "2026-06-05 17:51:15"
   },
+  "B0FFI1W7J6": {
+    "poi_id": "B0FFI1W7J6",
+    "name": "宾丽量贩ktv",
+    "poi_role": "activity",
+    "category": "KTV",
+    "address": "大件路白家段280号1栋麦当劳旁边",
+    "location": "104.009623,30.568161",
+    "distance": "",
+    "rating": "3.8",
+    "tel": "",
+    "environment": "unknown",
+    "business_area": "双流片区",
+    "avg_price": 56,
+    "rank_label": "双流片区KTV推荐",
+    "photos": [],
+    "tags": [
+      "KTV",
+      "唱歌",
+      "朋友小聚"
+    ],
+    "highlights": [
+      "位于双流片区，适合与周边安排组合。",
+      "KTV类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "下午档安排比较轻松，唱歌聊天都合适。",
+      "包间私密性较好，适合朋友小聚。"
+    ],
+    "first_seen_at": "2026-06-06 10:58:44",
+    "updated_at": "2026-06-06 10:58:44"
+  },
+  "B0H2BAJGG5": {
+    "poi_id": "B0H2BAJGG5",
+    "name": "秦嬢串串",
+    "poi_role": "restaurant",
+    "category": "通用",
+    "address": "川大南路一段216号",
+    "location": "104.005149,30.548460",
+    "distance": "",
+    "rating": "4.3",
+    "tel": "",
+    "environment": "",
+    "business_area": "四川天府新区成都直管区",
+    "avg_price": 53,
+    "rank_label": "四川天府新区成都直管区人气推荐",
+    "photos": [],
+    "tags": [
+      "休闲",
+      "本地生活",
+      "轻松"
+    ],
+    "highlights": [
+      "位于四川天府新区成都直管区，适合与周边安排组合。",
+      "通用类型适合放入本次休闲计划。"
+    ],
+    "reviews": [
+      "整体安排比较稳妥，适合放进行程中衔接。",
+      "停留节奏灵活，可以根据现场状态调整。"
+    ],
+    "first_seen_at": "2026-06-06 11:00:36",
+    "updated_at": "2026-06-06 11:00:36"
+  },
   "B0FFHSK5NF": {
     "poi_id": "B0FFHSK5NF",
     "name": "巴国妹子毛肚火锅(蓝光·圣菲悦城店)",
@@ -3704,40 +3766,8 @@
       "整体用餐节奏轻松，适合边吃边聊。",
       "菜品选择比较丰富，适合作为行程里的正餐。"
     ],
-    "first_seen_at": "2026-06-06 00:22:06",
-    "updated_at": "2026-06-06 00:22:06"
-  },
-  "B0LK5LVC8T": {
-    "poi_id": "B0LK5LVC8T",
-    "name": "漫夜音乐酒吧",
-    "poi_role": "activity",
-    "category": "通用",
-    "address": "泰山路与红樱路交叉口东20米",
-    "location": "103.997575,30.567075",
-    "distance": "",
-    "rating": "2.4",
-    "tel": "",
-    "environment": "outdoor",
-    "business_area": "白家",
-    "avg_price": 35,
-    "rank_label": "白家人气推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松",
-      "户外"
-    ],
-    "highlights": [
-      "位于白家，适合与周边安排组合。",
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "停留节奏灵活，可以根据现场状态调整。",
-      "整体安排比较稳妥，适合放进行程中衔接。"
-    ],
-    "first_seen_at": "2026-06-06 00:22:09",
-    "updated_at": "2026-06-06 00:22:09"
+    "first_seen_at": "2026-06-06 11:18:59",
+    "updated_at": "2026-06-06 11:18:59"
   },
   "B0IGRMVNPJ": {
     "poi_id": "B0IGRMVNPJ",
@@ -3767,39 +3797,7 @@
       "整体用餐节奏轻松，适合边吃边聊。",
       "菜品选择比较丰富，适合作为行程里的正餐。"
     ],
-    "first_seen_at": "2026-06-06 00:22:11",
-    "updated_at": "2026-06-06 00:22:11"
-  },
-  "B0KRBXSDS9": {
-    "poi_id": "B0KRBXSDS9",
-    "name": "谜底·江安酒馆",
-    "poi_role": "activity",
-    "category": "通用",
-    "address": "川大路三段2号新世纪假日酒店7层(文星地铁站B1口旁)",
-    "location": "103.990219,30.551057",
-    "distance": "",
-    "rating": "4.0",
-    "tel": "",
-    "environment": "indoor",
-    "business_area": "双流片区",
-    "avg_price": 30,
-    "rank_label": "双流片区人气推荐",
-    "photos": [],
-    "tags": [
-      "休闲",
-      "本地生活",
-      "轻松",
-      "室内"
-    ],
-    "highlights": [
-      "位于双流片区，适合与周边安排组合。",
-      "通用类型适合放入本次休闲计划。"
-    ],
-    "reviews": [
-      "停留节奏灵活，可以根据现场状态调整。",
-      "整体安排比较稳妥，适合放进行程中衔接。"
-    ],
-    "first_seen_at": "2026-06-06 00:22:13",
-    "updated_at": "2026-06-06 00:22:13"
+    "first_seen_at": "2026-06-06 11:19:02",
+    "updated_at": "2026-06-06 11:19:02"
   }
 }
