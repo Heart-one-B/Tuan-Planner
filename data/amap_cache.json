@@ -9,13 +9,13 @@
     }
   },
   "weather:14bf5c897776": {
-    "cached_at": "2026-06-05T09:19:26",
+    "cached_at": "2026-06-06T02:57:24",
     "data": {
       "city": "成都",
-      "day_weather": "多云",
-      "day_temp": "33",
-      "day_wind": "西南风",
-      "humidity": "39"
+      "day_weather": "晴",
+      "day_temp": "32",
+      "day_wind": "东风",
+      "humidity": "47"
     }
   },
   "search:943e8819494e": {
@@ -2585,26 +2585,26 @@
     }
   },
   "distance:bff6542b1486": {
-    "cached_at": "2026-06-05T08:34:14",
+    "cached_at": "2026-06-06T02:58:02",
     "data": {
       "distance_meters": "2569",
-      "duration_seconds": "510",
-      "eta_minutes": 8
+      "duration_seconds": "538",
+      "eta_minutes": 9
     }
   },
   "distance:35d19e507828": {
-    "cached_at": "2026-06-05T08:34:16",
+    "cached_at": "2026-06-06T02:58:04",
     "data": {
       "distance_meters": "1457",
-      "duration_seconds": "290",
-      "eta_minutes": 5
+      "duration_seconds": "393",
+      "eta_minutes": 7
     }
   },
   "distance:2ce0732911b3": {
-    "cached_at": "2026-06-05T08:34:18",
+    "cached_at": "2026-06-06T02:58:06",
     "data": {
       "distance_meters": "2963",
-      "duration_seconds": "593",
+      "duration_seconds": "615",
       "eta_minutes": 10
     }
   },
@@ -10880,50 +10880,54 @@
     ]
   },
   "search:9ac5f2b22bfc": {
-    "cached_at": "2026-06-04T02:54:36",
+    "cached_at": "2026-06-06T03:00:05",
     "data": [
       {
         "id": "B0LUUHBCAX",
         "name": "板房老串串(泰山路店)",
         "address": "泰山南路63号附32-34",
-        "location": "103.999957,30.566181",
+        "location": "",
         "type": "070000",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
         "id": "B0FFI0R5EE",
         "name": "五味缘钢管厂小郡肝串串香(蓝光圣菲悦城店)",
         "address": "大件路白家段996号4栋附8号",
-        "location": "104.002011,30.566196",
+        "location": "",
         "type": "050117",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
         "id": "B0LDPC1EJU",
         "name": "川小厨•猪油面",
         "address": "泰山路59号",
-        "location": "103.999903,30.566492",
+        "location": "",
         "type": "050102",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
         "id": "B0LGF5NFN5",
         "name": "刘小禾手提串串",
         "address": "泰山路一街47号",
-        "location": "103.999813,30.566836",
+        "location": "",
         "type": "050100",
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -10935,6 +10939,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -10946,6 +10951,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -10957,6 +10963,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -10968,6 +10975,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -10979,6 +10987,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -10990,6 +10999,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11001,6 +11011,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11012,6 +11023,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11023,6 +11035,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11034,6 +11047,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11045,6 +11059,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11056,6 +11071,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11067,6 +11083,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11078,6 +11095,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11089,6 +11107,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       },
       {
@@ -11100,6 +11119,7 @@
         "rating": "",
         "distance": "",
         "tel": "",
+        "business_area": "",
         "keyword_source": "串串"
       }
     ]
@@ -11335,67 +11355,67 @@
     }
   },
   "distance:0c591a8704f8": {
-    "cached_at": "2026-06-05T08:33:31",
+    "cached_at": "2026-06-06T02:57:28",
     "data": {
       "distance_meters": "2891",
-      "duration_seconds": "579",
-      "eta_minutes": 10
+      "duration_seconds": "563",
+      "eta_minutes": 9
     }
   },
   "distance:9b5881bf90a7": {
-    "cached_at": "2026-06-05T08:33:33",
+    "cached_at": "2026-06-06T02:57:31",
     "data": {
       "distance_meters": "3417",
-      "duration_seconds": "775",
-      "eta_minutes": 13
+      "duration_seconds": "734",
+      "eta_minutes": 12
     }
   },
   "distance:3d795a41bf70": {
-    "cached_at": "2026-06-05T08:33:35",
+    "cached_at": "2026-06-06T02:57:34",
     "data": {
       "distance_meters": "3989",
-      "duration_seconds": "851",
+      "duration_seconds": "820",
       "eta_minutes": 14
     }
   },
   "distance:01a99e1e8b16": {
-    "cached_at": "2026-06-05T08:33:50",
+    "cached_at": "2026-06-06T02:57:49",
     "data": {
       "distance_meters": "2878",
-      "duration_seconds": "575",
-      "eta_minutes": 10
+      "duration_seconds": "551",
+      "eta_minutes": 9
     }
   },
   "distance:852641f13ccf": {
-    "cached_at": "2026-06-05T08:33:52",
+    "cached_at": "2026-06-06T02:57:51",
     "data": {
       "distance_meters": "2885",
-      "duration_seconds": "627",
-      "eta_minutes": 10
+      "duration_seconds": "658",
+      "eta_minutes": 11
     }
   },
   "distance:693d5a788825": {
-    "cached_at": "2026-06-05T08:33:54",
+    "cached_at": "2026-06-06T02:57:53",
     "data": {
       "distance_meters": "3818",
-      "duration_seconds": "743",
+      "duration_seconds": "717",
       "eta_minutes": 12
     }
   },
   "distance:a1f291b81891": {
-    "cached_at": "2026-06-05T08:33:43",
+    "cached_at": "2026-06-06T02:57:36",
     "data": {
       "distance_meters": "1637",
-      "duration_seconds": "381",
+      "duration_seconds": "375",
       "eta_minutes": 6
     }
   },
   "distance:1e32ae617777": {
-    "cached_at": "2026-06-05T08:33:45",
+    "cached_at": "2026-06-06T02:57:39",
     "data": {
       "distance_meters": "2519",
-      "duration_seconds": "504",
-      "eta_minutes": 8
+      "duration_seconds": "533",
+      "eta_minutes": 9
     }
   },
   "distance:a54f3499f6c8": {
@@ -11427,27 +11447,27 @@
     }
   },
   "distance:affb70cf6af4": {
-    "cached_at": "2026-06-05T08:33:56",
+    "cached_at": "2026-06-06T02:58:08",
     "data": {
       "distance_meters": "2930",
-      "duration_seconds": "576",
+      "duration_seconds": "608",
       "eta_minutes": 10
     }
   },
   "distance:5f8d9114dcdd": {
-    "cached_at": "2026-06-05T08:47:10",
+    "cached_at": "2026-06-06T02:58:10",
     "data": {
       "distance_meters": "2927",
-      "duration_seconds": "619",
+      "duration_seconds": "617",
       "eta_minutes": 10
     }
   },
   "distance:93f3231bd696": {
-    "cached_at": "2026-06-05T09:19:41",
+    "cached_at": "2026-06-06T02:58:12",
     "data": {
       "distance_meters": "2888",
-      "duration_seconds": "759",
-      "eta_minutes": 13
+      "duration_seconds": "611",
+      "eta_minutes": 10
     }
   },
   "search:7d7cd10374dd": {
@@ -12463,43 +12483,43 @@
     }
   },
   "distance:639d9a74edf7": {
-    "cached_at": "2026-06-05T08:33:37",
+    "cached_at": "2026-06-06T02:57:43",
     "data": {
       "distance_meters": "3557",
-      "duration_seconds": "763",
-      "eta_minutes": 13
+      "duration_seconds": "744",
+      "eta_minutes": 12
     }
   },
   "distance:12841b003852": {
-    "cached_at": "2026-06-05T08:33:39",
+    "cached_at": "2026-06-06T02:57:45",
     "data": {
       "distance_meters": "5651",
-      "duration_seconds": "982",
+      "duration_seconds": "964",
       "eta_minutes": 16
     }
   },
   "distance:a0f40a406823": {
-    "cached_at": "2026-06-05T08:33:41",
+    "cached_at": "2026-06-06T02:57:47",
     "data": {
       "distance_meters": "6382",
-      "duration_seconds": "1106",
+      "duration_seconds": "1057",
       "eta_minutes": 18
     }
   },
   "distance:1c15988fa49f": {
-    "cached_at": "2026-06-05T08:47:16",
+    "cached_at": "2026-06-06T03:18:28",
     "data": {
       "distance_meters": "5193",
-      "duration_seconds": "990",
-      "eta_minutes": 16
+      "duration_seconds": "897",
+      "eta_minutes": 15
     }
   },
   "distance:f41d98072903": {
-    "cached_at": "2026-06-05T08:47:19",
+    "cached_at": "2026-06-06T03:18:30",
     "data": {
       "distance_meters": "6331",
-      "duration_seconds": "1138",
-      "eta_minutes": 19
+      "duration_seconds": "1082",
+      "eta_minutes": 18
     }
   },
   "distance:8fe1f688c650": {
@@ -13852,34 +13872,34 @@
     }
   },
   "distance:3ade32304ffb": {
-    "cached_at": "2026-06-05T08:47:12",
+    "cached_at": "2026-06-06T03:16:41",
     "data": {
       "distance_meters": "2870",
-      "duration_seconds": "588",
-      "eta_minutes": 10
+      "duration_seconds": "527",
+      "eta_minutes": 9
     }
   },
   "distance:1401abdf58d5": {
-    "cached_at": "2026-06-05T08:34:08",
+    "cached_at": "2026-06-06T02:57:55",
     "data": {
       "distance_meters": "2456",
-      "duration_seconds": "488",
-      "eta_minutes": 8
+      "duration_seconds": "517",
+      "eta_minutes": 9
     }
   },
   "distance:a6a53133a698": {
-    "cached_at": "2026-06-05T08:34:10",
+    "cached_at": "2026-06-06T02:57:57",
     "data": {
       "distance_meters": "3287",
-      "duration_seconds": "673",
-      "eta_minutes": 11
+      "duration_seconds": "694",
+      "eta_minutes": 12
     }
   },
   "distance:5c904c3b9eac": {
-    "cached_at": "2026-06-05T08:34:12",
+    "cached_at": "2026-06-06T02:57:59",
     "data": {
       "distance_meters": "2817",
-      "duration_seconds": "595",
+      "duration_seconds": "610",
       "eta_minutes": 10
     }
   },
@@ -17250,10 +17270,10 @@
     }
   },
   "distance:16e23f484795": {
-    "cached_at": "2026-06-05T08:33:47",
+    "cached_at": "2026-06-06T02:57:41",
     "data": {
       "distance_meters": "3030",
-      "duration_seconds": "610",
+      "duration_seconds": "625",
       "eta_minutes": 10
     }
   },
@@ -25041,27 +25061,27 @@
     }
   },
   "distance:2a99a3b740c2": {
-    "cached_at": "2026-06-05T09:19:33",
+    "cached_at": "2026-06-05T15:49:50",
     "data": {
       "distance_meters": "1606",
-      "duration_seconds": "654",
-      "eta_minutes": 11
+      "duration_seconds": "350",
+      "eta_minutes": 6
     }
   },
   "distance:641665f9ef0a": {
-    "cached_at": "2026-06-05T09:19:36",
+    "cached_at": "2026-06-05T15:49:53",
     "data": {
       "distance_meters": "2485",
-      "duration_seconds": "664",
-      "eta_minutes": 11
+      "duration_seconds": "436",
+      "eta_minutes": 7
     }
   },
   "distance:981485dbfbb8": {
-    "cached_at": "2026-06-05T09:19:38",
+    "cached_at": "2026-06-05T15:49:55",
     "data": {
       "distance_meters": "2820",
-      "duration_seconds": "799",
-      "eta_minutes": 13
+      "duration_seconds": "517",
+      "eta_minutes": 9
     }
   },
   "search:4617f0e07a54": {
@@ -25079,7 +25099,7 @@
         "business_area": "",
         "keyword_source": "DQ",
         "waypoint_keyword": "DQ",
-        "waypoint_raw": "想吃DQ",
+        "waypoint_raw": "DQ",
         "waypoint_time_hint": null
       },
       {
@@ -25094,7 +25114,7 @@
         "business_area": "",
         "keyword_source": "DQ",
         "waypoint_keyword": "DQ",
-        "waypoint_raw": "想吃DQ",
+        "waypoint_raw": "DQ",
         "waypoint_time_hint": null
       }
     ]
@@ -25132,11 +25152,11 @@
     }
   },
   "distance:3a21abcea098": {
-    "cached_at": "2026-06-05T03:25:58",
+    "cached_at": "2026-06-05T15:58:04",
     "data": {
       "distance_meters": "2771",
-      "duration_seconds": "595",
-      "eta_minutes": 10
+      "duration_seconds": "502",
+      "eta_minutes": 8
     }
   },
   "search:7d1db3459f82": {
@@ -25193,10 +25213,10 @@
     }
   },
   "distance:6aeb32980eb3": {
-    "cached_at": "2026-06-05T08:35:17",
+    "cached_at": "2026-06-06T03:17:17",
     "data": {
       "distance_meters": "3115",
-      "duration_seconds": "555",
+      "duration_seconds": "562",
       "eta_minutes": 9
     }
   },
@@ -25832,11 +25852,11 @@
     }
   },
   "distance:429854d290a9": {
-    "cached_at": "2026-06-05T08:41:14",
+    "cached_at": "2026-06-06T03:00:41",
     "data": {
       "distance_meters": "3540",
-      "duration_seconds": "740",
-      "eta_minutes": 12
+      "duration_seconds": "675",
+      "eta_minutes": 11
     }
   },
   "distance:ef659ca0c064": {
@@ -25872,10 +25892,10 @@
     }
   },
   "distance:e4577c02fb4d": {
-    "cached_at": "2026-06-05T08:48:39",
+    "cached_at": "2026-06-06T02:58:56",
     "data": {
       "distance_meters": "2421",
-      "duration_seconds": "484",
+      "duration_seconds": "469",
       "eta_minutes": 8
     }
   },
@@ -26247,7 +26267,7 @@
         "id": "B0FFICNL2J",
         "name": "晋氏烧烤(蓝光·圣菲悦城店)",
         "address": "大件路白家段996号蓝光·圣菲悦城一期",
-        "location": "",
+        "location": "104.001262,30.566833",
         "type": "050000",
         "rating": "",
         "distance": "",
@@ -26259,7 +26279,7 @@
         "id": "B0L0ZAEAN2",
         "name": "肖老板·碳火烧烤·江湖爆炒",
         "address": "西航港街道大件路白家段996号4栋1层附42号",
-        "location": "",
+        "location": "104.001262,30.567030",
         "type": "050118",
         "rating": "",
         "distance": "",
@@ -26271,7 +26291,7 @@
         "id": "B0M6FSYIYB",
         "name": "朴社长地毯烤肉",
         "address": "泰山南路与泰山路交叉口南40米",
-        "location": "",
+        "location": "103.999649,30.567209",
         "type": "050000",
         "rating": "",
         "distance": "",
@@ -26512,27 +26532,27 @@
     }
   },
   "distance:04d8a868bb55": {
-    "cached_at": "2026-06-05T09:28:50",
+    "cached_at": "2026-06-06T02:58:14",
     "data": {
       "distance_meters": "2807",
-      "duration_seconds": "664",
-      "eta_minutes": 11
+      "duration_seconds": "615",
+      "eta_minutes": 10
     }
   },
   "distance:18f6e5c7b81b": {
-    "cached_at": "2026-06-05T09:28:52",
+    "cached_at": "2026-06-06T02:58:16",
     "data": {
       "distance_meters": "2793",
-      "duration_seconds": "657",
-      "eta_minutes": 11
+      "duration_seconds": "608",
+      "eta_minutes": 10
     }
   },
   "distance:d270f83802b8": {
-    "cached_at": "2026-06-05T09:28:54",
+    "cached_at": "2026-06-06T02:58:18",
     "data": {
       "distance_meters": "2860",
-      "duration_seconds": "657",
-      "eta_minutes": 11
+      "duration_seconds": "603",
+      "eta_minutes": 10
     }
   },
   "distance:c8f81d63d916": {
@@ -26829,10 +26849,10 @@
     }
   },
   "distance:7ae12f1d20fb": {
-    "cached_at": "2026-06-05T09:47:28",
+    "cached_at": "2026-06-06T03:17:14",
     "data": {
       "distance_meters": "1397",
-      "duration_seconds": "487",
+      "duration_seconds": "459",
       "eta_minutes": 8
     }
   },
@@ -26963,5 +26983,362 @@
   "search:ced363bc7eb2": {
     "cached_at": "2026-06-05T09:52:42",
     "data": []
+  },
+  "distance:be8c4b618d63": {
+    "cached_at": "2026-06-05T15:51:17",
+    "data": {
+      "distance_meters": "7462",
+      "duration_seconds": "1093",
+      "eta_minutes": 18
+    }
+  },
+  "distance:1d9a80e4a9c1": {
+    "cached_at": "2026-06-05T15:51:19",
+    "data": {
+      "distance_meters": "5583",
+      "duration_seconds": "893",
+      "eta_minutes": 15
+    }
+  },
+  "search:bd30f067596c": {
+    "cached_at": "2026-06-05T15:57:10",
+    "data": [
+      {
+        "id": "B0J3THJ68W",
+        "name": "盒子Club",
+        "address": "川大南路一段27号",
+        "location": "104.005554,30.552509",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0L0MR9M0R",
+        "name": "蓝光bar",
+        "address": "蓝光BRC圣菲TOWN城1号门旁",
+        "location": "104.002775,30.566375",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0KA91MCV1",
+        "name": "酒遇知己小酒馆",
+        "address": "大件路白家段996号附2029号",
+        "location": "104.001475,30.566825",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0LA59SSMI",
+        "name": "浪语小酒馆",
+        "address": "大件路白家段996号蓝光·圣菲悦城一期",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0LK5LVC8T",
+        "name": "漫夜音乐酒吧",
+        "address": "泰山路与红樱路交叉口东20米",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0IKO7765U",
+        "name": "酿佰汇酒库",
+        "address": "泰山路60号附33号(谢家渡地铁站A1口步行370米)",
+        "location": "",
+        "type": "061210",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0KRBXSDS9",
+        "name": "谜底·江安酒馆",
+        "address": "川大路三段2号新世纪假日酒店7层(文星地铁站B1口旁)",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0LDA7MAWE",
+        "name": "醺谷Bar",
+        "address": "川大路三段108号26栋附8号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0LKKLP49Y",
+        "name": "CONTINUE",
+        "address": "川大路三段与蜀星路交叉口北260米",
+        "location": "",
+        "type": "080000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0J1VM8764",
+        "name": "酒肆人间小酒馆(金色校园广场店)",
+        "address": "西航港街道长城路二段499号金色校园广场4栋302室",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0I15DUL0O",
+        "name": "夜语KTV酒吧",
+        "address": "蜀星路与蜀龙街交叉口北80米",
+        "location": "",
+        "type": "080302",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0LBZCOLIP",
+        "name": "夕阳醉了酒馆",
+        "address": "西航港街道临港路三段58号附五号一层",
+        "location": "",
+        "type": "050100",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0IU3AJAIT",
+        "name": "川G精酿啤酒(航空港店)",
+        "address": "临港路四段200号15栋附106号",
+        "location": "",
+        "type": "050600",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0IUJZFN9J",
+        "name": "谣小屋民谣酒馆(空港店)",
+        "address": "临港路四段200号14栋附119号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0L6AA03VO",
+        "name": "若初见·音乐酒吧(双流空港店)",
+        "address": "西航港街道大件路白家段280号3栋4层",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0K0MRG5T5",
+        "name": "ADC CLUB(成都旗舰店)",
+        "address": "大件路白家段280号韩国城购物中心",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0KU2DYDK2",
+        "name": "集体失眠·夜咖啡&鸡尾酒吧(蓝光空港T-MAX店)",
+        "address": "西航港街道临港路四段200号10栋附112号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0LANLY2L2",
+        "name": "南湾酒馆",
+        "address": "蓝光空港国际城T-MAX",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0JUZL6TBC",
+        "name": "FUN肆·营地酒吧",
+        "address": "西航港街道锦华路一段111号1栋-3号",
+        "location": "",
+        "type": "080304",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      },
+      {
+        "id": "B0I6A724YC",
+        "name": "优布劳精酿酒馆(韩国城店)",
+        "address": "临港路四段88号2栋附104号",
+        "location": "",
+        "type": "050000",
+        "rating": "",
+        "distance": "",
+        "tel": "",
+        "business_area": "",
+        "keyword_source": "酒馆"
+      }
+    ]
+  },
+  "distance:58be267c83cd": {
+    "cached_at": "2026-06-06T02:58:52",
+    "data": {
+      "distance_meters": "3023",
+      "duration_seconds": "616",
+      "eta_minutes": 10
+    }
+  },
+  "distance:5e3ad642689f": {
+    "cached_at": "2026-06-05T15:58:02",
+    "data": {
+      "distance_meters": "1396",
+      "duration_seconds": "437",
+      "eta_minutes": 7
+    }
+  },
+  "distance:620b8baedefa": {
+    "cached_at": "2026-06-06T02:58:54",
+    "data": {
+      "distance_meters": "3029",
+      "duration_seconds": "549",
+      "eta_minutes": 9
+    }
+  },
+  "distance:779bf3151292": {
+    "cached_at": "2026-06-06T03:00:39",
+    "data": {
+      "distance_meters": "1363",
+      "duration_seconds": "477",
+      "eta_minutes": 8
+    }
+  },
+  "search:10f57e99b499": {
+    "cached_at": "2026-06-06T03:16:38",
+    "data": []
+  },
+  "detail:1588241fb4ff": {
+    "cached_at": "2026-06-06T03:18:59",
+    "data": {
+      "id": "B0FFHSK5NF",
+      "name": "巴国妹子毛肚火锅(蓝光·圣菲悦城店)",
+      "location": "104.001877,30.566475",
+      "address": "大件路白家段996号圣菲悦城4栋附27号",
+      "business_area": "天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;火锅店",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "http://store.is.autonavi.com/showpic/c36b38c4f9977b3d81b0cac522c4b96a"
+      },
+      "cost": "106.00",
+      "opentime2": "周一至周日 09:00-24:00 2026-02-10至2026-03-04 周一至周日 09:00-23:30",
+      "rating": "4.5",
+      "open_time": "09:00-24:00 09:00-23:30",
+      "meal_ordering": "0"
+    }
+  },
+  "detail:b36466c5a1a6": {
+    "cached_at": "2026-06-06T03:19:02",
+    "data": {
+      "id": "B0IGRMVNPJ",
+      "name": "泸州酸菜豆花火锅(空港店)",
+      "location": "104.001997,30.566293",
+      "address": "西航港街道大件路996号4栋1层附15、16号",
+      "business_area": "四川天府新区",
+      "city": "成都市",
+      "type": "餐饮服务;中餐厅;火锅店",
+      "alias": [],
+      "photos": {
+        "title": [],
+        "url": "https://store.is.autonavi.com/showpic/cf46dcf50864e3e3b9f22b1c94e24080"
+      },
+      "cost": "42.00",
+      "opentime2": "周一至周日 10:00-22:00",
+      "rating": "2.2",
+      "open_time": "10:00-22:00",
+      "meal_ordering": "0"
+    }
+  },
+  "distance:f7567ff6ae86": {
+    "cached_at": "2026-06-06T03:19:04",
+    "data": {
+      "distance_meters": "4175",
+      "duration_seconds": "784",
+      "eta_minutes": 13
+    }
+  },
+  "distance:4e4294bee7eb": {
+    "cached_at": "2026-06-06T03:19:07",
+    "data": {
+      "distance_meters": "4396",
+      "duration_seconds": "756",
+      "eta_minutes": 13
+    }
   }
 }

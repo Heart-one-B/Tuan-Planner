@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import html
 import uuid
 from typing import Any
 
@@ -23,7 +22,7 @@ class CreateSessionRequest(BaseModel):
 
 
 class ClarifySessionRequest(BaseModel):
-    user_reply: str = Field(min_length=1, description="针对系统追问的回复")
+    user_reply: str = Field(min_length=1, description="针对系统追问的回复，或方案完成后的后续输入")
 
 
 class ConfirmSessionRequest(BaseModel):
@@ -32,6 +31,10 @@ class ConfirmSessionRequest(BaseModel):
 
 SESSIONS: dict[str, dict[str, Any]] = {}
 
+
+# ---------------------------------------------------------------------------
+# 后端辅助函数
+# ---------------------------------------------------------------------------
 
 def _thread_config(session_id: str) -> dict[str, Any]:
     return {"configurable": {"thread_id": session_id}}
@@ -56,15 +59,15 @@ def _capture_latest_state(session_id: str) -> dict[str, Any]:
 
 
 def _status_from_state(state: dict[str, Any]) -> str:
-  if state.get("execution_result"):
-    return "completed"
-  if state.get("final_message") or state.get("llm_answer"):
-    return "completed"
-  if state.get("pending_clarification"):
-    return "awaiting_clarification"
-  if state.get("pending_confirmation"):
-    return "awaiting_confirmation"
-  return "running"
+    if state.get("execution_result"):
+        return "completed"
+    if state.get("final_message") or state.get("llm_answer"):
+        return "completed"
+    if state.get("pending_clarification"):
+        return "awaiting_clarification"
+    if state.get("pending_confirmation"):
+        return "awaiting_confirmation"
+    return "running"
 
 
 def _store_session(session_id: str, state: dict[str, Any]) -> dict[str, Any]:
@@ -77,6 +80,7 @@ def _store_session(session_id: str, state: dict[str, Any]) -> dict[str, Any]:
         "pending_clarification": state.get("pending_clarification") or "",
         "pending_confirmation": state.get("pending_confirmation") or {},
         "final_message": state.get("final_message") or "",
+        "llm_answer": state.get("llm_answer") or "",
         "execution_result": state.get("execution_result") or {},
     }
     SESSIONS[session_id] = session
@@ -90,10 +94,28 @@ def _run_planning(session_id: str, user_input: str) -> dict[str, Any]:
 
 
 def _resume_with_reply(session_id: str, user_reply: str) -> dict[str, Any]:
-    workflow_app.invoke(
-        Command(resume=None, update={"user_reply": user_reply}),
-        config=_thread_config(session_id),
-    )
+    """
+    处理用户的后续输入，分两种情况：
+    1. 图还在挂起（clarification/confirmation 中断点）→ 用 Command resume 恢复
+    2. 图已完成（走到 END）→ 注入新 user_input 重新从 feedback_router 跑，
+       feedback_router 会自动判断是 adjust / new_plan / chat
+    """
+    config = _thread_config(session_id)
+    snapshot = workflow_app.get_state(config)
+
+    if snapshot and snapshot.next:
+        # 图还在挂起，用 Command resume
+        workflow_app.invoke(
+            Command(resume=None, update={"user_reply": user_reply}),
+            config=config,
+        )
+    else:
+        # 图已完成，直接注入新 user_input 重新跑
+        workflow_app.invoke(
+            {"user_input": user_reply},
+            config=config,
+        )
+
     state = _capture_latest_state(session_id)
     return _store_session(session_id, state)
 
@@ -102,18 +124,14 @@ def _run_confirmation(session_id: str, confirmed: bool) -> dict[str, Any]:
     session = SESSIONS.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-
     state = dict(session.get("state") or {})
     state["user_confirmed"] = confirmed
     state["web_preview_mode"] = False
-
-    # ── 新增：确认时同步触发偏好文档更新（补全原 confirmation_node 中的逻辑）──
     if confirmed:
         try:
             _update_preference_document(state)
         except Exception as exc:
             print(f"[Web Confirm] 用户偏好文档更新失败：{exc}")
-
     execution_state = execution_node(state)
     merged_state = dict(state)
     merged_state.update(execution_state)
@@ -122,393 +140,807 @@ def _run_confirmation(session_id: str, confirmed: bool) -> dict[str, Any]:
     return _store_session(session_id, merged_state)
 
 
+# ---------------------------------------------------------------------------
+# 前端 HTML
+# ---------------------------------------------------------------------------
+
 def _render_html() -> str:
-    return """<!doctype html>
+    return r"""<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>本地生活规划前端</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>本地生活规划助手</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: rgba(15, 23, 42, 0.82);
-      --panel-strong: rgba(15, 23, 42, 0.96);
-      --line: rgba(148, 163, 184, 0.22);
-      --text: #e5eefc;
-      --muted: #94a3b8;
-      --accent: #f5b942;
-      --accent-2: #6ee7b7;
-      --danger: #fb7185;
-      --shadow: 0 32px 80px rgba(2, 6, 23, 0.5);
+      --bg-top:#f4efe3; --bg-mid:#efe6d3; --bg-btm:#e5d4b7;
+      --text:#2a231a; --muted:#6d604f;
+      --line:rgba(112,92,60,.20);
+      --ai-bg:#fff9ed; --user-bg:#3b2e1f; --user-text:#fff8ed;
+      --accent:#b9812f; --accent2:#7ea06d; --danger:#b14e3d;
+      --shadow:0 20px 56px rgba(58,40,12,.18);
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
+    *,*::before,*::after{box-sizing:border-box;}
+    body{
+      margin:0; min-height:100vh;
+      font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(circle at top left, rgba(245, 185, 66, 0.22), transparent 28%),
-        radial-gradient(circle at top right, rgba(110, 231, 183, 0.16), transparent 24%),
-        linear-gradient(160deg, #060816 0%, #0b1020 42%, #111827 100%);
-      font-family: "Georgia", "Songti SC", "Microsoft YaHei", serif;
+        radial-gradient(circle at 10% 0%,rgba(177,78,61,.12),transparent 26%),
+        radial-gradient(circle at 90% 0%,rgba(126,160,109,.17),transparent 28%),
+        linear-gradient(180deg,var(--bg-top) 0%,var(--bg-mid) 50%,var(--bg-btm) 100%);
+      display:flex; justify-content:center; padding:20px 14px;
     }
-    .shell {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 28px 20px 40px;
+    .shell{
+      width:min(1020px,100%); min-height:calc(100vh - 40px);
+      border:1px solid var(--line); border-radius:28px;
+      background:linear-gradient(160deg,rgba(255,250,240,.93),rgba(247,238,220,.89));
+      box-shadow:var(--shadow);
+      display:grid; grid-template-rows:auto 1fr auto; overflow:hidden;
     }
-    .hero {
-      display: grid;
-      grid-template-columns: 1.3fr 0.9fr;
-      gap: 20px;
-      align-items: stretch;
-      margin-bottom: 20px;
+    .topbar{
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      border-bottom:1px solid var(--line); padding:14px 20px;
+      background:rgba(255,249,236,.92); backdrop-filter:blur(8px);
     }
-    .hero-card, .panel {
-      background: var(--panel);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
+    .title-group h1{margin:0;font-size:clamp(17px,2.6vw,24px);letter-spacing:.02em;}
+    .title-group p{margin:4px 0 0;color:var(--muted);font-size:12px;}
+    .topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .meta-pill{
+      border:1px solid var(--line); border-radius:999px; padding:4px 10px;
+      background:rgba(255,253,248,.9); color:#5f4f3a; font-size:12px;
+      max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
-    .hero-card {
-      padding: 28px;
-      overflow: hidden;
-      position: relative;
+    .sdot{
+      display:inline-block; width:7px; height:7px; border-radius:50%;
+      background:#c0b49a; margin-right:4px; vertical-align:middle; transition:background .3s;
     }
-    .hero-card::after {
-      content: "";
-      position: absolute;
-      inset: auto -60px -60px auto;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(245, 185, 66, 0.25), transparent 68%);
-      pointer-events: none;
+    .sdot.active{background:var(--accent2);animation:pulse 1.6s ease infinite;}
+    .sdot.done{background:var(--accent2);}
+    .sdot.err{background:var(--danger);}
+    .chat-area{overflow-y:auto;padding:20px 18px;scroll-behavior:smooth;}
+    .welcome{
+      border:1px dashed rgba(112,92,60,.30); border-radius:20px;
+      padding:20px 22px; background:rgba(255,252,244,.72);
+      color:#6f5f48; line-height:1.75; animation:fadeUp 500ms ease;
     }
-    .eyebrow {
-      color: var(--accent-2);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      font-size: 12px;
-      margin-bottom: 12px;
+    .welcome strong{color:var(--accent);}
+    .welcome ul{margin:10px 0 0;padding-left:20px;}
+    .welcome li{margin:5px 0;}
+    .msg-row{display:flex;gap:10px;margin:12px 0;animation:fadeUp 300ms ease;}
+    .msg-row.user{justify-content:flex-end;}
+    .msg-row.ai{justify-content:flex-start;}
+    .msg-row.sys{justify-content:center;}
+    .avatar{
+      flex:0 0 auto; width:32px; height:32px; border-radius:10px;
+      background:rgba(255,251,242,.96); border:1px solid var(--line);
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700; color:#5d4d36;
     }
-    h1, h2, h3 { margin: 0; font-family: "Palatino Linotype", "Songti SC", serif; }
-    h1 { font-size: clamp(34px, 5vw, 60px); line-height: 1.04; margin-bottom: 14px; }
-    .lead { color: var(--muted); line-height: 1.7; max-width: 56rem; }
-    .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-    .chip {
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.12);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      color: var(--text);
-      font-size: 13px;
+    .bubble{
+      max-width:min(780px,92vw); padding:12px 15px; border-radius:18px;
+      border:1px solid var(--line); line-height:1.75; font-size:14px;
+      box-shadow:0 6px 18px rgba(82,64,33,.07);
     }
-    .grid {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 20px;
+    .msg-row.ai .bubble{background:var(--ai-bg);color:#3e3120;border-top-left-radius:5px;}
+    .msg-row.user .bubble{
+      background:var(--user-bg);color:var(--user-text);
+      border-color:rgba(255,243,222,.20);border-top-right-radius:5px;
     }
-    .panel {
-      padding: 22px;
-      background: var(--panel-strong);
+    .msg-row.sys .bubble{
+      background:rgba(200,190,175,.22);color:var(--muted);
+      font-size:12px;border-radius:999px;padding:4px 14px;border-color:rgba(112,92,60,.12);
     }
-    .panel h2 { font-size: 24px; margin-bottom: 10px; }
-    .label { display: block; margin: 12px 0 8px; color: var(--muted); font-size: 14px; }
-    textarea, input[type="text"] {
-      width: 100%;
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.26);
-      background: rgba(2, 6, 23, 0.5);
-      color: var(--text);
-      padding: 14px 15px;
-      outline: none;
-      font-size: 15px;
-      font-family: inherit;
+    .loading-wrap{display:flex;flex-direction:column;gap:9px;}
+    .ld-row{display:flex;align-items:center;gap:9px;font-size:13px;color:#7a6a52;}
+    .spinner{
+      flex:0 0 auto;width:15px;height:15px;border-radius:50%;
+      border:2px solid rgba(185,129,47,.22);border-top-color:var(--accent);
+      animation:spin 700ms linear infinite;
     }
-    textarea { min-height: 160px; resize: vertical; }
-    textarea:focus, input:focus { border-color: rgba(245, 185, 66, 0.8); box-shadow: 0 0 0 3px rgba(245, 185, 66, 0.12); }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-    button {
-      border: 0;
-      border-radius: 14px;
-      padding: 12px 16px;
-      font-size: 14px;
-      cursor: pointer;
-      color: #0b1020;
-      background: linear-gradient(135deg, var(--accent), #ffd98b);
-      font-weight: 700;
+    .ld-row.done{color:var(--accent2);}
+    .ld-row.done::before{content:"✓ ";font-weight:700;}
+    .ld-row.pend{opacity:.4;color:#c0a87a;}
+    .prog-track{height:3px;background:rgba(185,129,47,.14);border-radius:999px;overflow:hidden;margin-top:3px;}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#d5a95f);border-radius:999px;transition:width .8s ease;}
+    .clar-wrap{display:flex;flex-direction:column;gap:6px;}
+    .clar-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .clar-q{font-size:14px;color:#3e3120;line-height:1.75;white-space:pre-wrap;}
+    .plan-wrap{display:flex;flex-direction:column;gap:14px;}
+    .plan-hd{
+      display:flex;align-items:flex-start;gap:10px;
+      padding-bottom:10px;border-bottom:1px solid var(--line);
     }
-    button.secondary { background: rgba(148, 163, 184, 0.14); color: var(--text); border: 1px solid rgba(148, 163, 184, 0.22); }
-    button.danger { background: linear-gradient(135deg, var(--danger), #fda4af); }
-    .meta { color: var(--muted); font-size: 13px; margin-top: 10px; }
-    .result {
-      white-space: pre-wrap;
-      line-height: 1.8;
-      padding: 18px;
-      border-radius: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      background: rgba(2, 6, 23, 0.46);
-      overflow: auto;
-      font-size: 14px;
+    .plan-hd-icon{font-size:20px;flex:0 0 auto;margin-top:2px;}
+    .plan-hd-title{font-size:15px;font-weight:700;color:#2e2416;}
+    .plan-hd-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+    .plan-sec{display:flex;flex-direction:column;gap:10px;}
+    .plan-sec-hd{display:flex;align-items:center;gap:8px;}
+    .plan-sec-badge{
+      width:22px;height:22px;border-radius:8px;
+      background:rgba(185,129,47,.15);color:#a0711f;
+      font-size:11px;font-weight:700;
+      display:flex;align-items:center;justify-content:center;flex:0 0 auto;
     }
-    .result.plan {
-      min-height: 220px;
-      font-family: inherit;
+    .plan-sec-title{font-size:13.5px;font-weight:700;color:#5b482f;}
+    .tl{display:flex;flex-direction:column;}
+    .tl-row{display:grid;grid-template-columns:82px 36px 1fr;gap:0 10px;}
+    .tl-time{
+      text-align:right;padding-top:7px;
+      font-size:11px;font-weight:700;color:var(--accent);
+      line-height:1.3;word-break:break-all;
     }
-    .result.message {
-      min-height: 140px;
-      font-family: inherit;
+    .tl-spine{display:flex;flex-direction:column;align-items:center;}
+    .tl-node{
+      width:32px;height:32px;border-radius:50%;
+      background:rgba(185,129,47,.10);border:2px solid rgba(185,129,47,.50);
+      display:flex;align-items:center;justify-content:center;
+      font-size:15px;flex:0 0 auto;z-index:1;
     }
-    .split { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
-    .card {
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      border-radius: 16px;
-      background: rgba(148, 163, 184, 0.06);
-      padding: 14px;
+    .tl-vbar{
+      flex:1;width:2px;min-height:16px;
+      background:linear-gradient(to bottom,rgba(185,129,47,.35),rgba(185,129,47,.06));
     }
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-      font-size: 15px;
+    .tl-body{padding:5px 0 14px;}
+    .tl-name{font-size:14px;font-weight:700;color:#2e2416;line-height:1.4;}
+    .tl-loc{font-size:12px;color:var(--muted);margin-top:3px;}
+    .tl-empty{color:var(--muted);font-size:13px;padding:6px 0;}
+    .venue-list{display:flex;flex-direction:column;gap:10px;}
+    .venue-card{
+      border:1px solid rgba(112,92,60,.16);border-radius:14px;
+      background:#fffcf5;padding:13px 14px;transition:box-shadow .2s;
     }
-    .section-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      background: rgba(245, 185, 66, 0.18);
-      color: #ffd98b;
-      font-weight: 700;
-      flex: 0 0 auto;
+    .venue-card:hover{box-shadow:0 4px 16px rgba(58,40,12,.10);}
+    .venue-hd{display:flex;gap:11px;align-items:flex-start;margin-bottom:9px;}
+    .venue-icon{
+      width:40px;height:40px;border-radius:11px;
+      background:rgba(185,129,47,.10);
+      display:flex;align-items:center;justify-content:center;
+      font-size:20px;flex:0 0 auto;
     }
-    .section-copy {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 6px;
-      line-height: 1.6;
+    .venue-info{flex:1;}
+    .venue-name{font-size:14.5px;font-weight:700;color:#2e2416;line-height:1.35;}
+    .venue-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+    .vtag{font-size:11.5px;padding:2px 8px;border-radius:999px;display:inline-flex;align-items:center;gap:2px;}
+    .vtag-star{background:rgba(255,196,0,.15);color:#7a5e00;}
+    .vtag-dist{background:rgba(126,160,109,.15);color:#3a5e32;}
+    .vtag-cat{background:rgba(148,163,184,.15);color:#415060;}
+    .vtag-price{background:rgba(185,129,47,.14);color:#7a5218;}
+    .venue-addr{font-size:12px;color:var(--muted);margin-top:5px;}
+    .venue-details{display:flex;flex-direction:column;gap:4px;margin-top:2px;}
+    .venue-li{font-size:13px;color:#4a3d2e;padding-left:14px;position:relative;line-height:1.6;}
+    .venue-li::before{content:"•";position:absolute;left:2px;color:var(--accent);font-weight:700;}
+    .plan-prose{font-size:13.5px;color:#4a3d2e;line-height:1.8;}
+    .plan-prose .md-h3{font-weight:700;color:#3e3020;margin:8px 0 3px;display:block;}
+    .plan-prose .md-li{padding-left:15px;display:block;position:relative;}
+    .plan-prose .md-li::before{content:"·";position:absolute;left:2px;color:var(--accent);}
+    .plan-prose .md-bold{font-weight:700;color:#3e3020;}
+    .plan-prose .md-hr{border:none;border-top:1px solid var(--line);margin:8px 0;display:block;}
+    .reasoning-list{display:flex;flex-direction:column;gap:7px;}
+    .reasoning-item{
+      font-size:13.5px;color:#4a3d2e;line-height:1.72;
+      padding:9px 12px 9px 32px;position:relative;
+      background:rgba(185,129,47,.06);border-radius:10px;
+      border-left:3px solid rgba(185,129,47,.40);
     }
-    .tag {
-      display: inline-block;
-      margin: 4px 8px 0 0;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(110, 231, 183, 0.14);
-      border: 1px solid rgba(110, 231, 183, 0.18);
-      font-size: 12px;
+    .reasoning-item::before{content:"💡";position:absolute;left:8px;top:9px;font-size:13px;}
+    .confirm-wrap{display:flex;flex-direction:column;gap:10px;}
+    .confirm-msg{font-size:14px;color:#3e3120;line-height:1.75;white-space:pre-wrap;}
+    .confirm-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .fb-card{
+      display:flex;align-items:flex-start;gap:12px;
+      background:rgba(242,252,235,.75);border:1px solid rgba(126,160,109,.28);
+      border-radius:14px;padding:13px 14px;
     }
-    .status { color: var(--accent-2); font-weight: 700; }
-    @media (max-width: 980px) {
-      .hero, .grid, .split { grid-template-columns: 1fr; }
+    .fb-card.cancel{background:rgba(255,245,242,.75);border-color:rgba(177,78,61,.22);}
+    .fb-icon{font-size:22px;flex:0 0 auto;}
+    .fb-title{font-size:14px;font-weight:700;color:#3a2e1e;margin-bottom:5px;}
+    .fb-msg{font-size:13.5px;color:#4a3d2e;line-height:1.72;white-space:pre-wrap;}
+    button{
+      border:none;border-radius:12px;padding:9px 15px;
+      font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+      transition:transform 120ms ease,box-shadow 120ms ease,opacity 120ms ease;
     }
+    button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+    button:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+    .btn-primary{background:linear-gradient(135deg,#bb8534,#d5a95f);color:#fff9ef;}
+    .btn-sec{background:rgba(98,78,48,.10);color:#4e3f2d;border:1px solid rgba(112,92,60,.22);}
+    .btn-green{background:linear-gradient(135deg,#5a9e6b,#7ec487);color:#f0fff4;}
+    .btn-danger{background:linear-gradient(135deg,#ba5e4f,#d67f6f);color:#fff4ef;}
+    .composer{border-top:1px solid var(--line);background:rgba(255,250,238,.96);padding:12px 14px;}
+    .composer-inner{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;max-width:960px;margin:0 auto;}
+    .composer textarea{
+      width:100%;resize:none;min-height:50px;max-height:160px;
+      border-radius:14px;border:1px solid rgba(112,92,60,.25);
+      background:#fffdf8;padding:11px 13px;font-size:14px;
+      outline:none;color:#362a1c;font-family:inherit;line-height:1.6;
+    }
+    .composer textarea:focus{border-color:rgba(185,129,47,.75);box-shadow:0 0 0 3px rgba(185,129,47,.12);}
+    .composer-footer{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      margin-top:7px;max-width:960px;margin-left:auto;margin-right:auto;
+    }
+    .mode-badge{font-size:12px;padding:3px 10px;border-radius:999px;font-weight:600;}
+    .mode-new{background:rgba(185,129,47,.13);color:#8a5e1a;}
+    .mode-clar{background:rgba(126,160,109,.18);color:#3e6636;}
+    .mode-wait{background:rgba(177,78,61,.12);color:#8a2e21;}
+    .hint-text{font-size:12px;color:var(--muted);}
+    @media(max-width:820px){
+      .shell{border-radius:18px;min-height:calc(100vh - 18px);}
+      .topbar{flex-direction:column;align-items:flex-start;}
+      .tl-row{grid-template-columns:68px 32px 1fr;gap:0 8px;}
+      .composer-inner{grid-template-columns:1fr;}
+      .composer button{width:100%;}
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
   </style>
 </head>
 <body>
-  <div class="shell">
-    <section class="hero">
-      <div class="hero-card">
-        <div class="eyebrow">FastAPI Frontend</div>
-        <h1>本地生活规划与确认面板</h1>
-        <p class="lead">输入你的出行需求，系统会生成最终规划结果；如果需要补充信息，会继续追问；当方案生成后，你可以在页面里直接确认执行。</p>
-        <div class="chips">
-          <span class="chip">用户输入接口</span>
-          <span class="chip">最终规划结果展示接口</span>
-          <span class="chip">确认执行接口</span>
-        </div>
-      </div>
-      <div class="hero-card">
-        <div class="eyebrow">How it works</div>
-        <h2>三步闭环</h2>
-        <p class="lead">先提交需求，再查看规划详情，最后确认是否执行。页面支持追问回复，适配当前工作流的澄清场景。</p>
-      </div>
-    </section>
+<div class="shell">
+  <header class="topbar">
+    <div class="title-group">
+      <h1>本地生活规划助手</h1>
+      <p>输入出行需求 · 智能追问补全 · 生成规划方案 · 一键确认执行</p>
+    </div>
+    <div class="topbar-right">
+      <span class="meta-pill" id="sessionPill">未开始</span>
+      <span class="meta-pill">
+        <span class="sdot" id="sdot"></span>
+        <span id="statusLabel">等待输入</span>
+      </span>
+      <button id="resetBtn" class="btn-sec" type="button">新建对话</button>
+    </div>
+  </header>
+  <main class="chat-area" id="chatArea">
+    <div class="welcome" id="welcomeCard">
+      <strong>👋 欢迎使用本地生活规划助手！</strong>
+      <ul>
+        <li>直接输入出行需求，例如：<em>今天下午 4 小时，想带孩子出去玩，不要离家太远</em></li>
+        <li>系统会追问缺少的信息（出发地、时间、偏好等）</li>
+        <li>收集完整后自动生成可视化行程方案与地点详情</li>
+        <li>对话中直接点击「确认执行」或「暂不执行」</li>
+      </ul>
+    </div>
+    <div id="msgList"></div>
+  </main>
+  <footer class="composer">
+    <div class="composer-inner">
+      <textarea id="inputBox" placeholder="输入你的规划需求，按 Enter 发送，Shift+Enter 换行"></textarea>
+      <button id="sendBtn" class="btn-primary" type="button">发送</button>
+    </div>
+    <div class="composer-footer">
+      <span class="mode-badge mode-new" id="modeBadge">新需求</span>
+      <span class="hint-text" id="hintText">Enter 发送 · Shift+Enter 换行</span>
+    </div>
+  </footer>
+</div>
+<script>
+(function(){
+  const chatArea    = document.getElementById('chatArea');
+  const msgList     = document.getElementById('msgList');
+  const welcomeCard = document.getElementById('welcomeCard');
+  const inputBox    = document.getElementById('inputBox');
+  const sendBtn     = document.getElementById('sendBtn');
+  const resetBtn    = document.getElementById('resetBtn');
+  const sessionPill = document.getElementById('sessionPill');
+  const sdot        = document.getElementById('sdot');
+  const statusLabel = document.getElementById('statusLabel');
+  const modeBadge   = document.getElementById('modeBadge');
+  const hintText    = document.getElementById('hintText');
 
-    <section class="grid">
-      <div class="panel">
-        <h2>输入需求</h2>
-        <label class="label" for="userInput">规划需求</label>
-        <textarea id="userInput" placeholder="例如：今天下午有空，想和老婆孩子出去玩几个小时，不要离家太远。"></textarea>
-        <div class="actions">
-          <button id="startBtn">生成方案</button>
-          <button id="resetBtn" class="secondary">清空会话</button>
-        </div>
-        <div class="meta">当前会话：<span id="sessionId">未开始</span></div>
+  let sessionId  = localStorage.getItem('lp_sid') || '';
+  let mode       = 'new';
+  let busy       = false;
+  let loadingRow = null;
+  let stageTimer = null;
 
-        <div id="clarifyBox" style="display:none; margin-top:18px;">
-          <h3 style="margin-bottom:8px;">系统追问</h3>
-          <div class="card" id="clarifyText" style="margin-bottom:12px;"></div>
-          <label class="label" for="clarifyReply">补充回答</label>
-          <input id="clarifyReply" type="text" placeholder="请输入你的补充信息" />
-          <div class="actions">
-            <button id="clarifyBtn" class="secondary">提交回复</button>
+  const STAGES_PLAN = [
+    {icon:'🧭', text:'解析规划意图…'},
+    {icon:'📍', text:'获取地理位置…'},
+    {icon:'🌤️', text:'收集天气实况…'},
+    {icon:'🔍', text:'搜索候选活动与餐厅…'},
+    {icon:'📋', text:'制定行程方案…'},
+    {icon:'✅', text:'规则校验与可行性评估…'},
+    {icon:'⭐', text:'方案评分排序…'},
+    {icon:'✨', text:'生成最终展示内容…'},
+  ];
+  const STAGES_CLAR = [
+    {icon:'💬', text:'理解补充信息…'},
+    {icon:'🔄', text:'更新规划约束…'},
+    {icon:'📋', text:'重新规划方案…'},
+  ];
+  const STAGES_CONF = [
+    {icon:'📝', text:'更新用户偏好…'},
+    {icon:'🚀', text:'执行方案…'},
+  ];
+
+  function esc(s){
+    return String(s||'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function nl2br(s){ return esc(s).replace(/\n/g,'<br>'); }
+
+  function renderMd(text){
+    if(!text) return '';
+    let html = '';
+    for(const raw of text.split('\n')){
+      const l = raw.trimEnd();
+      if(/^###\s/.test(l)){
+        html += `<span class="md-h3">${esc(l.replace(/^###\s+/,''))}</span>`;
+      } else if(/^[-*]\s/.test(l)){
+        html += `<span class="md-li">${boldEsc(l.replace(/^[-*]\s+/,''))}</span>`;
+      } else if(/^\d+\.\s/.test(l)){
+        html += `<span class="md-li">${boldEsc(l.replace(/^\d+\.\s+/,''))}</span>`;
+      } else if(/^---+$/.test(l)){
+        html += `<span class="md-hr"></span>`;
+      } else {
+        html += boldEsc(l) + '\n';
+      }
+    }
+    return html;
+  }
+  function boldEsc(s){
+    return esc(s).replace(/\*\*(.+?)\*\*/g,'<span class="md-bold">$1</span>');
+  }
+
+  function parseSections(rawText){
+    if(!rawText) return {};
+    const result = {};
+    let key = null, buf = [];
+    const norm = h => h.replace(/^第[一二三四五六七八九十\d]+部分[：:]\s*/,'').trim();
+    for(const line of rawText.split('\n')){
+      if(line.startsWith('## ')){
+        if(key !== null) result[key] = buf.join('\n').trim();
+        key = norm(line.slice(3).trim());
+        buf = [];
+      } else if(line.startsWith('# ')){
+        if(key !== null) result[key] = buf.join('\n').trim();
+        key = '__title__';
+        buf = [line.slice(2).trim()];
+      } else if(key !== null){
+        buf.push(line);
+      }
+    }
+    if(key !== null) result[key] = buf.join('\n').trim();
+    return result;
+  }
+
+  function guessIcon(name){
+    if(!name) return '📌';
+    if(/乐园|游乐|儿童|亲子|公园/.test(name)) return '🎡';
+    if(/餐|菜|火锅|饭|面|饺|川|粤|烤|烧|麻辣|小吃/.test(name)) return '🍽️';
+    if(/KTV|唱歌|卡拉/.test(name)) return '🎤';
+    if(/咖啡|茶|奶茶|甜品|蛋糕|面包|冰淇淋|冰激/.test(name)) return '☕';
+    if(/电影|影院|IMAX/.test(name)) return '🎬';
+    if(/商场|购物|广场|超市/.test(name)) return '🛍️';
+    if(/博物馆|展览|美术/.test(name)) return '🏛️';
+    if(/温泉|spa|按摩/.test(name)) return '♨️';
+    if(/酒吧|清吧|夜店/.test(name)) return '🍸';
+    return '📍';
+  }
+
+  function renderTimeline(text){
+    if(!text) return '<div class="tl-empty">暂无行程安排。</div>';
+    const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+    const tableLines = lines.filter(l=>l.startsWith('|'));
+    let rows = [];
+    if(tableLines.length >= 3){
+      rows = tableLines.slice(2)
+        .map(r => r.split('|').map(c=>c.trim()).filter(Boolean))
+        .filter(r=>r.length>0);
+    } else {
+      const listLines = lines.filter(l=>/^([-*]|\d+\.)/.test(l));
+      for(const l of listLines){
+        const raw = l.replace(/^([-*]|\d+\.)\s*/,'');
+        const m   = raw.match(/^(\d{1,2}:\d{2}(?:[–\-]\d{1,2}:\d{2})?)\s+(.+)/);
+        rows.push(m ? [m[1], m[2]] : ['', raw]);
+      }
+    }
+    if(rows.length === 0) return `<div class="plan-prose">${renderMd(text)}</div>`;
+    let html = '<div class="tl">';
+    for(let i=0; i<rows.length; i++){
+      const cells  = rows[i];
+      const time   = cells[0] || '';
+      const label  = cells[1] || cells[0] || '';
+      const loc    = cells[2] || '';
+      const isLast = i === rows.length-1;
+      html += `<div class="tl-row">
+        <div class="tl-time">${esc(time)}</div>
+        <div class="tl-spine">
+          <div class="tl-node">${guessIcon(label)}</div>
+          ${!isLast ? '<div class="tl-vbar"></div>' : ''}
+        </div>
+        <div class="tl-body">
+          <div class="tl-name">${esc(label)}</div>
+          ${loc && loc!==label ? `<div class="tl-loc">📍 ${esc(loc)}</div>` : ''}
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderVenueCards(text){
+    if(!text) return '';
+    const lines  = text.split('\n');
+    const venues = [];
+    let cur = null;
+    for(const line of lines){
+      const t = line.trim();
+      if(/^###\s/.test(t)){
+        if(cur) venues.push(cur);
+        cur = {name: t.replace(/^###\s+\d+\.\s*/,'').replace(/^###\s+/,''), bullets:[]};
+      } else if(cur && t.startsWith('-')){
+        cur.bullets.push(t.slice(1).trim());
+      }
+    }
+    if(cur) venues.push(cur);
+    if(venues.length === 0) return `<div class="plan-prose">${renderMd(text)}</div>`;
+    let html = '<div class="venue-list">';
+    for(const v of venues){
+      const metaBullet = v.bullets[0] || '';
+      let rating='', distance='', category='', price='', address='';
+      for(const part of metaBullet.split('｜')){
+        const [k,...rest] = part.split(/[：:]/);
+        const val = rest.join('：').trim();
+        if(k==='评分') rating=val;
+        else if(k==='距离') distance=val;
+        else if(k==='类别') category=val;
+        else if(k==='人均') price=val;
+      }
+      const addrBullet = v.bullets.find(b=>b.startsWith('地址：'));
+      if(addrBullet) address = addrBullet.slice(3);
+      const details = v.bullets.filter((b,i)=>
+        i>0 && !b.startsWith('地址：') && !b.startsWith('类别：') && b.trim()
+      );
+      html += `<div class="venue-card">
+        <div class="venue-hd">
+          <div class="venue-icon">${guessIcon(v.name)}</div>
+          <div class="venue-info">
+            <div class="venue-name">${esc(v.name)}</div>
+            <div class="venue-tags">
+              ${rating   ? `<span class="vtag vtag-star">⭐ ${esc(rating)}</span>` : ''}
+              ${distance ? `<span class="vtag vtag-dist">🚗 ${esc(distance)}</span>` : ''}
+              ${category ? `<span class="vtag vtag-cat">${esc(category)}</span>` : ''}
+              ${price    ? `<span class="vtag vtag-price">💰 ${esc(price)}</span>` : ''}
+            </div>
+            ${address ? `<div class="venue-addr">📍 ${esc(address)}</div>` : ''}
           </div>
         </div>
+        ${details.length>0 ? `<div class="venue-details">${
+          details.map(b=>`<div class="venue-li">${esc(b)}</div>`).join('')
+        }</div>` : ''}
+      </div>`;
+    }
+    html += '</div>';
+    return html;
+  }
 
-        <div id="confirmBox" style="display:none; margin-top:18px;">
-          <h3 style="margin-bottom:8px;">执行确认</h3>
-          <div class="card" id="confirmText" style="margin-bottom:12px;"></div>
-          <div class="actions">
-            <button id="confirmYesBtn">确认执行</button>
-            <button id="confirmNoBtn" class="danger">暂不执行</button>
-          </div>
+  function setStatus(label, type){
+    statusLabel.textContent = label;
+    sdot.className = 'sdot' + (type ? ' '+type : '');
+  }
+  function setMode(m){
+    mode = m;
+    if(m==='clarify'){
+      modeBadge.className='mode-badge mode-clar'; modeBadge.textContent='补充信息';
+      inputBox.placeholder='请输入补充信息，帮助我继续完善方案…';
+      hintText.textContent='Enter 发送 · Shift+Enter 换行';
+    } else if(m==='await_confirm'){
+      modeBadge.className='mode-badge mode-wait'; modeBadge.textContent='等待确认';
+      inputBox.placeholder='请点击上方「确认执行」或「暂不执行」按钮';
+      hintText.textContent='请通过按钮操作';
+    } else {
+      modeBadge.className='mode-badge mode-new'; modeBadge.textContent='新需求';
+      inputBox.placeholder='输入你的规划需求，按 Enter 发送，Shift+Enter 换行';
+      hintText.textContent='Enter 发送 · Shift+Enter 换行';
+    }
+  }
+  function setBusy(b){
+    busy=b; sendBtn.disabled=b; inputBox.disabled=b; resetBtn.disabled=b;
+  }
+
+  function stagesHtml(stages, active){
+    let h='<div class="loading-wrap">';
+    for(let i=0;i<stages.length;i++){
+      const s=stages[i];
+      const cls = i<active ? 'ld-row done' : i===active ? 'ld-row' : 'ld-row pend';
+      h += `<div class="${cls}">
+        ${i===active ? '<span class="spinner"></span>' : ''}
+        ${esc(s.icon)} ${esc(s.text)}
+      </div>`;
+    }
+    const pct = Math.round((Math.min(active+1,stages.length)/stages.length)*100);
+    h += `<div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>`;
+    h += '</div>';
+    return h;
+  }
+  function startLoading(stages){
+    stopLoading();
+    let idx=0;
+    loadingRow = appendRow('ai', stagesHtml(stages,idx));
+    stageTimer = setInterval(()=>{
+      idx = Math.min(idx+1, stages.length-1);
+      const bub = loadingRow && loadingRow.querySelector('.bubble');
+      if(bub) bub.innerHTML = stagesHtml(stages,idx);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }, 1800);
+  }
+  function stopLoading(){
+    if(stageTimer){ clearInterval(stageTimer); stageTimer=null; }
+    if(loadingRow){ loadingRow.remove(); loadingRow=null; }
+  }
+
+  function appendRow(role, innerHtml){
+    const row = document.createElement('div');
+    row.className = 'msg-row '+role;
+    if(role==='ai'){
+      const av=document.createElement('div'); av.className='avatar'; av.textContent='AI';
+      row.appendChild(av);
+    }
+    const bub=document.createElement('div'); bub.className='bubble';
+    bub.innerHTML=innerHtml; row.appendChild(bub);
+    msgList.appendChild(row);
+    welcomeCard.style.display='none';
+    requestAnimationFrame(()=>{ chatArea.scrollTop=chatArea.scrollHeight; });
+    return row;
+  }
+  function appendUser(t){ return appendRow('user', nl2br(t)); }
+  function appendAI(t)  { return appendRow('ai',   nl2br(t)); }
+  function appendSys(t) { return appendRow('sys',  esc(t));   }
+
+  function appendClarify(q){
+    return appendRow('ai', `<div class="clar-wrap">
+      <div class="clar-label">💬 需要补充一些信息</div>
+      <div class="clar-q">${nl2br(q)}</div>
+    </div>`);
+  }
+
+  function appendPlan(session){
+    const raw = session.display_text || '';
+    const llm = (session.llm_answer || '').trim();
+    if(!raw.trim() && !llm) return;
+    if(!raw.trim() && llm){ appendAI(llm); return; }
+    const S = parseSections(raw);
+    const titleLines = (S['__title__'] || '').split('\n');
+    const titleLine  = titleLines[0].trim();
+    const subLine    = titleLines.slice(1).join('\n').trim();
+    const flowText   = S['推荐游玩流程'] || S['行程安排'] || S['行程'] || '';
+    const detailText = S['地点详情'] || '';
+    const explainText= S['方案说明'] || '';
+    const reasoningList = (session.plan && Array.isArray(session.plan.reasoning))
+      ? session.plan.reasoning.filter(r => typeof r === 'string' && r.trim())
+      : [];
+    if(!flowText && !detailText && !explainText && reasoningList.length === 0){ appendAI(raw); return; }
+    let sn = 0;
+    let html = '<div class="plan-wrap">';
+    if(titleLine){
+      html += `<div class="plan-hd">
+        <div class="plan-hd-icon">📍</div>
+        <div>
+          <div class="plan-hd-title">${esc(titleLine)}</div>
+          ${subLine ? `<div class="plan-hd-sub">${esc(subLine)}</div>` : ''}
         </div>
+      </div>`;
+    }
+    if(flowText){
+      sn++;
+      html += `<div class="plan-sec">
+        <div class="plan-sec-hd">
+          <span class="plan-sec-badge">${sn}</span>
+          <span class="plan-sec-title">推荐游玩流程</span>
+        </div>
+        ${renderTimeline(flowText)}
+      </div>`;
+    }
+    if(reasoningList.length > 0){
+      sn++;
+      html += `<div class="plan-sec">
+        <div class="plan-sec-hd">
+          <span class="plan-sec-badge">${sn}</span>
+          <span class="plan-sec-title">推荐理由</span>
+        </div>
+        <div class="reasoning-list">
+          ${reasoningList.map(r => `<div class="reasoning-item">${esc(r)}</div>`).join('')}
+        </div>
+      </div>`;
+    }
+    if(detailText){
+      sn++;
+      html += `<div class="plan-sec">
+        <div class="plan-sec-hd">
+          <span class="plan-sec-badge">${sn}</span>
+          <span class="plan-sec-title">地点详情</span>
+        </div>
+        ${renderVenueCards(detailText)}
+      </div>`;
+    }
+    if(explainText){
+      sn++;
+      html += `<div class="plan-sec">
+        <div class="plan-sec-hd">
+          <span class="plan-sec-badge">${sn}</span>
+          <span class="plan-sec-title">方案说明</span>
+        </div>
+        <div class="plan-prose">${renderMd(explainText)}</div>
+      </div>`;
+    }
+    html += '</div>';
+    appendRow('ai', html);
+  }
+
+  function appendConfirm(message){
+    const row = appendRow('ai', `<div class="confirm-wrap">
+      <div class="confirm-msg">${nl2br(message||'是否确认执行当前方案？')}</div>
+      <div class="confirm-actions">
+        <button id="cYes" class="btn-green" type="button">✅ 确认执行</button>
+        <button id="cNo"  class="btn-danger" type="button">✖ 暂不执行</button>
       </div>
+    </div>`);
+    row.querySelector('#cYes').addEventListener('click', ()=> doConfirm(true));
+    row.querySelector('#cNo' ).addEventListener('click', ()=> doConfirm(false));
+    return row;
+  }
 
-      <div class="panel">
-        <h2>规划结果</h2>
-        <div class="meta">状态：<span id="statusText" class="status">等待输入</span></div>
-        <div class="split" style="margin:14px 0;">
-          <div class="card">
-            <div class="section-title"><span class="section-badge">1</span><strong>行程安排</strong></div>
-            <div id="planSectionOne" class="result plan">生成结果后会显示在这里。</div>
-            <div class="section-copy">展示当前规划中的时间安排、活动与餐厅，不展示结构化原始结果。</div>
-          </div>
-          <div class="card">
-            <div class="section-title"><span class="section-badge">2</span><strong>方案说明</strong></div>
-            <div id="planSectionTwo" class="result plan">生成结果后会显示在这里。</div>
-            <div class="section-copy">展示方案为什么这样安排，以及当前方案的核心理由。</div>
-          </div>
-        </div>
-        <div class="card">
-          <strong>执行反馈</strong>
-          <div id="finalMessage" class="result message" style="margin-top:10px;">尚未执行。</div>
-        </div>
+  function renderConfirmFeedback(session, confirmed){
+    const finalMsg = String(session.final_message||'').trim();
+    const isOk = confirmed;
+    const defaultMsg = isOk
+      ? '方案已确认，正在安排执行。如有后续进展将通知你。'
+      : '已取消执行当前方案。如需重新规划，请输入新的需求。';
+    const html = `<div class="fb-card${isOk?'':' cancel'}">
+      <div class="fb-icon">${isOk?'✅':'✖️'}</div>
+      <div>
+        <div class="fb-title">${isOk?'方案已确认执行':'方案已取消'}</div>
+        <div class="fb-msg">${nl2br(finalMsg||defaultMsg)}</div>
       </div>
-    </section>
-  </div>
+    </div>`;
+    appendRow('ai', html);
+    setMode('new');
+    setStatus('已完成','done');
+  }
 
-  <script>
-    const sessionIdEl = document.getElementById('sessionId');
-    const statusTextEl = document.getElementById('statusText');
-    const planSectionOneEl = document.getElementById('planSectionOne');
-    const planSectionTwoEl = document.getElementById('planSectionTwo');
-    const finalMessageEl = document.getElementById('finalMessage');
-    const clarifyBoxEl = document.getElementById('clarifyBox');
-    const clarifyTextEl = document.getElementById('clarifyText');
-    const clarifyReplyEl = document.getElementById('clarifyReply');
-    const confirmBoxEl = document.getElementById('confirmBox');
-    const confirmTextEl = document.getElementById('confirmText');
-    const userInputEl = document.getElementById('userInput');
-
-    let currentSessionId = localStorage.getItem('planner_session_id') || '';
-
-    function escapeHtml(value) {
-      return String(value || '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;');
+  function renderResult(session){
+    sessionPill.textContent = (session.session_id||'').slice(0,12)||'—';
+    const hasDisplay  = String(session.display_text||'').trim().length > 0;
+    const hasLlm      = String(session.llm_answer  ||'').trim().length > 0;
+    const clarify     = String(session.pending_clarification||'').trim();
+    const confirmMsg  = String((session.pending_confirmation||{}).message||'').trim();
+    if(hasDisplay || hasLlm) appendPlan(session);
+    if(clarify){
+      appendClarify(clarify);
+      setMode('clarify');
+      setStatus('等待补充','active');
+    } else if(confirmMsg){
+      appendConfirm(confirmMsg);
+      setMode('await_confirm');
+      setStatus('等待确认','active');
+    } else {
+      setMode('new');
+      setStatus(session.status==='completed'?'已完成':'就绪',
+                session.status==='completed'?'done':'');
     }
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
 
-    function extractSection(text, sectionNumber) {
-      const content = String(text || '').trim();
-      if (!content) return '';
-      const regex = sectionNumber === 1
-        ? /##\\s*第一部分[：:]\\s*行程安排\\s*([\\s\\S]*?)(?=\\n##\\s*第二部分[：:]\\s*方案说明|\\n##\\s*第三部分[：:]\\s*确认提示|$)/
-        : /##\\s*第二部分[：:]\\s*方案说明\\s*([\\s\\S]*?)(?=\\n##\\s*第三部分[：:]\\s*确认提示|$)/;
-      const match = content.match(regex);
-      const body = (match && match[1] ? match[1] : '').trim();
-      return body || (sectionNumber === 1 ? '暂无行程安排。' : '暂无方案说明。');
-    }
-
-    function renderSession(session) {
-      if (!session) return;
-      sessionIdEl.textContent = session.session_id || '未开始';
-      statusTextEl.textContent = session.status || 'unknown';
-      planSectionOneEl.innerHTML = escapeHtml(extractSection(session.display_text, 1));
-      planSectionTwoEl.innerHTML = escapeHtml(extractSection(session.display_text, 2));
-      finalMessageEl.textContent = session.final_message || '尚未执行。';
-
-      const pendingClarification = session.pending_clarification || '';
-      clarifyBoxEl.style.display = pendingClarification ? 'block' : 'none';
-      if (pendingClarification) {
-        clarifyTextEl.textContent = pendingClarification;
-      }
-
-      const pendingConfirmation = session.pending_confirmation || {};
-      confirmBoxEl.style.display = pendingConfirmation.message ? 'block' : 'none';
-      if (pendingConfirmation.message) {
-        confirmTextEl.textContent = pendingConfirmation.message;
-      }
-    }
-
-    async function requestJson(url, body) {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (!response.ok) {
-        const detail = await response.text();
-        throw new Error(detail || response.statusText);
-      }
-      return response.json();
-    }
-
-    async function startPlanning() {
-      const userInput = userInputEl.value.trim();
-      if (!userInput) {
-        alert('请先输入规划需求。');
-        return;
-      }
-      const data = await requestJson('/api/sessions', { user_input: userInput });
-      currentSessionId = data.session_id;
-      localStorage.setItem('planner_session_id', currentSessionId);
-      renderSession(data);
-    }
-
-    async function submitClarification() {
-      if (!currentSessionId) return;
-      const reply = clarifyReplyEl.value.trim();
-      if (!reply) {
-        alert('请先输入补充回答。');
-        return;
-      }
-      const data = await requestJson(`/api/sessions/${currentSessionId}/clarify`, { user_reply: reply });
-      clarifyReplyEl.value = '';
-      renderSession(data);
-    }
-
-    async function confirmExecution(confirmed) {
-      if (!currentSessionId) return;
-      const data = await requestJson(`/api/sessions/${currentSessionId}/confirm`, { confirmed });
-      renderSession(data);
-    }
-
-    async function loadCurrentSession() {
-      if (!currentSessionId) return;
-      const response = await fetch(`/api/sessions/${currentSessionId}`);
-      if (!response.ok) return;
-      renderSession(await response.json());
-    }
-
-    document.getElementById('startBtn').addEventListener('click', () => startPlanning().catch(err => alert(err.message)));
-    document.getElementById('clarifyBtn').addEventListener('click', () => submitClarification().catch(err => alert(err.message)));
-    document.getElementById('confirmYesBtn').addEventListener('click', () => confirmExecution(true).catch(err => alert(err.message)));
-    document.getElementById('confirmNoBtn').addEventListener('click', () => confirmExecution(false).catch(err => alert(err.message)));
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      currentSessionId = '';
-      localStorage.removeItem('planner_session_id');
-      sessionIdEl.textContent = '未开始';
-      statusTextEl.textContent = '等待输入';
-      planSectionOneEl.textContent = '生成结果后会显示在这里。';
-      planSectionTwoEl.textContent = '生成结果后会显示在这里。';
-      finalMessageEl.textContent = '尚未执行。';
-      clarifyBoxEl.style.display = 'none';
-      confirmBoxEl.style.display = 'none';
-      clarifyReplyEl.value = '';
+  async function req(url, body){
+    const r = await fetch(url,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body),
     });
+    if(!r.ok) throw new Error((await r.text())||r.statusText);
+    return r.json();
+  }
 
-    loadCurrentSession().catch(() => {});
-  </script>
+  async function doStart(text){
+    startLoading(STAGES_PLAN);
+    setStatus('规划中','active');
+    const data = await req('/api/sessions',{user_input:text});
+    sessionId = data.session_id;
+    localStorage.setItem('lp_sid', sessionId);
+    stopLoading();
+    renderResult(data);
+  }
+
+  async function doClarify(text){
+    if(!sessionId){ appendAI('当前没有活跃会话，请先输入新需求。'); setMode('new'); return; }
+    startLoading(STAGES_CLAR);
+    setStatus('处理中','active');
+    const data = await req(`/api/sessions/${sessionId}/clarify`,{user_reply:text});
+    stopLoading();
+    renderResult(data);
+  }
+
+  async function doConfirm(confirmed){
+    if(!sessionId){ appendAI('没有可确认的会话。'); setMode('new'); return; }
+    document.querySelectorAll('#cYes,#cNo').forEach(b=>{ b.disabled=true; });
+    appendUser(confirmed ? '确认执行当前方案。' : '暂不执行，取消方案。');
+    startLoading(STAGES_CONF);
+    setStatus('执行中','active');
+    setBusy(true);
+    try{
+      const data = await req(`/api/sessions/${sessionId}/confirm`,{confirmed});
+      stopLoading();
+      renderConfirmFeedback(data, confirmed);
+    } catch(err){
+      stopLoading();
+      appendAI(`操作失败：${err.message}`);
+      setMode('new'); setStatus('出错','err');
+    } finally { setBusy(false); }
+  }
+
+  /* ── 核心改动：handleSend ──
+     有 sessionId 就统一走 doClarify（复用 thread_id）
+     后端 _resume_with_reply 会自动判断图是挂起还是已完成：
+       挂起 → Command resume（处理 clarification 中断）
+       已完成 → 注入新 user_input，feedback_router 判断 adjust/new_plan/chat
+     没有 sessionId 才新建
+  */
+  async function handleSend(){
+    if(busy) return;
+    const text = inputBox.value.trim();
+    if(!text) return;
+    if(mode==='await_confirm'){
+      appendSys('请通过上方按钮确认或拒绝方案。'); return;
+    }
+    appendUser(text);
+    inputBox.value=''; inputBox.style.height='50px';
+    setBusy(true);
+    try{
+      if(sessionId){
+        await doClarify(text);
+      } else {
+        await doStart(text);
+      }
+    } catch(err){
+      stopLoading();
+      appendAI(`请求失败：${err.message||'网络错误'}`);
+      setStatus('出错','err'); setMode('new');
+    } finally { setBusy(false); }
+  }
+
+  async function loadSession(){
+    if(!sessionId) return;
+    try{
+      const r = await fetch(`/api/sessions/${sessionId}`);
+      if(!r.ok){ localStorage.removeItem('lp_sid'); sessionId=''; return; }
+      appendSys('已恢复上次会话状态。');
+      renderResult(await r.json());
+    } catch(_){}
+  }
+
+  inputBox.addEventListener('input', ()=>{
+    inputBox.style.height='50px';
+    inputBox.style.height = Math.min(inputBox.scrollHeight,160)+'px';
+  });
+  inputBox.addEventListener('keydown', e=>{
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); handleSend(); }
+  });
+  sendBtn.addEventListener('click', handleSend);
+  resetBtn.addEventListener('click', ()=>{
+    if(busy) return;
+    sessionId=''; localStorage.removeItem('lp_sid');
+    msgList.innerHTML=''; welcomeCard.style.display='';
+    sessionPill.textContent='未开始';
+    inputBox.value=''; inputBox.style.height='50px';
+    setMode('new'); setStatus('等待输入','');
+    appendAI('新对话已创建，请告诉我你的出行需求。');
+  });
+
+  setMode('new'); setStatus('等待输入','');
+  loadSession().catch(()=>{ appendAI('欢迎使用本地生活规划助手，请输入你的出行需求。'); });
+})();
+</script>
 </body>
 </html>"""
 
+
+# ---------------------------------------------------------------------------
+# API 路由
+# ---------------------------------------------------------------------------
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> HTMLResponse:
@@ -535,15 +967,13 @@ def get_session_plan(session_id: str) -> JSONResponse:
     session = SESSIONS.get(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    return JSONResponse(
-        {
-            "session_id": session_id,
-            "status": session.get("status"),
-            "display_text": session.get("display_text") or "",
-            "plan": session.get("plan") or {},
-            "pending_confirmation": session.get("pending_confirmation") or {},
-        }
-    )
+    return JSONResponse({
+        "session_id":           session_id,
+        "status":               session.get("status"),
+        "display_text":         session.get("display_text") or "",
+        "plan":                 session.get("plan") or {},
+        "pending_confirmation": session.get("pending_confirmation") or {},
+    })
 
 
 @app.post("/api/sessions/{session_id}/clarify")

@@ -35,13 +35,13 @@ def route_after_confirmation(state: AgentState) -> str:
 
     * user_confirmed 为 True → ``execute``（对应节点注册的 execution）；
     * web_preview_mode 为 True → ``await_confirmation``（Web 端先展示结果，等待用户二次确认）；
-    * 否则 → ``replan``（对应节点注册的 repair_loop/replan）。
+    * 否则 → ``terminate``（直接结束本轮流程）。
     """
     if state.get("web_preview_mode") is True:
         return "await_confirmation"
     if state.get("user_confirmed"):
         return "execute"
-    return "replan"
+    return "terminate"
 
 
 def route_after_intent(state: AgentState) -> str:

@@ -151,6 +151,10 @@ def feedback_router_node(state: AgentState) -> AgentState:
             "restaurants":            [],
             "waypoints":              [],
             "eta":                    {},
+            # 清空对话历史，避免新一轮 clarification 带上旧对话内容
+            "conversation_turns":     [],
+            "clarification_round":    0,
+            "user_input":             state.get("user_input") or "",
         }
 
     return {
