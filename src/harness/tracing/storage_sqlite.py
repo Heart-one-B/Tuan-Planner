@@ -1,3 +1,4 @@
+# harness/tracing/storage_sqlite.py
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -25,6 +26,11 @@ class SQLiteTraceStorage(TraceStorageBase):
     Args:
         db_path: Path to the SQLite file.
                  Parent directories and the file are created if absent.
+
+    注意:CREATE TABLE IF NOT EXISTS 不会给已存在的旧表补列。
+    开发库直接删掉 db 文件重建即可;如需保留旧数据,手动执行:
+        ALTER TABLE traces ADD COLUMN parent_trace_id TEXT;
+        ALTER TABLE llm_calls ADD COLUMN reasoning TEXT;
     """
 
     def __init__(self, db_path: Path = _DEFAULT_DB_PATH):
@@ -46,6 +52,7 @@ class SQLiteTraceStorage(TraceStorageBase):
                     tool_call_count   INTEGER,
                     llm_call_count    INTEGER,
                     status            TEXT,
+                    parent_trace_id   TEXT,
                     created_at        TEXT
                 );
 
@@ -68,6 +75,7 @@ class SQLiteTraceStorage(TraceStorageBase):
                     output            TEXT,
                     has_tool_calls    INTEGER,
                     duration_ms       INTEGER,
+                    reasoning         TEXT,
                     timestamp         TEXT,
                     FOREIGN KEY (trace_id) REFERENCES traces(trace_id)
                 );
@@ -78,12 +86,13 @@ class SQLiteTraceStorage(TraceStorageBase):
     def save_trace(self, trace: Trace) -> None:
         with _get_conn(self.db_path) as conn:
             conn.execute(
-                "INSERT OR REPLACE INTO traces VALUES (?,?,?,?,?,?,?,?,?)",
+                "INSERT OR REPLACE INTO traces VALUES (?,?,?,?,?,?,?,?,?,?)",
                 (
                     trace.trace_id, trace.session_id, trace.user_input,
                     trace.final_reply, trace.total_duration_ms,
                     trace.tool_call_count, trace.llm_call_count,
-                    trace.status, trace.created_at.isoformat(),
+                    trace.status, trace.parent_trace_id,
+                    trace.created_at.isoformat(),
                 ),
             )
             for e in trace.tool_events:
@@ -96,11 +105,11 @@ class SQLiteTraceStorage(TraceStorageBase):
                 )
             for c in trace.llm_calls:
                 conn.execute(
-                    "INSERT OR REPLACE INTO llm_calls VALUES (?,?,?,?,?,?,?)",
+                    "INSERT OR REPLACE INTO llm_calls VALUES (?,?,?,?,?,?,?,?)",
                     (
                         c.event_id, c.trace_id, c.input_token_count,
                         c.output, int(c.has_tool_calls),
-                        c.duration_ms, c.timestamp.isoformat(),
+                        c.duration_ms, c.reasoning, c.timestamp.isoformat(),
                     ),
                 )
 

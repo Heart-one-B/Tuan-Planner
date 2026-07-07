@@ -46,3 +46,8 @@ class AgentState(TypedDict, total=False):
     user_confirmed: bool
     pending_clarification: str
     final_message: str
+
+    clarification_round: int  # 当前追问轮次，默认0
+    clarification_history: list[dict]  # [{"question": str, "answer": str}]
+    clarification_forced: bool
+    has_new_plan: bool

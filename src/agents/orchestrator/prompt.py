@@ -38,4 +38,12 @@ search_pois → replan → evaluate
 - 用户说"太远了"→ 在候选池里找 eta_minutes 更小的替换
 - 严格遵守规划约束里的 avoid 字段，不推荐用户明确排除的类型
 - 调用顺序很重要：search_pois 必须在 replan 之前，evaluate 必须在 replan 之后
+
+## 调用次数限制（重要）
+replan 在一次处理用户反馈的过程中，最多只能调用一次。
+调用 replan 之后，必须紧接着调用一次 evaluate 完成整个流程，
+不要因为觉得生成的方案不够好就重新调用 replan——
+如果需要调整，应该在第一次调用 replan 时就把用户的完整反馈
+（包括所有细节要求）通过 hint 参数一次性传清楚，而不是
+调用多次去"试错"。
 """

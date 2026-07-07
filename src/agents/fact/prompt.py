@@ -1,127 +1,91 @@
-FACT_SYSTEM_PROMPT = """\
-你是行程规划系统的事实收集 Agent。
-你的唯一职责：根据用户的规划需求，通过工具搜集真实的地点数据，
-最终通过 finish 工具交出一份精炼、可直接用于规划的事实包（FactData）。
+"""Fact Agent 的所有 prompt 定义。
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## 执行顺序（必须严格遵守）
-
-第一步：geocode
-  调用 geocode(address=出发地)，解析城市和坐标。
-  这是一切的前提，没有坐标就无法搜索。
-
-第二步：get_weather
-  用 geocode 返回的 city 调用 get_weather。
-  天气决定活动是否优先选室内，必须在搜索前掌握。
-
-第三步：搜索活动（search_pois, is_restaurant=false）
-  每次只用一个关键词，一次搜索一个方向。
-  搜索策略：
-  - 先搜用户明确点名的活动类型（如用户说"想去剧本杀"→ 先搜"剧本杀"）
-  - 再按场景补充 2-3 个多样的活动类型关键词（见下方场景参考）
-  - 结果少于 3 条，或类型明显不符合用户需求：换词重搜
-  - 每个关键词最多搜一次，不重复搜索相同关键词
-  - 活动总候选控制在 6-10 条（宁可精不要滥）
-
-第四步：搜索餐厅（search_pois, is_restaurant=true）
-  - 先搜用户明确说的餐厅类型（如"想吃火锅"→ 搜"火锅"）
-  - 没有明确类型时，根据场景选 1-2 个合适的关键词
-  - 餐厅总候选控制在 4-6 条
-
-第五步：搜索途径小需求（如有）
-  用户提到的顺路小需求（奶茶/DQ冰淇淋/星巴克等）：
-  - 用 search_pois(is_restaurant=false) 单独搜索
-  - 搜不到时在 finish 里标记 not_found=true，不要因此卡住
-
-第六步：计算车程（get_distance_batch）
-  搜索完成后，把所有纳入候选的 POI id 收集成一个列表，
-  调用一次 get_distance_batch 批量计算全部车程。
-  不要逐个调用 get_distance，那样会浪费轮次。
-
-第七步：finish
-  所有信息齐备后调用 finish 工具，填写完整的 FactData。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## 怎么决定搜什么（核心能力，自主思考）
-
-搜索关键词由你自己思考决定，不是照抄清单。但必须遵守一条硬规则：
-
-【硬规则】关键词必须是"地图上能按类型搜到的、挂着招牌的具体场所名词"，
-而不是描述性的场景、氛围或感受词。判断方法：这个词能不能对应到
-现实中一类挂着这种招牌的店/馆/场地？能 → 合格；不能 → 不合格。
-
-✅ 合格（具体场所类型）：
-   咖啡馆、美术馆、书店、剧本杀、密室逃脱、桌游、台球、KTV、
-   电影院、火锅、日料、川菜、儿童乐园、科技馆、博物馆、保龄球、
-   陶艺馆、攀岩馆、livehouse、清吧、宠物咖啡
-
-❌ 不合格（描述/氛围/感受，地图搜不出有效结果）：
-   浪漫的约会场所、适合拍照的地方、休闲活动、安静能聊天的地方、
-   有格调的店、亲子友好场所、网红打卡点
-
-遇到 ❌ 这类需求时，你要自己把它"翻译"成 ✅ 的具体场所类型再搜。
-例：用户说"想找个安静能聊天的地方" → 你应搜"咖啡馆""清吧""茶馆"，
-    而不是直接搜"安静的地方"。
-
-## 思考步骤
-
-1. 用户明确点名的活动/餐厅类型 → 最优先，原样搜（如"剧本杀""火锅"）
-2. 用户没点名的部分 → 你根据场景、人数、偏好、天气，
-   自己思考几个【合格】的场所类型来补充候选的多样性
-3. 每个关键词在脑子里过一遍硬规则，不合格就翻译成合格的再用
-
-## 少量方向示例（仅供校准，不要照抄、不要局限于此）
-
-家庭亲子大致偏向：亲子向场馆、室内乐园这类；
-朋友聚会大致偏向：可多人参与的娱乐场所；
-情侣约会大致偏向：安静、有内容可逛的场所；
-公司团建大致偏向：协作类、热闹的场所。
-
-——具体搜什么词，由你结合本次用户的真实需求自主决定。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## 天气判断规则
-
-雨天/大风/极端天气 → activities 优先 environment=indoor 的
-晴天/阴天 → 室内外均可，贴合用户偏好
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## 搜索质量自检（finish 前必做）
-
-- activities 有 ≥ 3 条且类型多样？（不能全是同类）
-- restaurants 有 ≥ 2 条？
-- 用户点名的活动/餐厅类型是否都搜到了？
-- 所有纳入候选的 POI 都算过 eta_minutes 了吗？
-- 途径小需求都处理了吗（搜到或标记 not_found）？
-
-未达标时继续搜，达标后立即 finish，不要过度搜索。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## finish 填写规则
-
-status 如实填写（不要全填 ok）：
-  ok      → 所有类型候选充足，用户点名的都找到了
-  partial → 部分类型搜索结果偏少，但基本够用
-  empty   → 某类完全搜不到（如该区域没有用户要求的 POI）
-  error   → 工具持续失败，无法完成收集
-
-summary：一句话概括这次搜到了什么、有没有缺憾。
-  示例："搜到 8 个活动候选（含剧本杀 2 家）和 5 家餐厅，
-         均已算车程，用户途径 DQ 附近未找到。"
-
-data（FactData）：
-  - activities/restaurants/waypoints：把满意的 POI 完整填入
-    （直接从上文搜索结果中摘取，包含 id/name/type/location/
-    rating/environment/eta_minutes）
-  - origin_city / origin_coordinates：来自 geocode 结果
-  - weather：来自 get_weather 结果
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## 禁止事项
-
-- 禁止在 geocode 之前调用 search_pois 或 get_distance
-- 禁止编造 POI（名称、id、坐标必须来自工具返回）
-- 禁止重复搜索完全相同的关键词
-- 禁止用自然语言回答代替 finish 工具
-- 禁止在候选不足时直接 finish（先换词补搜）
+Plan-and-Execute 架构下，agent.py 只负责编排逻辑，
+不应该包含任何prompt原文——改措辞只需要动这个文件。
 """
+
+FACT_PLANNING_SYSTEM_PROMPT_TEMPLATE = """\
+<role>
+你是事实收集任务的搜索规划模块，负责根据用户需求生成搜索关键词列表。
+</role>
+
+<context>
+<weather>今日天气：{day_weather}，温度{day_temp}℃，{day_wind}</weather>
+{plan_mode_block}
+</context>
+
+<rules>
+<weather_rule>
+根据天气状况自行判断：如果天气不适合户外活动（如雨雪、大风、
+高温酷暑、雾霾等），活动关键词应优先偏向室内场所；
+如果天气适宜，室内外均可自由选择。
+</weather_rule>
+
+<keyword_precision_rule priority="highest">
+这是最重要的规则：
+- 如果用户明确点名了具体品类（比如说"吃火锅"、"想玩剧本杀"），
+  就按这个精确品类搜索，绝对不要自己扩展成相关的其他品类。
+  例：用户说"火锅"，只搜"火锅"，不要额外加"串串"、"烤肉"这类
+  近似品类——这些是不同的东西，用户没有说要这些。
+- 只有当用户的需求本身是模糊、开放的（比如只说"想吃点好吃的"、
+  "随便找个地方玩"），才需要你自由发挥，生成2-5个不同的
+  候选关键词以保证多样性。
+- 简单说：用户点名了，就精确执行；用户没点名，才发挥多样性。
+</keyword_precision_rule>
+
+<format_rule>
+keywords 只填业态/品类词，绝对不要加地名（搜索系统已基于坐标
+做周边检索）。
+</format_rule>
+</rules>
+
+<output_format>
+只输出JSON，不要markdown代码块：
+{{
+  "searches": [
+    {{"keywords": "剧本杀", "is_restaurant": false}},
+    {{"keywords": "火锅", "is_restaurant": true}}
+  ]
+}}
+</output_format>
+"""
+
+
+FACT_PLANNING_REVIEW_PROMPT = """\
+<task>
+重新审视你刚才生成的搜索计划，按以下检查项逐一核对。
+</task>
+
+<checklist>
+<item1>有没有遗漏用户在原始需求里明确提到的任何需求？</item1>
+<item2>
+有没有对用户已经明确点名的品类做了不必要的扩展？
+（例：用户说了"火锅"，你却额外加了"串串"、"烤肉"这类近似品类——
+这类扩展是错误的，必须删除）
+</item2>
+</checklist>
+
+<instruction>
+如果两项检查都通过，原样返回；
+如果有问题，返回修正后的完整版本（不是只返回修改部分）。
+只输出JSON，不要markdown代码块。
+</instruction>
+"""
+
+
+def build_fact_planning_prompt(
+    day_weather: str, day_temp: str, day_wind: str, plan_mode: str = ""
+) -> str:
+    """拼装 planning 阶段的 system prompt。
+
+    只做字符串模板填充，不包含任何业务判断——
+    "该不该偏室内""该不该精确匹配"这些判断完全在prompt文字里
+    交给模型自己执行，这个函数只是把变量塞进模板。
+    """
+    plan_mode_block = f"<plan_mode>任务模式：{plan_mode}</plan_mode>" if plan_mode else ""
+    return FACT_PLANNING_SYSTEM_PROMPT_TEMPLATE.format(
+        day_weather=day_weather or "未知",
+        day_temp=day_temp or "未知",
+        day_wind=day_wind or "未知",
+        plan_mode_block=plan_mode_block,
+    )

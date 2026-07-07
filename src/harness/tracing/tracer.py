@@ -1,3 +1,4 @@
+# harness/tracing/tracer.py
 import json
 import logging
 import time
@@ -32,7 +33,12 @@ def configure_storage(storage: TraceStorageBase) -> None:
 
 # ── lifecycle ─────────────────────────────────────────────────────────────────
 
-def start_trace(trace_id: str, session_id: str, user_input: str) -> None:
+def start_trace(
+    trace_id: str,
+    session_id: str,
+    user_input: str,
+    parent_trace_id: str | None = None,
+) -> None:
     _active[trace_id] = Trace(
         trace_id=trace_id,
         session_id=session_id,
@@ -42,9 +48,10 @@ def start_trace(trace_id: str, session_id: str, user_input: str) -> None:
         tool_call_count=0,
         llm_call_count=0,
         status="running",
+        parent_trace_id=parent_trace_id,
     )
     _start_times[trace_id] = time.time()
-    logger.info(f"[Tracer] start  trace_id={trace_id}")
+    logger.info(f"[Tracer] start  trace_id={trace_id}  parent={parent_trace_id}")
 
 
 def end_trace(trace_id: str, final_reply: str, status: str = "success") -> None:
@@ -99,6 +106,7 @@ def record_llm_call(
     output: str,
     has_tool_calls: bool,
     duration_ms: int,
+    reasoning: str | None = None,
 ) -> None:
     trace = _active.get(trace_id)
     if trace is None:
@@ -120,5 +128,6 @@ def record_llm_call(
         output=output[:500],
         has_tool_calls=has_tool_calls,
         duration_ms=duration_ms,
+        reasoning=(reasoning or "")[:500] or None,
     ))
     trace.llm_call_count += 1

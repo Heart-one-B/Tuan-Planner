@@ -63,7 +63,13 @@ class ToolExecutor:
           【系统错误，请勿重试】        unexpected Exception
         """
         name = tool_call.function.name
-        args = json.loads(tool_call.function.arguments)
+
+        try:
+            args = json.loads(tool_call.function.arguments)
+        except json.JSONDecodeError as e:
+            msg = f"【参数错误,请调整后重试】参数不是合法 JSON:{e}"
+            logger.warning(f"[ToolExecutor] bad JSON in {name}: {e}")
+            return msg
 
         logger.info(f"[ToolExecutor] execute: {name}  args={args}")
 

@@ -1,124 +1,143 @@
 # src/graph/nodes/presentation_node.py
-from typing import Any
+
+from __future__ import annotations
 
 from src.graph.state import AgentState
-from src.agent.presentation_agent import PresentationAgent
-from src.tools.cached_amap_client import CachedAmapClient
-from src.utils.state_utils import  _append_error
 
 
-def _location_text(value: Any) -> str:
-    return value.strip() if isinstance(value, str) and value.strip() else ""
+async def presentation_node(state: AgentState) -> dict:
+    """把选中方案渲染成展示文本，纯代码渲染，不调用 LLM。
 
+    数据已经是结构化的（CandidatePlan 的 timeline/activities/restaurants），
+    不需要模型再生成一次自然语言描述 —— 这样能保证：
+    1. 不消耗额外 LLM 调用
+    2. 不会有渲染幻觉（模型编造不存在的细节）
+    3. 渲染结果是确定性的，方便测试
+    """
+    task_log = list(state.get("task_log") or [])
+    errors   = list(state.get("errors") or [])
+    agent_outputs = state.get("agent_outputs") or {}
 
-def _origin_coordinates(state: AgentState) -> str:
-    direct = _location_text(state.get("runtime_origin_coordinates"))
-    if direct:
-        return direct
-    lookup = state.get("location_lookup_result")
-    if isinstance(lookup, dict):
-        return _location_text(lookup.get("coordinates") or lookup.get("location"))
-    return ""
+    eval_output = agent_outputs.get("evaluation") or {}
+    eval_data   = eval_output.get("data") or {}
+    selected_id = eval_data.get("selected_plan_id") or ""
 
+    # ── 异常1：evaluation 没有选中方案（不该走到这里，但防御性检查）──────
+    if eval_output.get("status") != "ok" or not selected_id:
+        errors.append({
+            "node": "presentation",
+            "error": "evaluation 未产出合格方案，presentation 不应被调用",
+            "recoverable": False,
+        })
+        task_log.append("presentation: 无selected_plan_id，跳过渲染")
+        return {
+            "display_text": "抱歉，没能生成合适的方案，要不要换个时间或地点再试试？",
+            "task_log": task_log,
+            "errors":   errors,
+        }
 
-def _format_distance_text(result: dict | None, prefix: str = "") -> str:
-    if not isinstance(result, dict):
-        return ""
-    raw_meters = result.get("distance_meters")
+    planning_output = agent_outputs.get("planning") or {}
+    planning_data   = planning_output.get("data") or {}
+    candidates      = planning_data.get("candidates") or []
+
+    selected_plan = next(
+        (c for c in candidates if isinstance(c, dict) and c.get("id") == selected_id),
+        None
+    )
+
+    # ── 异常2：selected_id 在 candidates 里找不到对应方案 ──────────────
+    # 理论上不该发生(evaluation只能从传入的candidates里选)，但数据流转
+    # 出问题时(比如 Orchestrator 更新了 planning 但 evaluation 引用了旧id)
+    # 必须有兜底，不能让整个流程崩溃
+    if not selected_plan:
+        errors.append({
+            "node": "presentation",
+            "error": f"selected_plan_id={selected_id} 在 candidates 中未找到",
+            "recoverable": False,
+        })
+        task_log.append(f"presentation: 找不到方案{selected_id}，candidates数量={len(candidates)}")
+        return {
+            "display_text": "方案数据出现异常，请重新发起规划。",
+            "task_log": task_log,
+            "errors":   errors,
+        }
+
     try:
-        meters = int(float(raw_meters))
-    except (TypeError, ValueError):
-        return ""
+        display_text, plan_summary = _render_plan(
+            selected_plan,
+            eval_data.get("selected_score"),
+            eval_data.get("selected_reason"),
+        )
+        task_log.append(f"presentation: 渲染完成 plan_id={selected_id}")
+        return {
+            "display_text":          display_text,
+            "selected_plan_summary": plan_summary,
+            "pending_confirmation":  True,
+            "task_log": task_log,
+            "errors":   errors,
+        }
 
-    if meters >= 1000:
-        km = meters / 1000
-        distance = f"约{km:.1f}km" if km < 10 else f"约{round(km)}km"
+    except Exception as e:
+        # ── 异常3：渲染过程本身出错（数据字段缺失导致拼接失败等）────────
+        errors.append({"node": "presentation", "error": str(e), "recoverable": False})
+        task_log.append(f"presentation: 渲染异常 {e}")
+        return {
+            "display_text": "方案生成时出现了点问题，麻烦重新试一下。",
+            "task_log": task_log,
+            "errors":   errors,
+        }
+
+
+def _render_plan(plan: dict, score, reason: str) -> tuple[str, dict]:
+    """纯函数渲染：把 CandidatePlan 转成 (展示文本, 结构化摘要)。
+
+    所有字段访问都用 .get() 兜底，任何一个 POI 字段缺失都不应该
+    让整个渲染崩溃 —— 缺了就显示"待确认"或留空，而不是抛异常。
+    """
+    title     = plan.get("title") or "为你推荐的方案"
+    timeline  = plan.get("timeline") or []
+    reasoning = plan.get("reasoning") or []
+
+    lines = [f"# {title}", ""]
+
+    if score is not None:
+        lines.append(f"匹配度：{score}分")
+        lines.append("")
+
+    lines.append("## 行程安排")
+    if not timeline:
+        lines.append("（暂无具体安排）")
     else:
-        distance = f"约{meters}m"
-    if prefix:
-        distance = f"{prefix}{distance}"
+        for item in timeline:
+            time_str = item.get("time") or "?"
+            end_str  = item.get("end_time") or ""
+            name     = item.get("item") or item.get("label") or "待确认"
+            time_range = f"{time_str}-{end_str}" if end_str else time_str
+            lines.append(f"- {time_range} {name}")
 
-    eta = result.get("eta_minutes")
-    try:
-        eta_minutes = int(round(float(eta)))
-    except (TypeError, ValueError):
-        eta_minutes = 0
-    if eta_minutes > 0:
-        return f"{distance} / 约{eta_minutes}分钟车程"
-    return distance
+    if reasoning:
+        lines.append("")
+        lines.append("## 推荐理由")
+        for r in reasoning:
+            if isinstance(r, str) and r.strip():
+                lines.append(f"- {r}")
 
+    if reason:
+        lines.append("")
+        lines.append(f"## 综合评价\n{reason}")
 
-def enrich_selected_plan_distances(plan: dict, state: AgentState, api: CachedAmapClient | None = None) -> dict:
-    details = plan.get("plan_poi_details")
-    steps = [step for step in plan.get("steps") or [] if isinstance(step, dict)]
-    if not isinstance(details, dict) or not steps:
-        return plan
+    lines.append("")
+    lines.append("这个方案可以吗？需要调整随时告诉我。")
 
-    enriched_details = {
-        poi_id: dict(detail) if isinstance(detail, dict) else detail
-        for poi_id, detail in details.items()
+    display_text = "\n".join(lines)
+
+    # 结构化摘要，给前端按需渲染卡片用，不依赖文本解析
+    plan_summary = {
+        "id":        plan.get("id", ""),
+        "title":     title,
+        "timeline":  timeline,
+        "reasoning": reasoning,
+        "score":     score,
     }
-    client = api or CachedAmapClient()
-    previous_location = _origin_coordinates(state)
 
-    for idx, step in enumerate(steps):
-        poi_id = step.get("poi_id") or ""
-        detail = enriched_details.get(poi_id)
-        if not poi_id or not isinstance(detail, dict):
-            continue
-        destination = _location_text(detail.get("location"))
-        if not destination:
-            continue
-
-        distance_text = ""
-        if previous_location:
-            try:
-                prefix = "距出发地" if idx == 0 else "距上一站"
-                distance_text = _format_distance_text(client.distance(previous_location, destination), prefix)
-            except Exception:
-                distance_text = ""
-        elif idx == 0:
-            distance_text = "行程起点"
-
-        if distance_text:
-            detail["distance"] = distance_text
-        previous_location = destination
-
-    plan["plan_poi_details"] = enriched_details
-    return plan
-
-
-def presentation_node(state: AgentState) -> AgentState:
-    """Presentation Node：将选定的最优计划及其排期信息渲染为富文本供用户预览。"""
-    print("[Presentation Node] 开始生成富文本最终预览排版...")
-    try:
-        final_plan_result = state.get("final_plan_result")
-        if isinstance(final_plan_result, dict) and final_plan_result:
-            selected_candidate = final_plan_result.get("selected_candidate") or {}
-            plan = dict(selected_candidate)
-            activities = plan.get("activities")
-            if isinstance(activities, list):
-                plan["activities"] = [item for item in activities if isinstance(item, dict)]
-            else:
-                activity = plan.get("activity")
-                plan["activities"] = [activity] if isinstance(activity, dict) else []
-            if not isinstance(plan.get("restaurant"), dict):
-                plan["restaurant"] = {}
-            schedule_timing_result = state.get("schedule_timing_result")
-            if isinstance(schedule_timing_result, dict):
-                plan["schedule_timing_result"] = schedule_timing_result
-            plan["selected_candidate_id"] = final_plan_result.get("selected_candidate_id", "")
-            plan["final_score"] = final_plan_result.get("final_score", 0)
-            plan["all_scored_candidates"] = final_plan_result.get("all_scored_candidates", [])
-            plan["plan_poi_details"] = state.get("plan_poi_details") or {}
-            plan = enrich_selected_plan_distances(plan, state)
-        else:
-            return state
-
-        display_text = PresentationAgent().generate_plan_display(plan, state.get("intent", {}))
-        print("\n" + "=" * 20 + " 方案详情 " + "=" * 20)
-        print(display_text)
-        print("=" * 50)
-        return {"display_text": display_text, "plan": plan}
-    except Exception as exc:
-        return _append_error(state, f"Presentation node failed: {exc}")
+    return display_text, plan_summary

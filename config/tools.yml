@@ -3,4 +3,4 @@ weather_api_key: 8dc35af4bccb4ae894dd89d2bc82bffe
 amap_mcp_url: https://mcp.api-inference.modelscope.net/2676dee6db1d4e/mcp
 default_weather_city: 成都
 # true=只用本地缓存，false=调真实高德API
-amap_use_cache_only: true
+amap_use_cache_only: false

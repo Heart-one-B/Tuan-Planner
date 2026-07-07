@@ -18,6 +18,7 @@ async def fact_node(state: AgentState) -> dict:
     try:
         result = await FactAgent(llm_client=build_llm_client()).run(
             task=task,
+            plan_mode=plan_context.get("plan_mode", "activity_plus_meal"),
             trace_id=state.get("session_id"),
         )
         agent_outputs["fact"] = {

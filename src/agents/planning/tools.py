@@ -163,10 +163,12 @@ def build_step_index(
     steps: list[dict],
     activities_by_id: dict[str, dict],
     restaurants_by_id: dict[str, dict],
+    waypoints_by_id: dict[str, dict],
 ) -> dict[str, Any]:
-    """从 steps 构建活动/餐厅索引和时间轴。"""
+    """从 steps 构建活动/餐厅/途径点索引和时间轴。"""
     activities_out: list[dict] = []
     restaurants_out: list[dict] = []
+    waypoints_out: list[dict] = []
     timeline: list[dict] = []
 
     for step in steps:
@@ -174,7 +176,11 @@ def build_step_index(
             continue
         poi_type = step.get("poi_type") or ""
         poi_id   = step.get("poi_id") or ""
-        label    = step.get("label") or ("活动" if poi_type == "activity" else "用餐")
+        label    = step.get("label") or (
+            "活动" if poi_type == "activity"
+            else "用餐" if poi_type == "restaurant"
+            else "途径点"
+        )
 
         if poi_type == "activity":
             poi = activities_by_id.get(poi_id, {})
@@ -184,6 +190,10 @@ def build_step_index(
             poi = restaurants_by_id.get(poi_id, {})
             if poi:
                 restaurants_out.append(poi)
+        elif poi_type == "waypoint":
+            poi = waypoints_by_id.get(poi_id, {})
+            if poi:
+                waypoints_out.append(poi)
         else:
             poi = {}
 
@@ -212,8 +222,27 @@ def build_step_index(
         "secondary_activity": activities_out[1] if len(activities_out) > 1 else {},
         "restaurants":        restaurants_out,
         "restaurant":         primary_restaurant or {},
+        "waypoints":          waypoints_out,
         "timeline":           timeline,
     }
+
+def validate_meal_phase_consistency(steps: list[dict]) -> list[dict]:
+    """校验 category 和 phase/poi_type 的一致性。
+
+    不判断任何POI的语义（那是模型的职责，通过category字段体现），
+    只检查模型自己填的 category 和 phase/poi_type 是否自相矛盾——
+    category != "meal" 的 step 不该占用 lunch/dinner 这两个phase。
+    发现矛盾时以 category 为准修正 phase/poi_type。
+    """
+    fixed = []
+    for step in steps:
+        s = dict(step)
+        category = s.get("category")
+        if category and category != "meal" and s.get("phase") in ("lunch", "dinner"):
+            s["phase"] = "evening" if s.get("phase") == "dinner" else "afternoon"
+            s["poi_type"] = "waypoint" if category == "snack_drink" else s.get("poi_type", "activity")
+        fixed.append(s)
+    return fixed
 
 
 def validate_and_normalize_steps(

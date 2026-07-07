@@ -1,12 +1,20 @@
 from __future__ import annotations
+
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
 class StepItem(BaseModel):
     """行程中的一个步骤。"""
     step_id: str = Field(default="")
+    category: Literal["meal", "snack_drink", "activity"] = Field(
+        default="activity",
+        description="POI性质分类：meal=能吃饱的正餐场所，"
+                     "snack_drink=甜品饮品类场所，activity=其他活动场所"
+    )
     phase: str = Field(default="")           # morning/lunch/afternoon/dinner/evening
-    poi_type: str = Field(default="")        # activity/restaurant
+    poi_type: str = Field(default="")        # activity/restaurant/waypoint
     poi_id: str = Field(default="")
     label: str = Field(default="")
     duration_minutes: int = Field(default=60)
