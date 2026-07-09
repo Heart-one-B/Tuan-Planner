@@ -29,8 +29,10 @@ class SQLiteTraceStorage(TraceStorageBase):
 
     注意:CREATE TABLE IF NOT EXISTS 不会给已存在的旧表补列。
     开发库直接删掉 db 文件重建即可;如需保留旧数据,手动执行:
-        ALTER TABLE traces ADD COLUMN parent_trace_id TEXT;
-        ALTER TABLE llm_calls ADD COLUMN reasoning TEXT;
+        ALTER TABLE llm_calls ADD COLUMN prompt_tokens INTEGER;
+        ALTER TABLE llm_calls ADD COLUMN completion_tokens INTEGER;
+        ALTER TABLE llm_calls ADD COLUMN token_source TEXT;
+        (并把旧的 input_token_count 列数据按需迁移或直接丢弃)
     """
 
     def __init__(self, db_path: Path = _DEFAULT_DB_PATH):
@@ -71,7 +73,9 @@ class SQLiteTraceStorage(TraceStorageBase):
                 CREATE TABLE IF NOT EXISTS llm_calls (
                     event_id          TEXT PRIMARY KEY,
                     trace_id          TEXT,
-                    input_token_count INTEGER,
+                    prompt_tokens     INTEGER,
+                    completion_tokens INTEGER,
+                    token_source      TEXT,
                     output            TEXT,
                     has_tool_calls    INTEGER,
                     duration_ms       INTEGER,
@@ -105,10 +109,10 @@ class SQLiteTraceStorage(TraceStorageBase):
                 )
             for c in trace.llm_calls:
                 conn.execute(
-                    "INSERT OR REPLACE INTO llm_calls VALUES (?,?,?,?,?,?,?,?)",
+                    "INSERT OR REPLACE INTO llm_calls VALUES (?,?,?,?,?,?,?,?,?,?)",
                     (
-                        c.event_id, c.trace_id, c.input_token_count,
-                        c.output, int(c.has_tool_calls),
+                        c.event_id, c.trace_id, c.prompt_tokens, c.completion_tokens,
+                        c.token_source, c.output, int(c.has_tool_calls),
                         c.duration_ms, c.reasoning, c.timestamp.isoformat(),
                     ),
                 )

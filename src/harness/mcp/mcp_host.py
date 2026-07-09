@@ -1,88 +1,96 @@
-# agent/mcp/mcp_host.py
+# harness/mcp/mcp_host.py
+from __future__ import annotations
 
-import asyncio
-import json
 import logging
-import sys
+from dataclasses import dataclass, field
+from typing import Literal
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-
-from harness.tools.exceptions import RetryableError, DegradedError
-from harness.tools.tool_executor import ToolDefinition
-from utils.path_tool import get_abs_path
+from harness.mcp.base import MCPServerClient
+from harness.mcp.registry import get_mcp_client
+from harness.mcp.stdio_client import StdioMCPClient
+from harness.tools.exceptions import DegradedError, RetryableError
+from harness.tools.tool_definition import ToolDefinition
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class MCPServerConfig:
+    """连哪个 MCP Server、怎么连——这是业务配置,不是 harness 的知识。"""
+    name: str
+    transport: Literal["stdio", "http"]
+    command: str | None = None
+    args: list[str] = field(default_factory=list)
+    env: dict[str, str] | None = None
+    url: str | None = None
+
+
 class MCPHost:
-    _instance = None
+    """AI 应用层面的 MCP 连接管理器。不再是单例——不同场景需要不同
+    server 组合,单例和"可配置"是矛盾的,改为显式实例化。
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._tools: list[ToolDefinition] = []
-            cls._instance.initialized = False
-        return cls._instance
+    工具命名空间:{server_name}__{tool_name},避免多 server 同名工具冲突。
+    """
 
-    async def connect_servers(self):
-        import os
-        server_script = get_abs_path("agent/mcp/local_mcp_server.py")
-        server_params = StdioServerParameters(
-            command=sys.executable,    #  确保使用的是当前项目的解释器（虚拟环境的）
-            args=["-u", server_script],
-            env=os.environ.copy(),
-        )
+    def __init__(self, server_configs: list[MCPServerConfig]):
+        self._server_configs = server_configs
+        self._clients: dict[str, MCPServerClient] = {}
+        self._tools: list[ToolDefinition] = []
+        self.initialized = False
 
-        logger.info("🔗 [MCP Host] 正在连接本地技能服务器...")
+    async def connect_servers(self) -> None:
+        for cfg in self._server_configs:
+            client = await self._build_client(cfg)
+            await client.connect()
+            self._clients[cfg.name] = client
+            logger.info(f"🔗 [MCP Host] 已连接 server '{cfg.name}' ({cfg.transport})")
+        await self._refresh_tools()
+        self.initialized = True
 
-        async with stdio_client(server_params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
+    async def _build_client(self, cfg: MCPServerConfig) -> MCPServerClient:
+        if cfg.transport == "stdio":
+            if not cfg.command:
+                raise ValueError(f"server '{cfg.name}' 是 stdio 传输,必须提供 command")
+            return StdioMCPClient(command=cfg.command, args=cfg.args, env=cfg.env)
+        elif cfg.transport == "http":
+            if not cfg.url:
+                raise ValueError(f"server '{cfg.name}' 是 http 传输,必须提供 url")
+            return await get_mcp_client(cfg.url)
+        raise ValueError(f"未知的 transport: {cfg.transport}")
 
-                # 拿到 MCP server 暴露的工具列表
-                response = await session.list_tools()
+    async def _refresh_tools(self) -> None:
+        self._tools = []
+        for server_name, client in self._clients.items():
+            specs = await client.list_tools()
+            for spec in specs:
+                self._tools.append(ToolDefinition(
+                    name=f"{server_name}__{spec.name}",
+                    description=spec.description,
+                    parameters=(spec.input_schema or {}).get("properties", {}),
+                    required=(spec.input_schema or {}).get("required", []),
+                    func=self._make_caller(server_name, spec.name),
+                ))
+        logger.info(f"✅ [MCP Host] 已聚合工具: {[t.name for t in self._tools]}")
 
-                self._tools = []
-                for t in response.tools:
-                    # 把 MCP 工具转成统一的 ToolDefinition
-                    tool_def = ToolDefinition(
-                        name=t.name,
-                        description=t.description or "",
-                        parameters=t.inputSchema.get("properties", {}),
-                        required=t.inputSchema.get("required", []),
-                        func=self._make_caller(server_params, t.name),
-                    )
-                    self._tools.append(tool_def)
-
-                self.initialized = True
-                logger.info(f"✅ [MCP Host] 已挂载工具: {[t.name for t in self._tools]}")
-
-    def _make_caller(self, server_params: StdioServerParameters, tool_name: str):
+    def _make_caller(self, server_name: str, tool_name: str):
         async def _async_call(**kwargs) -> str:
-            async with stdio_client(server_params) as (read, write):
-                async with ClientSession(read, write) as session:
-                    await session.initialize()
-                    result = await session.call_tool(tool_name, arguments=kwargs)
-                    text = result.content[0].text if result.content else ""
-
-                    # 解析错误前缀，转成对应异常
-                    if text.startswith("ERROR:RETRYABLE:"):
-                        raise RetryableError(text.replace("ERROR:RETRYABLE:", ""))
-                    elif text.startswith("ERROR:DEGRADED:"):
-                        raise DegradedError(text.replace("ERROR:DEGRADED:", ""))
-
-                    return text
-
+            client = self._clients[server_name]
+            text = str(await client.call(tool_name, arguments=kwargs))
+            if text.startswith("ERROR:RETRYABLE:"):
+                raise RetryableError(text.replace("ERROR:RETRYABLE:", ""))
+            elif text.startswith("ERROR:DEGRADED:"):
+                raise DegradedError(text.replace("ERROR:DEGRADED:", ""))
+            return text
         return _async_call
-
-        def _sync_call(**kwargs) -> str:
-            return asyncio.run(_async_call(**kwargs))
-
-        return _sync_call
 
     def get_tools(self) -> list[ToolDefinition]:
         return self._tools
 
-
-mcp_host = MCPHost()
+    async def close(self) -> None:
+        """只关闭本 Host 独有的 stdio 客户端;http 客户端归全局注册表管。"""
+        for cfg in self._server_configs:
+            if cfg.transport == "stdio":
+                client = self._clients.get(cfg.name)
+                if client is not None:
+                    await client.close()
+        self.initialized = False

@@ -102,32 +102,31 @@ def record_tool_event(
 
 def record_llm_call(
     trace_id: str,
-    input_messages: list,
+    prompt_tokens: int,
+    completion_tokens: int,
     output: str,
     has_tool_calls: bool,
     duration_ms: int,
+    token_source: str = "estimated",
     reasoning: str | None = None,
 ) -> None:
+    """记录一次 LLM 调用。
+
+    prompt_tokens / completion_tokens 由调用方(各 LLMClientBase 实现)算好传入——
+    tracer 不解析 response 对象的形状,不同 provider 的 usage 字段结构不同,
+    这属于客户端层的归一化职责,和推理通道归一化是同一个原则。
+    token_source 标注这两个数字的可信度("api_usage" 来自真实用量字段,
+    "estimated" 是客户端算不到 usage 时的兜底估算),下游做成本分析时
+    应该能区分,不能让估算值悄悄冒充真实值。
+    """
     trace = _active.get(trace_id)
     if trace is None:
         return
-
-    input_token_count = sum(
-        len(m["content"])
-        if isinstance(m, dict) and isinstance(m.get("content"), str)
-        else len(m.content or "")
-        if hasattr(m, "content") and isinstance(m.content, str)
-        else 0
-        for m in input_messages
-    )
-
     trace.llm_calls.append(LLMCall(
-        event_id=str(uuid.uuid4()),
-        trace_id=trace_id,
-        input_token_count=input_token_count,
-        output=output[:500],
-        has_tool_calls=has_tool_calls,
-        duration_ms=duration_ms,
+        event_id=str(uuid.uuid4()), trace_id=trace_id,
+        prompt_tokens=prompt_tokens, completion_tokens=completion_tokens,
+        token_source=token_source, output=output[:500],
+        has_tool_calls=has_tool_calls, duration_ms=duration_ms,
         reasoning=(reasoning or "")[:500] or None,
     ))
     trace.llm_call_count += 1

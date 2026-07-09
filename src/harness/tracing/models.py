@@ -8,10 +8,9 @@ class ToolEvent:
     event_id: str
     trace_id: str
     tool_name: str
-    args: str           # JSON string
+    args: str
     result: str
-    status: str         # success | param_error | retryable | missing_info |
-                        # not_found | degraded | unavailable | partial | error
+    status: str
     duration_ms: int
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -20,11 +19,13 @@ class ToolEvent:
 class LLMCall:
     event_id: str
     trace_id: str
-    input_token_count: int
+    prompt_tokens: int
+    completion_tokens: int
+    token_source: str        # "api_usage" | "estimated" —— 标注数字可信度
     output: str
     has_tool_calls: bool
     duration_ms: int
-    reasoning: str | None = None            # 新增:归一化后的推理内容(截断存储)
+    reasoning: str | None = None
     timestamp: datetime = field(default_factory=datetime.now)
 
 
@@ -37,8 +38,8 @@ class Trace:
     total_duration_ms: int
     tool_call_count: int
     llm_call_count: int
-    status: str         # success | timeout | error
-    parent_trace_id: str | None = None      # 新增:父 trace 串联(span 树)
+    status: str
+    parent_trace_id: str | None = None
     created_at: datetime = field(default_factory=datetime.now)
     tool_events: list[ToolEvent] = field(default_factory=list)
     llm_calls: list[LLMCall] = field(default_factory=list)
