@@ -5,22 +5,26 @@ import time
 import openai
 from openai import AsyncOpenAI
 
-from harness.llm.base import LLMClientBase
+from harness.llm.base import ContextOverflowError, LLMClientBase, NormalizedUsage
 from harness.llm.retry import retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
 
-# ── 错误分类:瞬态(值得重试) vs 永久(重试无用,快速失败) ────────────────
-# 与 tools/exceptions.py 的 RetryableError/ParamError 分类哲学同构。
 _RETRYABLE_EXCEPTIONS = (
-    openai.APIConnectionError,   # 网络层面连不上
-    openai.APITimeoutError,      # 请求超时
-    openai.RateLimitError,       # 429——注:配额耗尽型 429 重试也无用,
-                                  # 但暂不做精细区分,重试预算上限兜底,已知简化
-    openai.InternalServerError,  # 5xx
+    openai.APIConnectionError,
+    openai.APITimeoutError,
+    openai.RateLimitError,
+    openai.InternalServerError,
 )
-_RETRYABLE_STATUS_CODES = {500, 502, 503, 504, 529}   # 529 常见于部分兼容端点
+_RETRYABLE_STATUS_CODES = {500, 502, 503, 504, 529}
+
+# 上下文超长的启发式判断:openai SDK 没有为此单独的异常类,
+# 表现为 BadRequestError 带特定 code 或消息文本包含关键词。
+# 这是最佳努力检测,不同 provider/未来 SDK 版本可能变化——
+# 已知局限,不保证覆盖所有 provider 的溢出错误形态。
+_OVERFLOW_ERROR_CODES = {"context_length_exceeded"}
+_OVERFLOW_MESSAGE_HINTS = ("maximum context length", "context_length_exceeded")
 
 
 def _is_retryable(exc: Exception) -> bool:
@@ -30,29 +34,20 @@ def _is_retryable(exc: Exception) -> bool:
     return status_code in _RETRYABLE_STATUS_CODES
 
 
+def _is_overflow(exc: Exception) -> bool:
+    if not isinstance(exc, openai.BadRequestError):
+        return False
+    code = getattr(exc, "code", None)
+    if code in _OVERFLOW_ERROR_CODES:
+        return True
+    msg = str(exc).lower()
+    return any(hint in msg for hint in _OVERFLOW_MESSAGE_HINTS)
+
+
 class OpenAIClient(LLMClientBase):
-    """OpenAI-compatible LLM client.
-
-    重试(Phase 0 修复):
-      SDK 自带重试被显式关闭(max_retries=0),统一由 retry_with_backoff
-      负责——避免两层重试各自倒计时导致总延迟不可预测,且只有这一层的
-      重试事件会被日志记录、可观测。只重试瞬态错误,永久性错误(400/401/
-      403/404)直接快速失败,不浪费重试预算。
-
-    Token 计数:优先读 response.usage,缺失时估算并标注来源。
-    推理通道归一化:不同提供商的推理字段名统一抹平成 msg.reasoning。
-    """
-
-    def __init__(
-        self,
-        api_key: str,
-        base_url: str,
-        model_name: str,
-        extra_body: dict = None,
-        max_retries: int = 5,
-        base_delay: float = 1.0,
-        max_delay: float = 30.0,
-    ):
+    def __init__(self, api_key: str, base_url: str, model_name: str,
+                extra_body: dict = None, max_retries: int = 5,
+                base_delay: float = 1.0, max_delay: float = 30.0):
         self.model_name = model_name
         self.extra_body = extra_body or {}
         self.max_retries = max_retries
@@ -65,15 +60,20 @@ class OpenAIClient(LLMClientBase):
         if "messages" in kwargs:
             kwargs = {**kwargs, "messages": self._strip_reasoning_for_replay(kwargs["messages"])}
 
-        response = await retry_with_backoff(
-            fn=lambda: self._client.chat.completions.create(
-                model=self.model_name, extra_body=self.extra_body, stream=stream, **kwargs,
-            ),
-            is_retryable=_is_retryable,
-            max_retries=self.max_retries,
-            base_delay=self.base_delay,
-            max_delay=self.max_delay,
-        )
+        try:
+            response = await retry_with_backoff(
+                fn=lambda: self._client.chat.completions.create(
+                    model=self.model_name, extra_body=self.extra_body, stream=stream, **kwargs,
+                ),
+                is_retryable=_is_retryable,
+                max_retries=self.max_retries,
+                base_delay=self.base_delay,
+                max_delay=self.max_delay,
+            )
+        except Exception as e:
+            if _is_overflow(e):
+                raise ContextOverflowError(str(e)) from e
+            raise
 
         duration = int((time.time() - start) * 1000)
 
@@ -81,15 +81,18 @@ class OpenAIClient(LLMClientBase):
             msg = response.choices[0].message
             reasoning = self._extract_reasoning(msg)
             msg.reasoning = reasoning
+            msg.finish_reason = getattr(response.choices[0], "finish_reason", None)
 
             prompt_tokens, completion_tokens, token_source = self._extract_usage(
                 response, kwargs.get("messages", []), msg.content or "",
             )
+            msg.usage = NormalizedUsage(prompt_tokens, completion_tokens, token_source)
 
             logger.debug(
                 f"[OpenAIClient] done  duration={duration}ms  "
                 f"has_tool_calls={bool(msg.tool_calls)}  "
-                f"tokens={prompt_tokens}+{completion_tokens}({token_source})"
+                f"tokens={prompt_tokens}+{completion_tokens}({token_source})  "
+                f"finish_reason={msg.finish_reason}"
             )
             from harness.tracing import tracer
             tracer.record_llm_call(

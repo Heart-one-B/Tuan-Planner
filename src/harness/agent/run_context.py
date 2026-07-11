@@ -26,7 +26,7 @@ class RunContext:
 
     span: Span
     state: dict[str, Any] = field(default_factory=dict)
-    # context_manager: "ContextManager"   # ← Phase 2 挂载点(预留,勿删注释)
+    context_manager: "ContextManager | None" = None
 
     @classmethod
     def begin(cls, name: str, task: str, parent: Span | None = None) -> "RunContext":

@@ -18,6 +18,8 @@ class ToolDefinition:
     func: Callable
     required: list[str] = field(default_factory=list)
     timeout: float | None = None
+    max_result_chars: int | None = None   # 单工具的卸载阈值,None 用全局默认
+                                          # (与 timeout 同构:工具级覆盖全局)
 
     def to_openai_schema(self) -> dict:
         return {
