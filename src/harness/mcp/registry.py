@@ -1,3 +1,4 @@
+# harness/mcp/registry.py
 from __future__ import annotations
 
 import asyncio

@@ -143,7 +143,23 @@ class Compactor:
             if trigger != "overflow":
                 # threshold:还有余量,一档到此为止,不够就如实不够
                 logger.warning("[Compactor] 熔断:LLM 压缩失败,第一档降级(规则清理)")
-                new_messages = prefix + shrunk + tail
+                # 拍板(冒烟 Part D1 发现):一档同样给取回线索。理由:
+                # ① 熔断的是摘要器,取回是本地文件读,可靠性与摘要器无关;
+                # ② 一档清掉的工具结果没有摘要兜底,损失比正常压缩更重,
+                #    更需要线索;③ 全局不变量"任何内容离开窗口,窗口内必留
+                #    可见指针"自此无例外。
+                hint = []
+                if middle_ref:
+                    hint = [{
+                        "role": "user",
+                        "content": (
+                            f"[系统提示] 因自动摘要失败,较早的部分工具结果已被"
+                            f"清理为占位符(无摘要兜底)。被清理段的完整原文已换页"
+                            f"保存,引用: {middle_ref},如占位符对应的内容对任务"
+                            f"仍然重要,可调用 {RETRIEVAL_TOOL_NAME} 分页取回。"
+                        ),
+                    }]
+                new_messages = prefix + hint + shrunk + tail
             else:
                 # overflow:先看一档瘦身后是否已放得下(便宜优先也适用于紧急路径)
                 candidate = prefix + shrunk + tail
@@ -216,9 +232,24 @@ class Compactor:
             if (getattr(m, "tool_calls", None)
                 or (isinstance(m, dict) and m.get("tool_calls")))
         ]
-        if len(round_starts) <= keep_recent_rounds:
+        if len(round_starts) > keep_recent_rounds:
+            cut = round_starts[-keep_recent_rounds]
+            return prefix, rest[:cut], rest[cut:]
+
+        # 回退锚定(审查修复):工具轮次不足时改用 user 消息锚定轮次——
+        # 纯文本会话没有任何带 tool_calls 的消息,原逻辑会把中间段恒判空,
+        # 导致纯对话永远不可压缩、超线后空转至撞墙。一轮=一条 user 到
+        # 下一条 user 之前(纯对话即一问一答)。配对安全性天然成立:
+        # 工具配对是紧邻的 assistant→tool 序列,user 消息不会插在配对
+        # 中间,以 user 为切口不拆对。
+        user_starts = [
+            j for j, m in enumerate(rest)
+            if (isinstance(m, dict) and m.get("role") == "user")
+            or getattr(m, "role", None) == "user"
+        ]
+        if len(user_starts) <= keep_recent_rounds:
             return prefix, [], rest
-        cut = round_starts[-keep_recent_rounds]
+        cut = user_starts[-keep_recent_rounds]
         return prefix, rest[:cut], rest[cut:]
 
     # ── 摘要输入预瘦身 ──────────────────────────────────────────────────
@@ -251,7 +282,13 @@ class Compactor:
         msgs = build_compaction_messages(render_text, self.compaction_prompt,
                                          focus, allow_questions=allow_questions)
         resp = await client.call(trace_id=trace_id, messages=msgs)
-        raw = resp.choices[0].message.content
+        msg = resp.choices[0].message
+        # 审查修复:摘要自身被 max_tokens 腰斩时不许当完整摘要接受——
+        # 残缺摘要可能整章缺失,静默替换历史是最隐蔽的信息丢失。
+        # 主循环的截断保护不覆盖这条旁路 LLM 调用,必须在此自查。
+        if getattr(msg, "finish_reason", None) == "length":
+            raise ValueError("压缩器输出被截断(finish_reason=length),按失败处理")
+        raw = msg.content
         if not raw or not raw.strip():
             raise ValueError("压缩器返回了空摘要")
         summary = extract_summary(raw)
@@ -298,10 +335,23 @@ class Compactor:
             elif isinstance(m, dict):
                 content = m.get("content")
                 if isinstance(content, str) and len(content) > cls._LONG_TEXT_TRUNCATE_CHARS:
-                    half = cls._LONG_TEXT_TRUNCATE_CHARS // 2
-                    m = {**m, "content": (
-                        f"{content[:half]}\n...[压缩降级:原文 {len(content)} 字符被截断]...\n"
-                        f"{content[-half:]}"
-                    )}
+                    m = {**m, "content": cls._truncate(content)}
+            else:
+                # 审查修复:真实运行中 assistant 纯文本消息是 SDK 对象不是
+                # dict,原实现只截 dict,对象形态的超长结论永远漏网——
+                # 降级对真实对话内容第三次形同虚设(前两次:只清tool/只认
+                # 首条user)。同一类病:覆盖检查必须枚举全部内容形状。
+                content = getattr(m, "content", None)
+                if isinstance(content, str) and len(content) > cls._LONG_TEXT_TRUNCATE_CHARS:
+                    try:
+                        m.content = cls._truncate(content)
+                    except Exception:
+                        pass
             shrunk.append(m)
         return shrunk
+
+    @classmethod
+    def _truncate(cls, content: str) -> str:
+        half = cls._LONG_TEXT_TRUNCATE_CHARS // 2
+        return (f"{content[:half]}\n...[压缩降级:原文 {len(content)} 字符被截断]...\n"
+                f"{content[-half:]}")

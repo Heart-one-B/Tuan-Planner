@@ -1,3 +1,4 @@
+# harness/tool/tool_definition.py
 from dataclasses import dataclass, field
 from typing import Callable
 

@@ -185,6 +185,13 @@ class AgentLoop:
 
                     decision = self.termination.on_plain_message(msg)
                     if isinstance(decision, Finish):
+                        # 审查修复(真实LLM冒烟发现):此前这条最终文本消息
+                        # 从未 append 进 store 就直接返回了——outcome.messages
+                        # /快照里因此永远缺失"模型自己说出的结论",只有走
+                        # FinishToolTermination(调用finish工具收尾)才会
+                        # 因为工具调用阶段已 append 而侥幸完整。续跑场景下
+                        # 这正是最需要保留的一句话:模型刚得出的结论。
+                        store.append(msg)
                         for ev in self._finish_events(decision):
                             yield ev
                         yield self._outcome(
@@ -207,8 +214,11 @@ class AgentLoop:
                         tc, trace_id=span.trace_id, run_ctx=run_ctx,
                     )
                     yield {"type": "tool_end", "tool": tc.function.name, "result": result}
-                    # ⑤ 回填前过卸载
-                    text = store.offload_tool_result(span.trace_id, tc.id, str(result))
+                    # ⑤ 回填前过卸载(单工具阈值优先,None落回全局默认)
+                    text = store.offload_tool_result(
+                        span.trace_id, tc.id, str(result),
+                        max_chars=self.tool_executor.max_result_chars_for(tc.function.name),
+                    )
                     store.append({"role": "tool", "tool_call_id": tc.id, "content": text})
 
                 finished: Finish | None = None
@@ -276,6 +286,10 @@ class AgentLoop:
                 if content:
                     final_text += content
                     yield {"type": "token", "content": content}
+            # 同一类修复:流式拼出的最终答案同样要入账,否则预算耗尽路径下
+            # 快照/续跑一样会丢失模型的最终结论。
+            if final_text:
+                store.append({"role": "assistant", "content": final_text})
             yield self._outcome("exhausted", Finish(final_text=final_text),
                                 rounds, used, store.messages, span, trace_status="timeout")
             return

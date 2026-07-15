@@ -1,3 +1,4 @@
+# harness/tracing/__init__.py
 from harness.tracing.tracer import (
     configure_storage,
     start_trace,

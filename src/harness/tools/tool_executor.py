@@ -1,3 +1,5 @@
+# harness/tool/tool_excutor.py
+
 import asyncio
 import inspect
 import json
@@ -29,6 +31,12 @@ class ToolExecutor:
     def register(self, tool: ToolDefinition) -> None:
         self._tools[tool.name] = tool
         logger.info(f"[ToolExecutor] registered: {tool.name}")
+
+    def max_result_chars_for(self, name: str) -> int | None:
+        """单工具卸载阈值查询(审查修复:此前 ToolDefinition.max_result_chars
+        字段没有任何消费者,是死字段)。未注册的名字返回 None(用全局默认)。"""
+        tool = self._tools.get(name)
+        return tool.max_result_chars if tool else None
 
     @property
     def schemas(self) -> list[dict]:

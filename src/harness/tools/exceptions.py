@@ -1,3 +1,4 @@
+# harness/tool/exceptions.py
 class ToolException(Exception):
     """Base class for all tool exceptions.
     Subclasses are caught by ToolExecutor and converted to

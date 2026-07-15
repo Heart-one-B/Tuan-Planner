@@ -8,7 +8,7 @@ from harness.context.budget import ContextBudget
 from harness.context.compactor import CompactionOutcome, Compactor
 from harness.context.models import ContextSnapshot
 from harness.context.offload import OffloadStore, clear_stale_tool_results, offload_if_oversized
-from harness.context.token_counter import TokenCounter, estimate_tokens
+from harness.context.token_counter import TokenCounter, estimate_messages_tokens
 from harness.llm.base import LLMClientBase
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,11 @@ class ContextManager:
 
     def append(self, message) -> None:
         self._messages.append(message)
-        self.counter.note_appended(_message_text(message))
+        # 审查修复(冒烟 Part G 实测):原 _message_text 只读 .content,
+        # tool_calls 参数全部漏计,大参数场景增量记账低估 94%。
+        # 增量口径必须与全量重估(estimate_messages_tokens)完全一致,
+        # 否则两套账,drift 只在真实 API usage 刷新时才被冲掉。
+        self.counter.note_appended_tokens(estimate_messages_tokens([message]))
 
     def note_api_usage(self, prompt_tokens: int) -> None:
         self.counter.note_api_usage(prompt_tokens)
@@ -108,17 +112,26 @@ class ContextManager:
     # ── 第0+1层的便宜清理(管"太旧") ──────────────────────────────────
 
     def _clear_stale(self, trace_id: str) -> int:
-        cleared = clear_stale_tool_results(
+        cleared, records = clear_stale_tool_results(
             self._messages, self.budget.tool_result_clear_after_rounds,
-            store=self.offload_store, trace_id=trace_id,   # 换页而非销毁
+            store=self.offload_store, trace_id=trace_id,
         )
+        if records:
+            # 审查修复(冒烟实测):L2 换页产生的档案必须进账本,
+            # 否则级联清理会把它们当孤儿误删(详见 offload.py 同处注释)
+            self.offload_records.extend(records)
         if cleared:
-            # 消息内容被就地修改,旧的 API usage 读数已不能反映当前
-            # 消息列表的真实占用,必须失效并重新估算——这不是 bug,
-            # 是"任何改动 messages 内容的操作之后都要 reset"这条
-            # 规则的直接体现,to_snapshot/compact 之后同理。
             self.counter.reset(self._messages)
         return cleared
+
+    def all_refs(self) -> set[str]:
+        """本次运行产生的全部磁盘引用,来源三种:L1 卸载、L2 换页、
+        L3 压缩中间段。Phase 3 级联清理的"存活引用"判据应以此为准,
+        而不是只看 offload_records——middle_ref 记在 CompactionResult
+        里,是第二本账,这里做合并视图。"""
+        refs = {r.ref for r in self.offload_records}
+        refs |= {c.middle_ref for c in self.compaction_history if c.middle_ref}
+        return refs
 
     # ── 第2层:LLM 压缩 ─────────────────────────────────────────────────
 
@@ -142,6 +155,10 @@ class ContextManager:
             if not self.budget.should_compact(self.counter.current_tokens):
                 logger.info("[ContextManager] 沉底清理已经足够,跳过 LLM 压缩")
                 return None
+        elif trigger == "overflow":
+            # 审查修复(轻微项):紧急路径同样先跑免费清理——它直接缩小
+            # 真实消息列表,没有理由只让 threshold 路径享受
+            self._clear_stale(trace_id)
 
         outcome = await self.compactor.compact(
             self._messages, fallback_client=llm_client, trace_id=trace_id,
@@ -151,6 +168,13 @@ class ContextManager:
             offload_store=self.offload_store,             # 可恢复压缩
             fit_within=self.budget.effective_window,      # overflow一档瘦身后的容纳判据
         )
+        if outcome.result.dropped_message_count == 0 and not outcome.degraded:
+            # 审查修复:空转压缩(无可压中间段)不记账、不返回——否则
+            # 触发条件持续满足时每轮都产生一次假的"已压缩"事件和审计
+            # 记录,违背进展性不变量:压缩要么减少占用,要么明确报告
+            # 无能为力(返回 None 即报告)
+            logger.warning("[ContextManager] 压缩空转:无可压中间段,如实返回未压缩")
+            return None
         self._messages = outcome.new_messages
         self.compaction_history.append(outcome.result)
         self.counter.reset(self._messages)   # 历史被整体替换,旧读数作废

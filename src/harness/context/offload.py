@@ -54,13 +54,18 @@ def make_preview(content: str, record: OffloadRecord, preview_chars: int) -> str
     头尾各留而非只留头——日志的报错在尾部、列表的长尾在尾部,
     这是 Phase 1 设计截断时就确认过的原则,卸载预览沿用。"""
     half = max(1, preview_chars // 2)
-    head, tail = content[:half], content[-half:]
-    return (
+    header = (
         f"{OFFLOAD_MARKER} 原始长度 {record.original_chars} 字符,"
         f"完整内容引用: {record.ref}\n"
         f"(如需完整内容,调用 {RETRIEVAL_TOOL_NAME} 工具,参数 ref=\"{record.ref}\")\n"
-        f"--- 开头预览 ---\n{head}\n--- 结尾预览 ---\n{tail}"
     )
+    if len(content) <= preview_chars:
+        # 审查修复#7:原文短于预览预算时,头尾切片会重叠——各自都是全文,
+        # 预览把原文复制两遍、占位比原文还大(触发条件:单工具阈值<预览
+        # 长度,合法配置)。此时整段放一次,不切头尾。
+        return f"{header}--- 内容 ---\n{content}"
+    head, tail = content[:half], content[-half:]
+    return f"{header}--- 开头预览 ---\n{head}\n--- 结尾预览 ---\n{tail}"
 
 
 def offload_if_oversized(
@@ -82,28 +87,30 @@ def offload_if_oversized(
 def clear_stale_tool_results(
     messages: list, keep_recent_rounds: int,
     store: "OffloadStore | None" = None, trace_id: str | None = None,
-) -> int:
+) -> tuple[int, list[OffloadRecord]]:
     """管"太旧":最近 N 个工具调用轮次之外的 tool 消息清出上下文。
 
-    提供 store+trace_id 时是"换页"——原文先落盘,占位符携带 ref,
-    模型可用取回工具读回。不提供时退回旧的"销毁"行为(仅测试/特殊场景)。
+    (原有 docstring 不变,补充以下一段:)
 
-    换页而非销毁的原因(对照修正):无差别销毁会摧毁不可再生的结果——
-    本 harness 里子 Agent 以工具形态被调用,其产出(可能花了几分钟和
-    大量 token)就躺在 tool 消息里,销毁后无法靠"重跑工具"找回。
-    Claude Code 的对应做法是只清可重新获取的工具结果、绝不裁剪子 agent
-    输出;我们的通用化等价物是"清任何东西之前先换页",磁盘不要钱,
-    换页对所有工具一视同仁,不需要业务标注哪些工具可再生。
-    原地修改 messages,返回清理条数。"""
+    返回 (清理条数, 换页产生的 OffloadRecord 列表)。
+    审查修复(冒烟实测):此前 save() 产生的 record 在此被丢弃,只在消息
+    文本里留了一句 ref——ContextManager.offload_records 账本因此漏记
+    全部 L2 来源的文件(实测 23 个文件账本只认领 1 个)。Phase 3 级联
+    清理若以账本为"存活引用"判据,会把这些文件误判为孤儿删除,而它们
+    的 ref 还躺在占位符文本里、模型随时可能调取回工具去读。
+    不变量:任何落盘动作产生的 record 必须回到调用方的账本,
+    落盘和记账必须是同一笔交易。
+    """
     round_starts = [
         i for i, m in enumerate(messages)
         if (getattr(m, "tool_calls", None) or (isinstance(m, dict) and m.get("tool_calls")))
     ]
     if len(round_starts) <= keep_recent_rounds:
-        return 0
+        return 0, []
     cutoff = round_starts[-keep_recent_rounds]
 
     cleared = 0
+    records: list[OffloadRecord] = []
     for i, m in enumerate(messages):
         if i >= cutoff:
             break
@@ -111,10 +118,11 @@ def clear_stale_tool_results(
             continue
         content = m.get("content", "")
         if content.startswith(CLEARED_MARKER) or content.startswith(OFFLOAD_MARKER):
-            continue   # 已是占位/预览,不重复清理(预览含取回引用,保留)
+            continue
         call_id = m.get("tool_call_id")
         if store is not None and trace_id:
             record = store.save(trace_id, f"stale_{call_id}", content)
+            records.append(record)
             m["content"] = (
                 f"{CLEARED_MARKER} 原文已换页,引用: {record.ref}"
                 f"(如需内容可调用 {RETRIEVAL_TOOL_NAME} 取回) tool_call_id={call_id}"
@@ -125,7 +133,7 @@ def clear_stale_tool_results(
     if cleared:
         logger.info(f"[Offload] 清理了 {cleared} 条沉底工具结果"
                     f"({'换页' if store else '销毁'})")
-    return cleared
+    return cleared, records
 
 
 def build_retrieval_tool(store: OffloadStore, max_return_chars: int = 20_000) -> ToolDefinition:

@@ -30,7 +30,10 @@ def estimate_messages_tokens(messages: list) -> int:
             content = m.get("content")
             if isinstance(content, str):
                 total += estimate_tokens(content)
-        else:
+            for tc in (m.get("tool_calls") or []):  # 审查修复:dict 形态的
+                fn = tc.get("function", {}) if isinstance(tc, dict) else {}  # tool_calls 此前漏计,
+                total += estimate_tokens(str(fn.get("arguments", "")))  # 快照恢复统一 dict 后
+        else:  # 这将是主路径
             content = getattr(m, "content", None)
             if isinstance(content, str):
                 total += estimate_tokens(content)
@@ -67,6 +70,12 @@ class TokenCounter:
     def note_appended(self, text: str) -> None:
         """API 读数之后又有消息进入历史(工具结果回填等),先估上。"""
         self._pending_estimate += estimate_tokens(text)
+
+    def note_appended_tokens(self, tokens: int) -> None:
+        """按已估算好的 token 数记增量。与 note_appended(text) 并存:
+        调用方能拿到完整消息对象时用这个(口径与 estimate_messages_tokens
+        一致),只有纯文本时用旧的。"""
+        self._pending_estimate += tokens
 
     def reset(self, messages: list | None = None) -> None:
         """历史被整体替换(压缩后)时调用:旧读数全部作废,按新历史重新估。"""
