@@ -1,4 +1,4 @@
-# harness/tool/tool_excutor.py
+# harness/tools/tool_executor.py
 
 import asyncio
 import inspect
@@ -37,6 +37,18 @@ class ToolExecutor:
         字段没有任何消费者,是死字段)。未注册的名字返回 None(用全局默认)。"""
         tool = self._tools.get(name)
         return tool.max_result_chars if tool else None
+
+    def is_exempt_from_offload(self, name: str) -> bool:
+        tool = self._tools.get(name)
+        return bool(tool and tool.exempt_from_offload)
+
+    def is_terminal(self, name: str) -> bool:
+        """第一刀新增(任务1.2)。终止判定不再需要一个独立的
+        TerminationPolicy.owns() 接口来分拣——ToolExecutor 自己就
+        知道哪个工具是"结构化收口"工具,AgentLoop 处理完一批工具调用后
+        据此判断要不要检查完成信号。未注册的名字返回 False。"""
+        tool = self._tools.get(name)
+        return bool(tool and tool.terminal)
 
     @property
     def schemas(self) -> list[dict]:

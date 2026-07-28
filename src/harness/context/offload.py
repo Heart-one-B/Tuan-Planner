@@ -166,4 +166,5 @@ def build_retrieval_tool(store: OffloadStore, max_return_chars: int = 20_000) ->
         },
         required=["ref"],
         func=read_offloaded_result,
+        exempt_from_offload=True,
     )

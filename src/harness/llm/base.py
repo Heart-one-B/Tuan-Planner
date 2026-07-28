@@ -3,70 +3,95 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import AsyncIterator
 
 
 class ContextOverflowError(Exception):
-    """provider 报告"这次请求的 prompt 超过了模型能接受的最大长度"时,
-    实现方必须捕获底层 provider 特定的错误信号,归一化抛出这个类型。
-    AgentLoop 只认这一个异常类型来触发紧急压缩,不认任何 provider 的
-    原始错误码/消息文本——这和 reasoning/usage 归一化是同一条原则。"""
+    pass
 
 
 @dataclass
 class NormalizedUsage:
-    """一次调用的 token 用量,归一化后的三元组。"""
     prompt_tokens: int
     completion_tokens: int
-    source: str   # "api_usage" | "estimated" —— 与 tracing 的约定一致
+    source: str
+
+
+@dataclass
+class StreamDelta:
+    """一次流式调用里,一个 chunk 归一化后的增量(第五刀,任务 5.1)。
+
+    content/reasoning: 追加到累积文本的增量片段,None 表示这个 chunk
+    没有携带这部分。
+
+    tool_call_delta: 单个 tool_call 的增量分片,形如
+      {"index": int, "id": str|None, "name": str|None, "arguments": str|None}
+    index 是 provider 在这次响应里给这个 tool_call 分配的位置序号
+    (不是全局唯一 id)。id 通常只在该 index 第一次出现的分片里非
+    None,后续同一 index 的分片只补 name/arguments 的片段,消费方
+    (StreamAccumulator)按 index 累加。
+
+    finish_reason: 只在最后一个 chunk(或专门的收尾 chunk)上非
+    None,值域和非流式路径一致("stop"/"length"/"tool_calls"/...)。
+
+    usage: 只在支持 usage 上报的 provider 的收尾 chunk 上非 None
+    (常见形态是一个 choices 为空、只带 usage 的收尾 chunk)。
+    """
+    content: str | None = None
+    reasoning: str | None = None
+    tool_call_delta: dict | None = None
+    finish_reason: str | None = None
+    usage: NormalizedUsage | None = None
 
 
 class LLMClientBase(ABC):
     """Abstract interface for LLM clients.
 
-    Implement this to swap providers (OpenAI, Anthropic, local, mock).
-    The harness only depends on this interface — never on a concrete client.
+    实现方必须履行的六条归一化契约(前五条见原有说明,第六条是
+    第五刀新增):
 
-    实现方必须履行的四条归一化契约(AgentLoop 依赖它们,且只认这四个
-    约定名字,不知道、也不该知道背后是哪家 provider):
+      1-5. (不变,略——msg.reasoning/finish_reason/usage、
+           ContextOverflowError、剥离 _hid 字段)
 
-      1. msg.reasoning: str | None
-         各 provider 的推理字段名不同(如 DeepSeek/Qwen 的 reasoning_content),
-         调用方在返回前统一写到这个属性上。没有独立推理通道则设为 None。
+      6. stream() 的实现方(如果重写了默认实现)必须:
+         - tool_call_delta 按 index 正确分片,不能假设同一个
+           tool_call 的信息在单个 chunk 里到齐
+         - finish_reason 可能出现在最后一条内容 chunk 上,也可能
+           出现在单独一条 content/tool_call_delta 都为 None、专门
+           收尾的 chunk 上,两种形态消费方(StreamAccumulator)都要
+           扛得住
+         - usage(如果 provider 支持)放在收尾 chunk 上,不得让
+           估算值冒充真实值(source 如实标注)
 
-      2. msg.finish_reason: str | None
-         用 OpenAI 的词表("stop" | "length" | "tool_calls" |
-         "content_filter" | 其他)。AgentLoop 用它判断一段纯文本回复
-         是模型主动结束,还是被 max_tokens 腰斩(finish_reason=="length"
-         时绝不能当作正常完成处理)。
-
-      3. msg.usage: NormalizedUsage
-         优先用 provider 返回的真实用量;拿不到时退回估算,
-         source 如实标注 "estimated",不得让估算值冒充真实值。
-
-      4. ContextOverflowError
-         provider 报告"prompt 超过模型最大长度"时(通常是一种特定的
-         400 类错误,不同 provider 错误码不同),必须捕获后归一化
-         抛出本模块的 ContextOverflowError,不能让原始异常类型泄漏
-         给 AgentLoop——AgentLoop 靠这个类型触发紧急压缩重试。
-
-    未履行契约的实现方不会报错,只会让对应能力静默失效(如 thinking
-    事件不出现、溢出不触发紧急压缩)——这是 Phase 1 测试 FakeLLMClient
-    时实际踩过的坑,写在这里防止第二次踩。
+    未履行契约同样不会报错,只会让能力静默失效——和前五条契约是
+    同一条纪律。
     """
 
     @abstractmethod
     async def call(self, trace_id: str, stream: bool = False, **kwargs) -> object:
-        """Make a chat completion call.
-
-        Args:
-            trace_id: Correlates this call in the tracing layer.
-            stream:   If True, return an async iterable stream instead of
-                      a full response object.
-            **kwargs: Passed through to the underlying API
-                      (messages, tools, temperature, etc.).
-
-        Returns:
-            OpenAI-SDK-compatible response object with a .choices attribute;
-            .choices[0].message 满足上述四条归一化契约。
-        """
         ...
+
+    async def stream(self, trace_id: str, **kwargs) -> AsyncIterator[StreamDelta]:
+        """默认实现:退化为一次非流式调用(内部调用 self.call()),
+        把完整响应包成若干个 StreamDelta 一次性吐出——这是"新能力
+        可选、不配置即无感"在客户端接口层面的落地。
+
+        关键:任何现有 LLMClientBase 实现方(包括测试用的
+        FakeLLMClient)只要不重写这个方法,循环改走 stream() 之后,
+        行为和以前完全一样,只是没有"边收边吐"的体感,不需要跟着
+        改一行代码。真正做流式的实现方(如 OpenAIClient)应该重写
+        这个方法,履行上面的第六条契约。
+        """
+        resp = await self.call(trace_id=trace_id, stream=False, **kwargs)
+        msg = resp.choices[0].message
+        yield StreamDelta(
+            content=msg.content,
+            reasoning=getattr(msg, "reasoning", None),
+            finish_reason=getattr(msg, "finish_reason", None),
+            usage=getattr(msg, "usage", None),
+        )
+        for i, tc in enumerate(getattr(msg, "tool_calls", None) or []):
+            yield StreamDelta(tool_call_delta={
+                "index": i, "id": tc.id,
+                "name": tc.function.name, "arguments": tc.function.arguments,
+            })

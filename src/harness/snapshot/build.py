@@ -7,21 +7,17 @@ from typing import TYPE_CHECKING
 from harness.snapshot.models import RunSnapshot, normalize_message, record_to_dict, result_to_dict
 
 if TYPE_CHECKING:
-    # 仅类型标注用,不产生运行期依赖——models.py 的零依赖纪律在这里
-    # 也尽量维持,只是本文件的职责本来就是"跨到 agent 层去取数据",
-    # 这层耦合无法避免,但局部化到这一个文件里,不扩散。
     from harness.agent.loop import LoopOutcome
     from harness.agent.run_context import RunContext
 
 
 def build_snapshot(outcome: "LoopOutcome", run_ctx: "RunContext",
-                   session_id: str, task: str) -> RunSnapshot:
-    """从 LoopOutcome + RunContext 构造快照。
-
-    未配置 ContextManager 时同样可用(messages-only,ctx 相关字段留空
-    默认值)——快照能力不强迫用户先启用上下文管理,"可选、不配置即
-    无感"的老规矩在这里继续成立。
-    """
+                   session_id: str, task: str,
+                   extraction_boundary_hid: str | None = None,
+                   runs_since_extraction: int = 0,
+                   surfaced_memories: list | None = None,
+                   pending_approval_id: str | None = None,
+                   pending_tool_call_id: str | None = None) -> RunSnapshot:
     cm = run_ctx.context_manager
     ctx = cm.to_snapshot() if cm is not None else None
     return RunSnapshot(
@@ -37,4 +33,16 @@ def build_snapshot(outcome: "LoopOutcome", run_ctx: "RunContext",
         total_tokens=ctx.total_tokens if ctx else 0,
         token_source=ctx.token_source if ctx else "estimated",
         created_at=datetime.now().isoformat(),
+        extraction_boundary_hid=extraction_boundary_hid,
+        runs_since_extraction=runs_since_extraction,
+        surfaced_memories=[m.to_dict() for m in surfaced_memories] if surfaced_memories else [],
+        pending_approval_id=pending_approval_id,
+        pending_tool_call_id=pending_tool_call_id,
+        # 任务 3.10:不需要 build_snapshot() 新增参数——outcome(LoopOutcome)
+        # 在第三刀已经携带这四个字段(见 loop.py 的每个构造点),直接读。
+        exit_reason=outcome.reason,
+        overflow_recovery_count=outcome.overflow_recovery_count,
+        output_truncation_count=outcome.output_truncation_count,
+        output_upgraded=outcome.output_upgraded,
+        terminal_nudge_count=outcome.terminal_nudge_count,
     )

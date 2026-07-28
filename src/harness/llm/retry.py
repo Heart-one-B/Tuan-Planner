@@ -19,19 +19,6 @@ async def retry_with_backoff(
     max_delay: float = 30.0,
     on_retry: Callable[[int, float, Exception], None] | None = None,
 ) -> T:
-    """通用指数退避重试(满抖动)。
-
-    与具体 provider 无关——"怎么退避"是不变的机制,"什么错误值得重试"
-    是随 provider 变化的策略(is_retryable 参数注入)。这和 TerminationPolicy /
-    DagScheduler 的 gate 是同一个设计原则的又一次应用:机制与策略分离。
-
-    满抖动(uniform(0, delay))而非固定指数退避,避免多个并发调用方
-    在同一个时间点集中重试造成惊群效应。
-
-    耗尽 max_retries 后原样抛出最后一次的异常,不吞、不转换——
-    调用方(AgentLoop)已有统一的异常处理路径(捕获→关闭 span→re-raise),
-    这里不需要,也不应该重新设计一套错误处理。
-    """
     attempt = 0
     while True:
         try:

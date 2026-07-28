@@ -4,21 +4,22 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass, field
 
-SNAPSHOT_VERSION = 1
+SNAPSHOT_VERSION = 6
+# v5 -> v6 变更(第三刀,退出原因两级化 + 恢复计数器):新增
+# exit_reason(细粒度退出原因,配合 status 的两级设计——status 是宿主
+# 决策用的粗信号,exit_reason 是诊断/上报用的细信号,详见
+# harness/agent/loop.py LoopOutcome 的字段注释)+ overflow_recovery_count/
+# output_truncation_count/output_upgraded/terminal_nudge_count 四个
+# LoopState 计数器/标志位。
+#
+# 这一步是 bug#1("overflow_recovered 跨 resume 边界重置")真正被修复
+# 的地方:第二刀只是把这个字段从局部变量搬进 LoopState,行为没变
+# (resume 时仍然从 0/False 重新开始);v6 把它纳入快照,
+# Agent.resume_events() 从这里读回真实值重建 LoopState,跨 resume
+# 边界的记忆才算真正接上,不是又一次"搬家但没修"。
 
 
 def normalize_message(msg) -> dict:
-    """任意形态的消息(dict / SDK 对象 / SimpleNamespace)归一为可 JSON
-    往返的 dict。这是快照的"存活契约":只有这里显式提取的字段能活过
-    序列化。
-
-    刻意排除 reasoning:回放前本就要剥(见 OpenAIClient._strip_reasoning_
-    for_replay),它的观测价值已经在 tracing 层保留,快照不重复承担。
-
-    assistant 消息的 content 字段即使为 None 也显式写入(而不是省略
-    该 key)——OpenAI 兼容 API 的标准形态是 content 键存在、值为 null,
-    省略键在部分 provider/SDK 上可能触发校验错误,写 None 更保守。
-    """
     if isinstance(msg, dict):
         out = {k: v for k, v in msg.items() if k != "reasoning_content"}
         return json.loads(json.dumps(out, ensure_ascii=False, default=str))
@@ -38,16 +39,12 @@ def normalize_message(msg) -> dict:
 
 
 def result_to_dict(c) -> dict:
-    """CompactionResult(harness.context.models)→dict。刻意用 duck typing
-    (不 import 该类型)——本模块的零依赖纪律优先于类型标注的精确性,
-    调用方(build.py)传什么形状进来,这里就按属性读什么。"""
     d = asdict(c)
     d["timestamp"] = c.timestamp.isoformat()
     return d
 
 
 def record_to_dict(r) -> dict:
-    """OffloadRecord(harness.context.models)→dict,同上不 import。"""
     d = asdict(r)
     d["created_at"] = r.created_at.isoformat()
     return d
@@ -55,25 +52,6 @@ def record_to_dict(r) -> dict:
 
 @dataclass
 class RunSnapshot:
-    """一次运行结束时的完整工作现场,可 JSON 往返。
-
-    本文件零依赖 harness.agent / harness.context —— 和 context/models.py
-    "不 import agent 下任何东西"是同一条纪律的延伸:纯数据结构应该能被
-    任何消费者(未来的 DagScheduler、memory 系统、离线分析脚本)直接
-    引用,不该背上"必须先装配一整套 Agent 运行时"的依赖负担。真正需要
-    从 LoopOutcome/RunContext 提取快照的转换逻辑在 build.py。
-
-    显式排除项及理由(不是遗漏,是决策):
-      - Span 对象      只存 trace_id 字符串。tracing 是观测,快照是状态,
-                       观测数据在 trace.db 里,两边用 trace_id 关联。
-      - RunContext.state dict   任意业务对象,无法保证可序列化。记入
-                       缺口,Phase 6 的 ask_human 需要时回来解决。
-      - 工具 schemas    工具是代码不是数据,恢复时由装配代码重新注册。
-      - reasoning      见 normalize_message 的说明。
-
-    version 字段是序列化系统的第一课:没有它,第一次改格式就会静默
-    毁掉所有旧快照。加载时 version 不匹配必须显式报错,不允许半解析。
-    """
     session_id: str
     task: str
     trace_id: str
@@ -87,23 +65,24 @@ class RunSnapshot:
     token_source: str = "estimated"
     created_at: str = ""
     version: int = SNAPSHOT_VERSION
+    extraction_boundary_hid: str | None = None
+    runs_since_extraction: int = 0
+    surfaced_memories: list = field(default_factory=list)
+    pending_approval_id: str | None = None
+    pending_tool_call_id: str | None = None
+    exit_reason: str | None = None
+    overflow_recovery_count: int = 0
+    output_truncation_count: int = 0
+    output_upgraded: bool = False
+    terminal_nudge_count: int = 0
 
     def resume_history(self) -> list[dict]:
-        """恢复为新 run 的 history 参数:剥掉开头连续的 system 消息。
-
-        指令是配置、对话是数据——恢复时应使用 Agent 当前的 system prompt
-        (它可能已更新过),而不是快照里冻结的旧版,否则会拼出重复的
-        system 消息。Claude Code 在 compact 后重新加载 CLAUDE.md 是
-        同一条原则的体现。
-        """
         i = 0
         while i < len(self.messages) and self.messages[i].get("role") == "system":
             i += 1
         return self.messages[i:]
 
     def all_refs(self) -> set[str]:
-        """本快照引用的全部卸载文件——级联清理的存活判据之一
-        (完整判据是"该 session 全部存活快照的 all_refs 并集")。"""
         refs = {r["ref"] for r in self.offload_records}
         refs |= {c["middle_ref"] for c in self.compaction_history if c.get("middle_ref")}
         return refs
@@ -114,9 +93,73 @@ class RunSnapshot:
     @classmethod
     def from_dict(cls, data: dict) -> "RunSnapshot":
         version = data.get("version")
+        if version == 1:
+            data = migrate_v1_to_v2(data)
+            version = data["version"]
+        if version == 2:
+            data = migrate_v2_to_v3(data)
+            version = data["version"]
+        if version == 3:
+            data = migrate_v3_to_v4(data)
+            version = data["version"]
+        if version == 4:
+            data = migrate_v4_to_v5(data)
+            version = data["version"]
+        if version == 5:
+            data = migrate_v5_to_v6(data)
+            version = data["version"]
         if version != SNAPSHOT_VERSION:
             raise ValueError(
                 f"快照版本不兼容: 文件版本={version}, 当前代码版本={SNAPSHOT_VERSION}。"
                 f"拒绝半解析——版本迁移需要显式的迁移函数,不能假装能读。"
             )
         return cls(**data)
+
+
+def migrate_v1_to_v2(data: dict) -> dict:
+    migrated = dict(data)
+    migrated["version"] = 2
+    migrated.setdefault("extraction_watermark", None)
+    migrated.setdefault("runs_since_extraction", 0)
+    return migrated
+
+
+def migrate_v2_to_v3(data: dict) -> dict:
+    migrated = dict(data)
+    migrated["version"] = 3
+    migrated.setdefault("surfaced_memories", [])
+    return migrated
+
+
+def migrate_v3_to_v4(data: dict) -> dict:
+    migrated = dict(data)
+    migrated["version"] = 4
+    migrated.pop("extraction_watermark", None)
+    migrated.setdefault("extraction_boundary_hid", None)
+    old_surfaced = migrated.get("surfaced_memories") or []
+    if old_surfaced and isinstance(old_surfaced[0], str):
+        migrated["surfaced_memories"] = [{"name": n, "hid": None} for n in old_surfaced]
+    return migrated
+
+
+def migrate_v4_to_v5(data: dict) -> dict:
+    migrated = dict(data)
+    migrated["version"] = 5
+    migrated.setdefault("pending_approval_id", None)
+    migrated.setdefault("pending_tool_call_id", None)
+    return migrated
+
+
+def migrate_v5_to_v6(data: dict) -> dict:
+    """v5 没有细粒度退出原因和恢复计数器的概念。exit_reason=None 表示
+    "未知"(老快照的 status 字段仍然准确,只是没有细分);四个新字段
+    归零/False,是"这些恢复在 v5 时代不被追踪"的直接翻译——不假装
+    能从旧数据反推出真实发生过几次紧急压缩/截断恢复。"""
+    migrated = dict(data)
+    migrated["version"] = 6
+    migrated.setdefault("exit_reason", None)
+    migrated.setdefault("overflow_recovery_count", 0)
+    migrated.setdefault("output_truncation_count", 0)
+    migrated.setdefault("output_upgraded", False)
+    migrated.setdefault("terminal_nudge_count", 0)
+    return migrated
