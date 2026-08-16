@@ -157,41 +157,71 @@ WITH RECURSIVE tree(trace_id, agent) AS (
     SELECT t.trace_id, t.session_id
     FROM traces t JOIN tree ON t.parent_trace_id = tree.trace_id
 )
-SELECT tree.agent,
-       COUNT(c.event_id),
-       COALESCE(SUM(c.prompt_tokens), 0),
-       COALESCE(SUM(c.completion_tokens), 0),
-       COALESCE(SUM(CASE WHEN c.token_source != 'api_usage' THEN 1 ELSE 0 END), 0)
-FROM tree LEFT JOIN llm_calls c ON c.trace_id = tree.trace_id
-GROUP BY tree.agent
+SELECT trace_id, agent FROM tree
 """
 
 
-def aggregate_tokens(root_trace_id: str) -> dict:
-    """沿 parent_trace_id 递归聚合整棵 span 树的 token，按 Agent 分列。
+def llm_watermark() -> int:
+    """本轮开始前 llm_calls 的最大 rowid。"""
+    if not DB_PATH.exists():
+        return 0
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        n = conn.execute("SELECT COALESCE(MAX(rowid), 0) FROM llm_calls").fetchone()[0]
+        conn.close()
+        return n
+    except Exception:
+        return 0
 
-    分列是必须的：总数只能看出"涨了"，看不出**谁在涨**。而 baseline
-    的结论要落到具体 Agent 上才有因果（比如"增长全在 intent，因为
-    adjust_history 每轮拼进 prompt"）。
+
+def aggregate_tokens(root_trace_id: str, since_rowid: int) -> dict:
+    """聚合本轮的全部 LLM 调用，按 Agent 分列。
+
+    【为什么用 rowid 水位线而不是只走 span 树】
+    实测发现三个节点的 LLM 调用**根本不在 span 树里**：
+
+        intent_node.py:122      trace_id=state["session_id"]   ← traces 表里没这行
+        routing_node.py:68      trace_id=state["session_id"]
+        clarification_node.py   trace_id="clarification"       ← 字面量
+
+    只沿 parent_trace_id 递归会把它们全部漏掉——而 intent 恰恰是
+    adjust_history 每轮拼进 prompt 的地方，是最该被测的增长点。
+    改成"本轮新增的 llm_calls 全收"，挂没挂上树都跑不掉；挂上树的
+    按 Agent 名归属，没挂上的单独标 orphan，**让漏洞在数据里显形而
+    不是消失**。
+
+    这条本身是 finding：span 树不完整会让 analytics.session_cost()
+    对这三个节点算不出真实开销。
     """
     if not DB_PATH.exists():
         return {"error": f"{DB_PATH} 不存在"}
     try:
         conn = sqlite3.connect(str(DB_PATH))
-        rows = conn.execute(_TREE_SQL, (root_trace_id,)).fetchall()
+        tree = dict(conn.execute(_TREE_SQL, (root_trace_id,)).fetchall())
+        rows = conn.execute(
+            "SELECT trace_id, prompt_tokens, completion_tokens, token_source "
+            "FROM llm_calls WHERE rowid > ?", (since_rowid,)
+        ).fetchall()
         conn.close()
     except Exception as e:                      # 观测设施失败不该中断采集
         return {"error": f"{type(e).__name__}: {e}"}
 
-    by_agent, tot_p, tot_c, tot_calls, tot_est = {}, 0, 0, 0, 0
-    for agent, n_calls, p, c, n_est in rows:
-        if not n_calls:
-            continue
-        by_agent[agent or "?"] = {
-            "llm_calls": n_calls, "prompt_tokens": p, "completion_tokens": c,
-            "estimated_calls": n_est,
-        }
-        tot_p += p; tot_c += c; tot_calls += n_calls; tot_est += n_est
+    by_agent: dict[str, dict] = {}
+    tot_p = tot_c = tot_calls = tot_est = n_orphan = 0
+    for trace_id, p, c, src in rows:
+        p, c = p or 0, c or 0
+        agent = tree.get(trace_id)
+        if agent is None:                       # 不在本轮 span 树上
+            agent, n_orphan = f"orphan:{trace_id}", n_orphan + 1
+        d = by_agent.setdefault(agent, {"llm_calls": 0, "prompt_tokens": 0,
+                                        "completion_tokens": 0, "estimated_calls": 0})
+        d["llm_calls"] += 1
+        d["prompt_tokens"] += p
+        d["completion_tokens"] += c
+        if src != "api_usage":
+            d["estimated_calls"] += 1
+            tot_est += 1
+        tot_p += p; tot_c += c; tot_calls += 1
 
     return {
         "by_agent": by_agent,
@@ -200,8 +230,11 @@ def aggregate_tokens(root_trace_id: str) -> dict:
         "completion_tokens": tot_c,
         "total_tokens": tot_p + tot_c,
         # estimated 混进来会污染曲线（原则 2：usage 收不到不伪造）。
-        # 非 0 时报表要按 token_source 分组，不能直接把两者相加比较。
+        # 非 0 时报表要按 token_source 分组，不能直接相加比较。
         "estimated_calls": tot_est,
+        # 游离在 span 树外的调用数。非 0 说明 tracing 有覆盖缺口，
+        # 是 F-008 的量化证据。
+        "orphan_calls": n_orphan,
     }
 
 
@@ -365,14 +398,15 @@ async def main(n_turns: int, dry_run: bool) -> None:
         row: dict = {**spec, "ok": False}
 
         try:
+            mark = llm_watermark()
             result = await session.say(spec["input"])
             obs = observe(result, prev_max_eta, prev_log_len)
             prev_log_len = len(result.task_log or [])
             row.update({
-                "ok": True,
+                "ok": result.ok,
                 "reply": result.reply,
                 "root_trace_id": result.root_trace_id,
-                "tokens": aggregate_tokens(result.root_trace_id),
+                "tokens": aggregate_tokens(result.root_trace_id, mark),
                 "observed": obs,
                 # ⚠️ 人工标注列：跑完后逐轮填。第 9 轮这一格是
                 #    P0-A / P1 分界的唯一依据，机器判不了。
@@ -396,6 +430,9 @@ async def main(n_turns: int, dry_run: bool) -> None:
                 parts = [f"{a}:{d['prompt_tokens'] + d['completion_tokens']}"
                          for a, d in sorted(tk["by_agent"].items())]
                 print(f"  by_agent  {'  '.join(parts)}")
+            if tk.get("orphan_calls"):
+                print(f"  ⚠️ {tk['orphan_calls']} 次调用不在 span 树上"
+                      f"（intent/routing/clarification，见 F-008）")
             if tk.get("estimated_calls"):
                 print(f"  ⚠️ {tk['estimated_calls']} 次调用的 token 是估算的，"
                       f"报表需按 token_source 分组")
