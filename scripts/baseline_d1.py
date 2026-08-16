@@ -213,15 +213,21 @@ _NO_SPICY_RE = re.compile(r"no_spicy=(True|False)")
 _ETA_FILTER_RE = re.compile(r"eta≤(\d+)min 过滤掉 (\d+) 个候选")
 
 
-def observe(result, prev_max_eta: int | None) -> dict:
+def observe(result, prev_max_eta: int | None, prev_log_len: int = 0) -> dict:
     """把这一轮的观测项从 state 里挖出来。
 
     每一项都用 try 兜住：采集脚本自己崩掉会浪费掉前面几轮的真实
     LLM 花费，而这一整段会话是不可逆的。宁可某一列是 None。
+
+    ⚠️ task_log 是**跨轮累积**的（整个 state 带进下一轮）。所以
+    必须切出本轮新增的那一段再匹配——否则第 3 轮会读到第 1 轮
+    留下的 no_spicy=False。试跑时踩过这个，正是"发送方以为传了、
+    接收方读到的是别的东西"的又一个实例。
     """
     st = result.state or {}
     task_log = result.task_log or []
-    log_text = "\n".join(str(x) for x in task_log)
+    turn_log = task_log[prev_log_len:]          # 只看本轮新增
+    log_text = "\n".join(str(x) for x in turn_log)
 
     def safe(fn, default=None):
         try:
@@ -235,9 +241,13 @@ def observe(result, prev_max_eta: int | None) -> dict:
     fact_data = safe(lambda: (outputs.get("fact") or {}).get("data") or {}, {}) or {}
     orch_data = safe(lambda: (outputs.get("orchestrator") or {}).get("data") or {}, {}) or {}
 
-    # no_spicy：fact_node 已经把它写进 task_log，不用改生产代码
-    m = _NO_SPICY_RE.search(log_text)
-    no_spicy = (m.group(1) == "True") if m else None
+    # no_spicy：fact_node 已经把它写进 task_log，不用改生产代码。
+    # 取**最后一个**匹配：一轮内 fact 可能被调用多次。
+    # 值为 None 的语义是"本轮没有任何地方计算过 no_spicy"——
+    # 这不是缺测，它本身就是观测结果（adjust 路径不走 fact_node）。
+    hits = _NO_SPICY_RE.findall(log_text)
+    no_spicy = (hits[-1] == "True") if hits else None
+    fact_ran = any(str(x).startswith("fact:") for x in turn_log)
 
     # 预算：IntentResult schema 里没有这个字段，预期整场恒为 False
     blob = json.dumps({"intent": intent, "plan_context": pc}, ensure_ascii=False)
@@ -255,6 +265,13 @@ def observe(result, prev_max_eta: int | None) -> dict:
         "adjust_history_len": len(st.get("adjust_history") or []),
         "adjust_history": list(st.get("adjust_history") or []),
 
+        # fact_ran=False + no_spicy=None → 本轮没有任何辣度执行点。
+        # 【试跑实测】adjust 路径不经过 fact_node，且 Orchestrator
+        # 的 _tool_search_pois 调 FactAgent 时不传 no_spicy（默认
+        # False）——「不吃辣」在整条调整路径上没有执行机构。
+        "fact_ran": fact_ran,
+        "searched_pois": any("search_pois" in str(a)
+                             for a in (orch_data.get("action_log") or [])),
         "no_spicy": no_spicy,
         "budget_seen": budget_seen,
         "waypoints_len": len(fact_data.get("waypoints") or []),
@@ -342,13 +359,15 @@ async def main(n_turns: int, dry_run: bool) -> None:
     }
 
     prev_max_eta = None
+    prev_log_len = 0          # task_log 跨轮累积，记住上轮长度好切出本轮
     for spec in turns:
         print(f"\n{'─'*66}\n轮 {spec['turn']}  「{spec['input']}」")
         row: dict = {**spec, "ok": False}
 
         try:
             result = await session.say(spec["input"])
-            obs = observe(result, prev_max_eta)
+            obs = observe(result, prev_max_eta, prev_log_len)
+            prev_log_len = len(result.task_log or [])
             row.update({
                 "ok": True,
                 "reply": result.reply,
@@ -367,6 +386,10 @@ async def main(n_turns: int, dry_run: bool) -> None:
             print(f"  route={obs['route']}  adjust={obs['adjust_history_len']}  "
                   f"no_spicy={obs['no_spicy']}  budget_seen={obs['budget_seen']}  "
                   f"waypoints={obs['waypoints_len']}")
+            print(f"  fact_ran={obs['fact_ran']}  searched_pois={obs['searched_pois']}  "
+                  f"diet={obs['diet']}  avoid={obs['avoid']}")
+            if not obs["fact_ran"]:
+                print("  ⚠️ 本轮未经过 fact_node —— 辣度约束无执行点")
             print(f"  tokens={tk.get('total_tokens')}  calls={tk.get('llm_calls')}  "
                   f"pool={obs['poi_pool_size']}  max_eta={obs['max_eta_in_pool']}")
             if tk.get("by_agent"):
@@ -399,15 +422,16 @@ async def main(n_turns: int, dry_run: bool) -> None:
                         encoding="utf-8")
 
     print(f"\n{'='*66}\n已写入 {out_path}\n{'='*66}")
-    print(f"{'轮':>3} {'route':<12} {'adj':>4} {'spicy':>6} {'budget':>7} "
-          f"{'wp':>3} {'tokens':>8} {'calls':>6}")
+    print(f"{'轮':>3} {'route':<12} {'adj':>4} {'fact':>6} {'spicy':>6} "
+          f"{'budget':>7} {'wp':>3} {'tokens':>8} {'calls':>6}")
     for r in record["turns"]:
         if not r.get("ok"):
             print(f"{r['turn']:>3}  ❌ {r.get('error','')[:50]}")
             continue
         o, t = r["observed"], r["tokens"]
         print(f"{r['turn']:>3} {str(o['route']):<12} {o['adjust_history_len']:>4} "
-              f"{str(o['no_spicy']):>6} {str(o['budget_seen']):>7} "
+              f"{str(o['fact_ran']):>6} {str(o['no_spicy']):>6} "
+              f"{str(o['budget_seen']):>7} "
               f"{o['waypoints_len']:>3} {t.get('total_tokens',0):>8} "
               f"{t.get('llm_calls',0):>6}")
 
