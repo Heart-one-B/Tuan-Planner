@@ -1,0 +1,1466 @@
+{
+  "timestamp": "2026-08-10T22:09:29.846138",
+  "cases_version": 3,
+  "layers": [
+    "l1_intent"
+  ],
+  "memory": false,
+  "selected": 39,
+  "summary": {
+    "overall": {
+      "n": 39,
+      "passed": 36,
+      "failed": 3,
+      "error": 0
+    },
+    "by_layer": {
+      "l1_intent": {
+        "n": 39,
+        "passed": 36,
+        "failed": 3,
+        "error": 0
+      }
+    },
+    "by_origin": {
+      "constructed": {
+        "n": 34,
+        "passed": 32,
+        "failed": 2,
+        "error": 0
+      },
+      "real": {
+        "n": 5,
+        "passed": 4,
+        "failed": 1,
+        "error": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L1-E01",
+      "layer": "l1_intent",
+      "origin": "real",
+      "input": "周六下午两点到十点和朋友出去玩，从四川大学江安校区出发，晚上想吃点火锅",
+      "expect": {
+        "restaurant_intent": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "火锅"
+        ],
+        "scenario": "friends",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "people_count"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "14:00",
+        "end_time": "22:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-E02",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "明天中午想吃日料，两个人，从江安校区出发",
+      "expect": {
+        "restaurant_intent": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "日本料理"
+        ],
+        "scenario": "couple",
+        "people_count": 2,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "11:00",
+        "end_time": "13:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-E03",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "这周末四个人朋友聚会，找个地方逛逛，晚上吃烧烤",
+      "expect": {
+        "restaurant_intent": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "烧烤"
+        ],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": true,
+        "missing_slots": [
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-E04",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "下午带孩子出去玩，晚上想吃粤菜，从江安校区出发",
+      "expect": {
+        "restaurant_intent": "explicit",
+        "scenario": "family"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='family' 实际='family'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "粤菜"
+        ],
+        "scenario": "family",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-E05",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "晚上想去海底捞，六个人，同事聚餐",
+      "expect": {
+        "restaurant_intent": "explicit",
+        "scenario": "team"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='team' 实际='team'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "海底捞",
+          "火锅"
+        ],
+        "scenario": "team",
+        "people_count": 6,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day",
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "18:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-E06",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "想吃凉皮和肉夹馍，中午，两个人",
+      "expect": {
+        "restaurant_intent": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "凉皮",
+          "肉夹馍"
+        ],
+        "scenario": "couple",
+        "people_count": 2,
+        "clarification_needed": true,
+        "missing_slots": [
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "11:00",
+        "end_time": "13:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-E07",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "周日晚上吃个川菜，四个人",
+      "expect": {
+        "restaurant_intent": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "川菜"
+        ],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": true,
+        "missing_slots": [
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "18:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-E08",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "下午逛街，晚上想吃日式拉面",
+      "expect": {
+        "restaurant_intent": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "日式拉面",
+          "日本料理"
+        ],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-T01",
+      "layer": "l1_intent",
+      "origin": "real",
+      "input": "晚上想吃清淡点的，四个人，从江安校区出发",
+      "expect": {
+        "restaurant_intent": "open",
+        "diet_preference_contains": [
+          "清淡"
+        ]
+      },
+      "verdict": "failed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": false,
+          "detail": "restaurant_intent: 期望='open' 实际='explicit'"
+        },
+        {
+          "key": "diet_preference_contains",
+          "passed": true,
+          "detail": "diet_preference: 期望含=['清淡'] 实际=['清淡'] 缺=[]"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "粤菜",
+          "江浙菜",
+          "茶餐厅",
+          "素食"
+        ],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [
+          "清淡"
+        ],
+        "must_avoid": [],
+        "start_time": "18:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-T02",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "找个便宜点的地方吃饭，学生党",
+      "expect": {
+        "restaurant_intent": "open"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-T03",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "想吃点有特色的，别太连锁",
+      "expect": {
+        "restaurant_intent": "open",
+        "must_avoid_contains": [
+          "连锁"
+        ]
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "must_avoid_contains",
+          "passed": true,
+          "detail": "must_avoid: 期望含=['连锁'] 实际=['连锁'] 缺=[]"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario",
+          "time_day",
+          "origin_area",
+          "people_count"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [
+          "连锁"
+        ],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-T04",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "晚上吃点好的，庆祝一下",
+      "expect": {
+        "restaurant_intent": "open"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "18:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-T05",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "想吃辣的，四个人晚上",
+      "expect": {
+        "restaurant_intent": "open"
+      },
+      "verdict": "failed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": false,
+          "detail": "restaurant_intent: 期望='open' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "川菜",
+          "湘菜",
+          "火锅",
+          "麻辣香锅"
+        ],
+        "scenario": "unknown",
+        "people_count": 4,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario",
+          "time_day",
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [
+          "辣"
+        ],
+        "must_avoid": [],
+        "start_time": "18:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-T06",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "随便吃点就行，不挑",
+      "expect": {
+        "restaurant_intent": "open"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O01",
+      "layer": "l1_intent",
+      "origin": "real",
+      "input": "这周日下午两点到晚上九点，还是四个人，从四川大学江安校区出发，找个地方聚一聚吃个饭",
+      "expect": {
+        "restaurant_intent": "open",
+        "scenario": "friends"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='friends' 实际='friends'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "14:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O02",
+      "layer": "l1_intent",
+      "origin": "real",
+      "input": "这周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，找个地方逛逛然后吃个饭",
+      "expect": {
+        "restaurant_intent": "open",
+        "scenario": "friends"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='friends' 实际='friends'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "14:00",
+        "end_time": "22:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O03",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "明天和女朋友出去约会，下午到晚上，江安校区附近",
+      "expect": {
+        "restaurant_intent": "open",
+        "scenario": "couple"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='couple' 实际='couple'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "couple",
+        "people_count": 2,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O04",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "周末带老婆孩子出去玩一天，孩子5岁，顺便解决午饭晚饭",
+      "expect": {
+        "restaurant_intent": "open",
+        "scenario": "family"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='family' 实际='family'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "family",
+        "people_count": 3,
+        "clarification_needed": true,
+        "missing_slots": [
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O05",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "公司团建，十个人，下午加晚上，包括聚餐",
+      "expect": {
+        "restaurant_intent": "open",
+        "scenario": "team"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='team' 实际='team'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "team",
+        "people_count": 10,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O06",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "晚上一起吃个饭吧，四个朋友",
+      "expect": {
+        "restaurant_intent": "open",
+        "scenario": "friends"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='friends' 实际='friends'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day",
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "18:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O07",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "下午有空，想出去转转顺便吃个晚饭",
+      "expect": {
+        "restaurant_intent": "open"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-O08",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "周六聚餐，六个人，地点你定",
+      "expect": {
+        "restaurant_intent": "open"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": 6,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-N01",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "下午想找个地方逛逛，两个小时，江安校区附近",
+      "expect": {
+        "restaurant_intent": "none"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='none' 实际='none'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario",
+          "time_day",
+          "time_window",
+          "people_count"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-N02",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "周末想去看个展览，一个人",
+      "expect": {
+        "restaurant_intent": "none"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='none' 实际='none'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": 1,
+        "clarification_needed": true,
+        "missing_slots": [
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-N03",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "带孩子去公园玩玩，下午",
+      "expect": {
+        "restaurant_intent": "none",
+        "scenario": "family"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='none' 实际='none'"
+        },
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='family' 实际='family'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "family",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-N04",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "想去打个台球，晚上，三个人",
+      "expect": {
+        "restaurant_intent": "none"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='none' 实际='none'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 3,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "18:00",
+        "end_time": "21:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-N05",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "下午出去走走透透气",
+      "expect": {
+        "restaurant_intent": "none"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='none' 实际='none'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-S01",
+      "layer": "l1_intent",
+      "origin": "real",
+      "input": "周六下午和朋友出去玩，从四川大学江安校区出发，晚上想吃点火锅",
+      "expect": {
+        "restaurant_intent": "explicit",
+        "missing_slots_contains": [
+          "people_count"
+        ]
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        },
+        {
+          "key": "missing_slots_contains",
+          "passed": true,
+          "detail": "missing_slots: 期望含=['people_count'] 实际=['people_count'] 缺=[]"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "火锅"
+        ],
+        "scenario": "friends",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "people_count"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-S02",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "我和老婆孩子想出去玩",
+      "expect": {
+        "scenario": "family",
+        "people_count": 3
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='family' 实际='family'"
+        },
+        {
+          "key": "people_count",
+          "passed": true,
+          "detail": "people_count: 期望=3 实际=3"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "family",
+        "people_count": 3,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-S03",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "和三个朋友周六出去",
+      "expect": {
+        "scenario": "friends",
+        "people_count": 4
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "scenario",
+          "passed": true,
+          "detail": "scenario: 期望='friends' 实际='friends'"
+        },
+        {
+          "key": "people_count",
+          "passed": true,
+          "detail": "people_count: 期望=4 实际=4"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_window",
+          "origin_area"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-S04",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "明天出去玩",
+      "expect": {
+        "clarification_needed": true
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "clarification_needed",
+          "passed": true,
+          "detail": "clarification_needed: 期望=True 实际=True"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "unknown",
+        "people_count": null,
+        "clarification_needed": true,
+        "missing_slots": [
+          "scenario"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-S05",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "周六下午两点到六点，四个人和朋友一起，从江安校区出发，想找个地方玩",
+      "expect": {
+        "clarification_needed": false,
+        "restaurant_intent": "none"
+      },
+      "verdict": "failed",
+      "checks": [
+        {
+          "key": "clarification_needed",
+          "passed": true,
+          "detail": "clarification_needed: 期望=False 实际=False"
+        },
+        {
+          "key": "restaurant_intent",
+          "passed": false,
+          "detail": "restaurant_intent: 期望='none' 实际='open'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "14:00",
+        "end_time": "18:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-C01",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "你好",
+      "expect": {
+        "is_leisure_planning": false
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "is_leisure_planning",
+          "passed": true,
+          "detail": "is_leisure_planning: 期望=False 实际=False"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "none",
+        "people_count": null,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": false,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-C02",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "你能干什么",
+      "expect": {
+        "is_leisure_planning": false
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "is_leisure_planning",
+          "passed": true,
+          "detail": "is_leisure_planning: 期望=False 实际=False"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "none",
+        "people_count": null,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": false,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-C03",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "成都有多少人口",
+      "expect": {
+        "is_leisure_planning": false
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "is_leisure_planning",
+          "passed": true,
+          "detail": "is_leisure_planning: 期望=False 实际=False"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "none",
+        "people_count": null,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": false,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-C04",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "谢谢，就这样吧",
+      "expect": {
+        "is_leisure_planning": false
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "is_leisure_planning",
+          "passed": true,
+          "detail": "is_leisure_planning: 期望=False 实际=False"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "none",
+        "people_count": null,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": false,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-M01",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "周六下午三点到晚上十点，四个人，江安校区出发，逛逛吃饭",
+      "expect": {
+        "start_time": "15:00",
+        "end_time": "22:00"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "start_time",
+          "passed": true,
+          "detail": "start_time: 期望='15:00' 实际='15:00'"
+        },
+        {
+          "key": "end_time",
+          "passed": true,
+          "detail": "end_time: 期望='22:00' 实际='22:00'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "15:00",
+        "end_time": "22:00",
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-M03",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "找个地方吃饭，四个人，江安校区出发",
+      "expect": {
+        "start_time": null,
+        "end_time": null
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "start_time",
+          "passed": true,
+          "detail": "start_time: 期望=None 实际=None"
+        },
+        {
+          "key": "end_time",
+          "passed": true,
+          "detail": "end_time: 期望=None 实际=None"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": true,
+        "missing_slots": [
+          "time_day"
+        ],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": null,
+        "end_time": null,
+        "waypoint_keywords": []
+      }
+    },
+    {
+      "id": "L1-M04",
+      "layer": "l1_intent",
+      "origin": "constructed",
+      "input": "中途想买杯奶茶，周六下午四个人从江安校区出发逛街吃饭",
+      "expect": {
+        "waypoint_keywords_contains": [
+          "奶茶"
+        ]
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "waypoint_keywords_contains",
+          "passed": true,
+          "detail": "waypoint_keywords: 期望含=['奶茶'] 实际=['奶茶'] 缺=[]"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "people_count": 4,
+        "clarification_needed": false,
+        "missing_slots": [],
+        "is_leisure_planning": true,
+        "diet_preference": [],
+        "must_avoid": [],
+        "start_time": "13:00",
+        "end_time": "18:00",
+        "waypoint_keywords": [
+          "奶茶"
+        ]
+      }
+    }
+  ]
+}

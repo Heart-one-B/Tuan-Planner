@@ -1,0 +1,166 @@
+{
+  "timestamp": "2026-08-12T19:12:47.250413",
+  "cases_version": 3,
+  "layers": [
+    "l3_multiturn"
+  ],
+  "memory": false,
+  "selected": 1,
+  "summary": {
+    "overall": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0,
+      "error": 0
+    },
+    "by_layer": {
+      "l3_multiturn": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    },
+    "by_origin": {
+      "real": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L3-01",
+      "layer": "l3_multiturn",
+      "origin": "real",
+      "input": [
+        "周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，逛逛然后晚上吃火锅",
+        "晚上不想吃火锅了，吃不了辣想吃清淡点"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "no_spicy_violation": false,
+        "eval_score_min": 80,
+        "eval_reason_not_contains": [
+          "核心需求未满足",
+          "需求匹配度严重不足"
+        ]
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['骑龙中水湿地公园', '楠亭茶府', '楠亭茶府'], ['九号桌游探案馆(金色校园广场店)', '绿茶餐厅(成都世豪广场店)']]"
+        },
+        {
+          "key": "no_spicy_violation",
+          "passed": true,
+          "detail": "辛辣餐厅=无"
+        },
+        {
+          "key": "eval_score_min",
+          "passed": true,
+          "detail": "评分=92.0 要求≥80"
+        },
+        {
+          "key": "eval_reason_not_contains",
+          "passed": true,
+          "detail": "命中禁止词=[]；评语=晚餐绿茶餐厅（江浙菜）精准满足清淡不辣需求，下午桌游适合4人朋友聚会且互动性强，活动与餐厅动线集中、衔接紧凑合理，整体体验最佳。"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [
+          "清淡",
+          "不辣"
+        ],
+        "must_avoid": [
+          "火锅",
+          "辣"
+        ],
+        "no_spicy": true,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "江浙菜",
+          "粤菜",
+          "茶餐厅",
+          "椰子鸡",
+          "粥底火锅"
+        ],
+        "searched_activity_keywords": [
+          "咖啡馆",
+          "桌游",
+          "公园",
+          "书店",
+          "茶馆"
+        ],
+        "selected_plan_id": "plan_2",
+        "selected_restaurants": [
+          {
+            "id": "B0FFIBL3BD",
+            "name": "绿茶餐厅(成都世豪广场店)",
+            "type": "050100",
+            "location": "104.045780,30.549921",
+            "rating": "4.5",
+            "cost": 59.0,
+            "environment": "unknown",
+            "eta_minutes": 21
+          }
+        ],
+        "plan_item_names": [
+          "九号桌游探案馆(金色校园广场店)",
+          "绿茶餐厅(成都世豪广场店)"
+        ],
+        "time_coverage": 0.53125,
+        "eval_score": 92.0,
+        "eval_reason": "晚餐绿茶餐厅（江浙菜）精准满足清淡不辣需求，下午桌游适合4人朋友聚会且互动性强，活动与餐厅动线集中、衔接紧凑合理，整体体验最佳。",
+        "adjust_history": [
+          "晚上不想吃火锅了，吃不了辣想吃清淡点"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=explicit clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=explicit a_intent=open r_kw=['火锅'] a_kw=['咖啡馆', '茶馆', '桌游', '书店', '公园'] adjust=0 origin=四川大学江安校区@成都 14:00-22:00",
+          "fact: status=partial no_spicy=False summary=搜到40个活动候选、0家餐厅候选（餐饮按点名精确检索：火锅），用户点名的「火锅」附近未搜到",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_3 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_3",
+          "routing: route=adjust reason=用户针对当前方案中的晚餐环节提出修改意见，要求将火锅更换为清淡口味",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=open a_intent=open r_kw=['粤菜', '江浙菜', '茶餐厅', '粥底火锅', '椰子鸡'] a_kw=['咖啡馆', '书店', '桌游', '密室逃脱', '美术馆'] adjust=1 origin=四川大学江安校区@成都 14:00-22:00",
+          "orchestrator: search_pois: done → replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_2"
+        ],
+        "turn_items": [
+          [
+            "骑龙中水湿地公园",
+            "楠亭茶府",
+            "楠亭茶府"
+          ],
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "绿茶餐厅(成都世豪广场店)"
+          ]
+        ],
+        "eta_before": null,
+        "eta_after": 21
+      }
+    }
+  ]
+}

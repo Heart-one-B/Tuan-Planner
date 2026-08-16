@@ -1,0 +1,684 @@
+# evals/cases.yaml
+# 行程规划助手评估集 v3
+#
+# ══════════════════════════════════════════════════════════════
+# 断言的准入判据（新增断言必须先过这一关）
+# ══════════════════════════════════════════════════════════════
+#
+#   **这条断言失败时，能不能推出"系统有缺陷"？**
+#
+# 不能的话就不该存在——它只制造噪声，久了让人习惯性忽略红色，
+# 真正的失败反而被淹没。
+#
+# 被这条判据淘汰过的五类（全部真实误报过）：
+#
+#   ① 同义词字面匹配
+#      期望 restaurant_explicit_types=['日料']，实际 ['日本料理']。
+#      同一个东西，模型选哪个都对——「日本料理」甚至更好，
+#      typecode 050202 的官方名就是它。
+#
+#   ② 用词表穷举 POI 命名方式
+#      期望方案含"博物馆"，实际排了「林跃艺术收藏馆」——它就是
+#      用户想要的那类地方，只是叫"收藏馆"。补词（艺术馆/文化馆/
+#      科技馆/XX院…）只是把下次误报推迟。
+#      修法不是补词，是**把断言从"结果叫什么"移到"有没有去搜"**：
+#      搜了就算听懂了，搜出来叫什么是高德的事。
+#
+#   ③ **否定式断言会假通过**（最危险，是假阴性）
+#      期望方案不含"商场"，实际排了「茂业天地」——它就是商场，
+#      只是名字里没这两个字。系统没听懂，断言却通过了。
+#      误判成失败还能被发现，假通过是彻底的沉默。
+#
+#   ④ 恒真断言
+#      clarification_needed_ok 无论如何都返回 True，没有信息量。
+#
+#   ⑤ 为规格没定的行为写断言
+#      "周日上午" 该解析成 09:00-12:00 还是 null？prompt 里两条
+#      规则给不出一致答案（"上午→09:00" vs "没提到时间就填 null"）。
+#      规格自相矛盾时，把断言绑到当前这次的输出上，下次模型换个
+#      选择就失败——测的是运气不是正确性。已删除 L1-M02，
+#      待 prompt 明确之后再加回来。
+#
+# 另外两条实现层面的纪律：
+#   · 断言不许靠日志字符串匹配（文案一改就静默失效）
+#   · 阈值必须标注是否经过校准；未校准的取最宽松值，只抓极端
+#
+# ══════════════════════════════════════════════════════════════
+#
+# 【分层依据：成本】
+#   L1  39 条 × 1 次调用    分类准确率需要样本量才有分辨率
+#   L2  20 条 × 4-5 次调用  结构性断言，单条就能发现问题
+#   L3   8 条 × 9-10 次调用 最贵，只覆盖调整链路的关键形态
+#
+# 【origin 的意义】
+#   real         真实使用中出现过、或已经暴露过缺陷的输入
+#   constructed  为覆盖某个维度补的边界情况
+# 报告里必须分开统计——两者证明力不同。
+#
+# 【期望值是跑之前标注的】
+# 跑完再反调期望值就不是评估而是自我确认。要改必须记 changelog。
+#
+# 【YAML 写法】
+# note 以引号（含中文引号）或 - [ { & 开头时，整体用单引号裹起来。
+# 时间值必须加引号（'15:00' 不加会被当六十进制数解析成 900）。
+#
+# changelog:
+#   v1  初稿 68 条。
+#   v2  审计：删除脆弱断言（同义词字面匹配、否定式、恒真）。
+#       修 L1-S05 输入（原输入未指明场景，必然触发追问，期望值写错）。
+#       time_coverage 阈值统一降到 0.3 并标注未校准。
+#   v3  删 L1-M02（prompt 内部矛盾，规格没定的行为不该写断言；
+#       矛盾本身记进 findings）。L2-10 判据从"方案 POI 名"改成
+#       "搜索关键词"（词表穷举 POI 命名方式本质上做不到）。
+#       L1 从 40 条变 39 条，总数 67。
+
+meta:
+  version: 3
+  city: 成都
+  default_origin: 四川大学江安校区
+  note: |
+    地点固定在成都：高德数据密度、typecode 分布、"火锅辣不辣"这类
+    地域性判断都随城市变化，换城市要重新校准期望值。
+
+# ══════════════════════════════════════════════════════════════
+# L1：意图分流（只跑 IntentAgent）
+# ══════════════════════════════════════════════════════════════
+# 本层唯一的被测对象是 restaurant_intent 三分类。
+# 具体填了哪些类型词不断言（判据①）——那属于 L2 的
+# no_search_expansion 该管的事，而它比的是"实搜 ⊆ 点名"，
+# 不要求字面相等。
+
+l1_intent:
+
+  # ── explicit：点名了可检索的具体品类/菜系/店名 ──
+  - id: L1-E01
+    origin: real
+    input: 周六下午两点到十点和朋友出去玩，从四川大学江安校区出发，晚上想吃点火锅
+    expect:
+      restaurant_intent: explicit
+
+  - id: L1-E02
+    origin: constructed
+    input: 明天中午想吃日料，两个人，从江安校区出发
+    expect:
+      restaurant_intent: explicit
+
+  - id: L1-E03
+    origin: constructed
+    input: 这周末四个人朋友聚会，找个地方逛逛，晚上吃烧烤
+    expect:
+      restaurant_intent: explicit
+
+  - id: L1-E04
+    origin: constructed
+    input: 下午带孩子出去玩，晚上想吃粤菜，从江安校区出发
+    expect:
+      restaurant_intent: explicit
+      scenario: family
+
+  - id: L1-E05
+    origin: constructed
+    input: 晚上想去海底捞，六个人，同事聚餐
+    expect:
+      restaurant_intent: explicit
+      scenario: team
+    note: 点名的是店名不是品类，同样应判 explicit。
+
+  - id: L1-E06
+    origin: constructed
+    input: 想吃凉皮和肉夹馍，中午，两个人
+    expect:
+      restaurant_intent: explicit
+    note: |
+      两个品类词。高德按名称能搜到，但它们不在 typecode 体系里
+      （最接近 050115 西北菜）——"分类是菜系+业态、用户想的是
+      食物品类"这个错配的典型。
+
+  - id: L1-E07
+    origin: constructed
+    input: 周日晚上吃个川菜，四个人
+    expect:
+      restaurant_intent: explicit
+
+  - id: L1-E08
+    origin: constructed
+    input: 下午逛街，晚上想吃日式拉面
+    expect:
+      restaurant_intent: explicit
+
+  # ── 陷阱：口味/风格描述**不是**点名 ──
+  # 判据是**这个词能不能直接拿去地图搜到店**。「粤菜」能，「清淡」不能。
+  - id: L1-T01
+    origin: real
+    input: 晚上想吃清淡点的，四个人，从江安校区出发
+    expect:
+      restaurant_intent: open
+      diet_preference_contains: [清淡]
+    note: |
+      真实缺陷，回归哨兵。当前实现判成 explicit 并生成
+      ['清淡餐饮','粤菜','茶餐厅','粥店']，其中"清淡餐饮"根本
+      搜不到东西。修好后本条应转为通过。
+
+  - id: L1-T02
+    origin: constructed
+    input: 找个便宜点的地方吃饭，学生党
+    expect:
+      restaurant_intent: open
+
+  - id: L1-T03
+    origin: constructed
+    input: 想吃点有特色的，别太连锁
+    expect:
+      restaurant_intent: open
+      must_avoid_contains: [连锁]
+
+  - id: L1-T04
+    origin: constructed
+    input: 晚上吃点好的，庆祝一下
+    expect:
+      restaurant_intent: open
+
+  - id: L1-T05
+    origin: constructed
+    input: 想吃辣的，四个人晚上
+    expect:
+      restaurant_intent: open
+    note: |
+      "辣"是口味不是品类。实测判成 explicit——与 T01 同一缺陷的
+      第二个实例。判 explicit 会让 FactAgent 去搜「辣」这个词。
+
+  - id: L1-T06
+    origin: constructed
+    input: 随便吃点就行，不挑
+    expect:
+      restaurant_intent: open
+
+  # ── open：想吃饭但没指定 ──
+  - id: L1-O01
+    origin: real
+    input: 这周日下午两点到晚上九点，还是四个人，从四川大学江安校区出发，找个地方聚一聚吃个饭
+    expect:
+      restaurant_intent: open
+      scenario: friends
+
+  - id: L1-O02
+    origin: real
+    input: 这周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，找个地方逛逛然后吃个饭
+    expect:
+      restaurant_intent: open
+      scenario: friends
+
+  - id: L1-O03
+    origin: constructed
+    input: 明天和女朋友出去约会，下午到晚上，江安校区附近
+    expect:
+      restaurant_intent: open
+      scenario: couple
+
+  - id: L1-O04
+    origin: constructed
+    input: 周末带老婆孩子出去玩一天，孩子5岁，顺便解决午饭晚饭
+    expect:
+      restaurant_intent: open
+      scenario: family
+
+  - id: L1-O05
+    origin: constructed
+    input: 公司团建，十个人，下午加晚上，包括聚餐
+    expect:
+      restaurant_intent: open
+      scenario: team
+
+  - id: L1-O06
+    origin: constructed
+    input: 晚上一起吃个饭吧，四个朋友
+    expect:
+      restaurant_intent: open
+      scenario: friends
+
+  - id: L1-O07
+    origin: constructed
+    input: 下午有空，想出去转转顺便吃个晚饭
+    expect:
+      restaurant_intent: open
+
+  - id: L1-O08
+    origin: constructed
+    input: 周六聚餐，六个人，地点你定
+    expect:
+      restaurant_intent: open
+
+  # ── none：完全没提吃饭 ──
+  - id: L1-N01
+    origin: constructed
+    input: 下午想找个地方逛逛，两个小时，江安校区附近
+    expect:
+      restaurant_intent: none
+
+  - id: L1-N02
+    origin: constructed
+    input: 周末想去看个展览，一个人
+    expect:
+      restaurant_intent: none
+
+  - id: L1-N03
+    origin: constructed
+    input: 带孩子去公园玩玩，下午
+    expect:
+      restaurant_intent: none
+      scenario: family
+
+  - id: L1-N04
+    origin: constructed
+    input: 想去打个台球，晚上，三个人
+    expect:
+      restaurant_intent: none
+
+  - id: L1-N05
+    origin: constructed
+    input: 下午出去走走透透气
+    expect:
+      restaurant_intent: none
+
+  # ── 槽位缺失与追问 ──
+  - id: L1-S01
+    origin: real
+    input: 周六下午和朋友出去玩，从四川大学江安校区出发，晚上想吃点火锅
+    expect:
+      restaurant_intent: explicit
+      missing_slots_contains: [people_count]
+    note: 真实出现过。人数无法推断时应追问。
+
+  - id: L1-S02
+    origin: constructed
+    input: 我和老婆孩子想出去玩
+    expect:
+      scenario: family
+      people_count: 3
+    note: '"一家三口"式推断，不该追问人数。'
+
+  - id: L1-S03
+    origin: constructed
+    input: 和三个朋友周六出去
+    expect:
+      scenario: friends
+      people_count: 4
+    note: '"和三个朋友" = 4 人（含自己）。这是算术，不是判断。'
+
+  - id: L1-S04
+    origin: constructed
+    input: 明天出去玩
+    expect:
+      clarification_needed: true
+    note: 几乎什么都没说，必须追问。
+
+  - id: L1-S05
+    origin: constructed
+    input: 周六下午两点到六点，四个人和朋友一起，从江安校区出发，想找个地方玩
+    expect:
+      clarification_needed: false
+      restaurant_intent: none
+    note: |
+      v2 修正输入：原输入未指明场景，scenario 必然是 unknown，
+      按 missing_slots 优先级第 1 条会触发追问——期望
+      clarification_needed=false 是我写错了，不是系统的问题。
+
+  # ── 非规划输入 ──
+  - id: L1-C01
+    origin: constructed
+    input: 你好
+    expect:
+      is_leisure_planning: false
+
+  - id: L1-C02
+    origin: constructed
+    input: 你能干什么
+    expect:
+      is_leisure_planning: false
+
+  - id: L1-C03
+    origin: constructed
+    input: 成都有多少人口
+    expect:
+      is_leisure_planning: false
+
+  - id: L1-C04
+    origin: constructed
+    input: 谢谢，就这样吧
+    expect:
+      is_leisure_planning: false
+
+  # ── 时间解析 ──
+  # v3 删除了 L1-M02（"周日上午"）：prompt 里"上午→09:00-12:00"和
+  # "没提到时间就填 null"两条规则对它给不出一致答案，规格自相矛盾
+  # 时不该写断言。矛盾本身记进 findings，prompt 明确之后再加回来。
+  - id: L1-M01
+    origin: constructed
+    input: 周六下午三点到晚上十点，四个人，江安校区出发，逛逛吃饭
+    expect:
+      start_time: '15:00'
+      end_time: '22:00'
+    note: 用户给了具体钟点，规格明确，字面断言是稳的。
+
+  - id: L1-M03
+    origin: constructed
+    input: 找个地方吃饭，四个人，江安校区出发
+    expect:
+      start_time: null
+      end_time: null
+    note: 完全没提时间，禁止脑补默认值。这条规格是明确的。
+
+  - id: L1-M04
+    origin: constructed
+    input: 中途想买杯奶茶，周六下午四个人从江安校区出发逛街吃饭
+    expect:
+      waypoint_keywords_contains: [奶茶]
+    note: 用户原话就是"奶茶"，模型没有改写它的理由。
+
+# ══════════════════════════════════════════════════════════════
+# L2：端到端（全链路，结构性断言）
+# ══════════════════════════════════════════════════════════════
+# 不评"方案好不好"——那需要 LLM judge，而 judge 本身未经校准。
+#
+# time_coverage_min 全部取 0.3：**阈值未经校准**，取最宽松值只为
+# 抓极端情况（8 小时行程只排一个活动就结束）。首轮实测分布为
+# 38%/57%/64%，看起来 0.3 偏松，但校准需要更多样本，先不动。
+
+l2_e2e:
+
+  - id: L2-01
+    origin: real
+    input: 这周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，找个地方逛逛然后晚上吃个火锅
+    expect:
+      restaurant_intent: explicit
+      no_search_expansion: true
+      time_coverage_min: 0.3
+      has_restaurant: true
+
+  - id: L2-02
+    origin: real
+    input: 这周日下午两点到晚上九点，还是四个人，从四川大学江安校区出发，找个地方聚一聚吃个饭
+    expect:
+      restaurant_intent: open
+      has_restaurant: true
+      time_coverage_min: 0.3
+
+  - id: L2-03
+    origin: constructed
+    input: 周六下午两点到六点，两个人，从江安校区出发，想找个地方逛逛，不吃饭
+    expect:
+      restaurant_intent: none
+      has_restaurant: false
+
+  - id: L2-04
+    origin: constructed
+    input: 明天中午十二点到下午两点，两个人，从江安校区出发，就吃个午饭
+    expect:
+      plan_mode: meal_only
+      has_restaurant: true
+    note: |
+      预期失败，哨兵。_build_plan_context 的 need_activity 判据是
+      字符串匹配（"只吃饭"/"只吃个饭"/"找餐厅"/"约饭"），
+      "就吃个午饭"不在表里 → plan_mode 会是 activity_plus_meal。
+      实测还连带触发了 FactAgent 的类别盲补（模型没规划活动搜索，
+      代码按 plan_mode 补了"公园、美术馆"）——"用错误的 plan_mode
+      逼出多余搜索"的完整链条。
+
+  - id: L2-05
+    origin: constructed
+    input: 周六上午十点到晚上九点，一家三口，孩子5岁，从江安校区出发，玩一天顺便吃饭
+    expect:
+      scenario: family
+      time_coverage_min: 0.3
+      has_restaurant: true
+    note: 长时长（11 小时），最容易暴露时段填不满。
+
+  - id: L2-06
+    origin: constructed
+    input: 周六晚上七点到十点，四个人，江安校区出发，吃个饭聊聊天
+    expect:
+      has_restaurant: true
+      time_coverage_min: 0.3
+
+  - id: L2-07
+    origin: constructed
+    input: 周日下午两点到晚上八点，两个人约会，从江安校区出发，想吃日料
+    expect:
+      restaurant_intent: explicit
+      no_search_expansion: true
+      scenario: couple
+
+  - id: L2-08
+    origin: constructed
+    input: 周六下午两点到晚上十点，四个人，从江安校区出发，想吃佛跳墙
+    expect:
+      restaurant_intent: explicit
+      no_search_expansion: true
+    note: |
+      v2 修正：原来断言 allow_empty_restaurant（要求 status=partial），
+      但成都真有闽菜馆，搜到了 status=ok 并不是缺陷——期望值写错了。
+      真正该断言的与"搜没搜到"无关：**不擅自把用户点名的品类
+      扩展成别的**。搜不到就如实报告，不替他改需求。
+
+  - id: L2-09
+    origin: constructed
+    input: 周六下午两点到晚上十点，四个人，江安校区出发，逛逛吃饭，我们不吃辣
+    expect:
+      no_spicy: true
+      no_spicy_violation: false
+    note: |
+      选中餐厅的 typecode 不得是 050102（川菜）/ 050108（湘菜）。
+      火锅店 050117 属存疑类目，不算违规——与生产代码
+      violates_no_spicy(strict=False) 同一口径。评估用一套判定、
+      生产用另一套是自欺。
+
+  - id: L2-10
+    origin: constructed
+    input: 周六下午，四个人和朋友一起，江安校区出发，想去博物馆，晚上吃饭
+    expect:
+      has_restaurant: true
+      searched_activity_contains_any: [博物馆, 展览, 美术馆]
+    note: |
+      v3 改判据：从"方案里的 POI 名含博物馆"改成"搜索关键词含
+      博物馆"。实测方案排的是「林跃艺术收藏馆」——它就是用户想要
+      的那类地方，只是叫"收藏馆"。**用词表穷举 POI 的命名方式
+      本质上做不到**（收藏馆/艺术馆/文化馆/科技馆/XX院…），
+      补词只是把下次误报推迟。
+      这条的本意是"用户点名了活动类型，系统有没有去搜它"——
+      搜了就算听懂了；搜出来叫什么是高德的事，不是系统的责任。
+      活动侧仍无 intent 分流，哨兵性质不变。
+
+  - id: L2-11
+    origin: constructed
+    input: 周六下午两点到晚上十点，六个人同事聚餐，江安校区出发
+    expect:
+      scenario: team
+      has_restaurant: true
+
+  - id: L2-12
+    origin: constructed
+    input: 周日全天，两个人和朋友，江安校区出发，随便安排
+    expect:
+      produced_plan: true
+    note: |
+      v2 修正：原来用 clarification_needed_ok，那是个恒真断言，
+      没有信息量。改成断言"最终出了方案"——不管中间追问几轮，
+      走完之后必须有产出，这才是可证伪的。
+
+  - id: L2-13
+    origin: constructed
+    input: 周六下午两点到晚上十点，四个人，江安校区出发，中途想买杯奶茶，逛逛吃饭
+    expect:
+      waypoint_handled: false
+    note: |
+      预期失败，哨兵。waypoints 在 schema 里声明了，但
+      _synthesize 硬编码为 []。修好之后期望值改成 true。
+      ⚠️ 这条断言天然容易假通过（链路没跑完时 waypoints 也是空的），
+      靠 runner 的 PipelineNotRun 提前拦成 error 才安全。
+
+  - id: L2-14
+    origin: constructed
+    input: 周六下午两点到晚上十点，四个人和朋友，从春熙路出发，逛逛吃饭
+    expect:
+      origin_city: 成都
+    note: |
+      **实测失败，真 bug**：「春熙路」解析成了云南昭通。
+      与更早的「陆家嘴 → 昆明」是同一个缺陷：CachedAmapClient.geocode
+      调 maps_geo 时没传 city 参数（schema 里有这个可选参数），
+      全国重名地点靠碰运气。
+
+  - id: L2-15
+    origin: constructed
+    input: 周六下午两点到晚上十点，四个人和朋友，江安校区出发，人均一百以内，逛逛吃饭
+    expect:
+      has_restaurant: true
+    note: |
+      预算约束当前**无执行通路**（cost 采到了但不参与筛选）。
+      期望值刻意不含预算断言——为一个没有执行机构的约束写断言，
+      测的是我们自己的遗漏，不是系统能力。修通之后再加。
+
+  - id: L2-16
+    origin: constructed
+    input: 周六下午两点到晚上十点，四个人和朋友，江安校区出发，想吃火锅，别太远
+    expect:
+      restaurant_intent: explicit
+      max_eta: 30
+    note: |
+      弱断言：即使 distance_preference 没生效，餐厅也可能恰好在
+      30 分钟内（假通过）。保留是因为 30 分钟本身是合理的业务
+      约束；但它不能证明"别太远"被正确解析了。
+
+  - id: L2-17
+    origin: constructed
+    input: 周六下午一点到晚上十一点，四个人和朋友，江安校区出发，逛逛吃饭
+    expect:
+      time_coverage_min: 0.3
+    note: 10 小时，时段填充压力最大。
+
+  - id: L2-18
+    origin: constructed
+    input: 周六下午两点到四点，两个人，江安校区出发，找个地方坐坐
+    expect:
+      produced_plan: true
+    note: |
+      极短（2 小时）。不断言 time_coverage——短时长下比例天然波动
+      大（一个 90 分钟活动就是 75%，60 分钟的就是 50%），
+      用同一个阈值卡没有道理。
+
+  - id: L2-19
+    origin: constructed
+    input: 周六下午两点到晚上十点，一个人，江安校区出发，逛逛吃饭
+    expect:
+      has_restaurant: true
+    note: |
+      单人场景。刻意不断言 scenario——单人既不是 friends 也不是
+      couple，判 unknown 是合理的，断言任何具体值都是在测我的偏好
+      而不是系统的正确性。
+
+  - id: L2-20
+    origin: constructed
+    input: 周六下午两点到晚上十点，四个人和朋友，江安校区出发，想去剧本杀然后吃烤肉
+    expect:
+      restaurant_intent: explicit
+      searched_activity_contains_any: [剧本杀, 探案, 桌游, 密室, 推理]
+    note: |
+      v3 同 L2-10：判据从"方案 POI 名"改成"搜索关键词"。
+      实测剧本杀店叫「九号桌游探案馆」「千寻探案馆·剧本杀·桌游」
+      ——前者不含"剧本杀"三个字。
+
+# ══════════════════════════════════════════════════════════════
+# L3：多轮调整（最贵，只覆盖关键形态）
+# ══════════════════════════════════════════════════════════════
+
+l3_multiturn:
+
+  - id: L3-01
+    origin: real
+    turns:
+      - 周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，逛逛然后晚上吃火锅
+      - 晚上不想吃火锅了，吃不了辣想吃清淡点
+    expect:
+      plan_changed: true
+      no_spicy_violation: false
+      eval_score_min: 80
+      eval_reason_not_contains: [核心需求未满足, 需求匹配度严重不足]
+    note: |
+      已修 bug 的回归哨兵。修复前：评分 58，评语"用户明确点名的
+      火锅被替换…核心需求未满足"——系统照做了用户的要求然后给
+      自己打不及格。禁止词取的是修复前的实际原文。
+      eval_score_min=80 是拍的，但 58→92 的跨度足够大，
+      80 落在中间任何位置都能区分修复前后。
+
+  - id: L3-02
+    origin: constructed
+    turns:
+      - 周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭
+      - 这个餐厅太远了，换个近点的
+    expect:
+      plan_changed: true
+      eta_decreased: true
+
+  - id: L3-03
+    origin: constructed
+    turns:
+      - 周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭
+      - 下午的活动换一个，不想逛商场
+    expect:
+      plan_changed: true
+    note: |
+      v2 删除了 activity_not_contains: 商场。那是**否定式字面断言，
+      会假通过**：换成「茂业天地」时名字里没有"商场"二字，断言
+      通过——但它就是个商场，系统其实没听懂。
+      假通过比误报危险得多，只保留"方案变了"这个可证伪的部分。
+
+  - id: L3-04
+    origin: constructed
+    turns:
+      - 周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭
+      - 不吃辣
+      - 也别太贵
+    expect:
+      plan_changed: true
+      adjust_history_len: 2
+      no_spicy_violation: false
+    note: |
+      两条调整累积。核心：第二条提交后第一条**不能失效**。
+      只带最后一条是最容易被用户察觉、也最恼火的"说了不听"。
+
+  - id: L3-05
+    origin: constructed
+    turns:
+      - 周六下午两点到晚上十点，四个人和朋友，江安校区出发，想吃火锅
+      - 算了还是吃火锅吧，刚才说错了
+    expect:
+      restaurant_intent_final: explicit
+    note: 调整又撤回调整。期望回到最初需求。
+
+  - id: L3-06
+    origin: constructed
+    turns:
+      - 周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭
+      - 挺好的，就这个吧
+    expect:
+      plan_changed: false
+      route: chat
+    note: 确认不是调整。route 应判 chat，不该触发 replan 烧钱。
+
+  - id: L3-07
+    origin: constructed
+    turns:
+      - 周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭
+      - 明天改成两个人去看电影吧
+    expect:
+      route: new_plan
+    note: 前提全变（日期/人数/目的），应判全新需求而非调整。
+
+  - id: L3-08
+    origin: constructed
+    turns:
+      - 周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭
+      - 晚饭想吃日料
+    expect:
+      plan_changed: true
+      restaurant_intent_final: explicit
+    note: open → explicit 的转变，验证分流在调整轮次也正确。

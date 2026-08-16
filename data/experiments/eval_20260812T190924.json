@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-08-12T19:09:24.736765",
+  "cases_version": 3,
+  "layers": [
+    "l2_e2e"
+  ],
+  "memory": false,
+  "selected": 1,
+  "summary": {
+    "overall": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0,
+      "error": 0
+    },
+    "by_layer": {
+      "l2_e2e": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    },
+    "by_origin": {
+      "constructed": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L2-14",
+      "layer": "l2_e2e",
+      "origin": "constructed",
+      "input": "周六下午两点到晚上十点，四个人和朋友，从春熙路出发，逛逛吃饭",
+      "expect": {
+        "origin_city": "成都"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "origin_city",
+          "passed": true,
+          "detail": "origin_city: 期望='成都' 实际='成都'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "小吃店",
+          "餐厅",
+          "美食广场",
+          "特色菜馆",
+          "小吃"
+        ],
+        "searched_activity_keywords": [
+          "步行街",
+          "景点",
+          "公园",
+          "商场",
+          "商业街"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0FFI32RP2",
+            "name": "唐宋美食街",
+            "type": "050100",
+            "location": "104.077956,30.658624",
+            "rating": "4.4",
+            "cost": 64.0,
+            "environment": "unknown",
+            "eta_minutes": 8
+          }
+        ],
+        "plan_item_names": [
+          "春熙路步行街",
+          "唐宋美食街",
+          "春熙路-太古里商圈"
+        ],
+        "time_coverage": 0.71875,
+        "eval_score": 92.0,
+        "eval_reason": "精准满足'逛逛吃饭'泛需求，春熙路步行街+太古里夜游动线顺畅，晚餐地道川菜适合朋友聚餐；通勤仅5.5分钟、评分4.6为三方案最优，节奏舒适无冗余等待。",
+        "adjust_history": [],
+        "last_route": "new_plan",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=open a_intent=open r_kw=['餐厅', '美食广场', '特色菜馆', '小吃店'] a_kw=['景点', '公园', '商场', '步行街'] adjust=0 origin=春熙路@成都 14:00-22:00",
+          "fact: status=ok no_spicy=False summary=搜到30个活动候选、28家餐厅候选（缺口补搜：商业街、小吃）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ]
+      }
+    }
+  ]
+}

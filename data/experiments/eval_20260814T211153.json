@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-08-14T21:11:53.957709",
+  "cases_version": 3,
+  "layers": [
+    "l2_e2e"
+  ],
+  "memory": false,
+  "selected": 3,
+  "summary": {
+    "overall": {
+      "n": 3,
+      "passed": 0,
+      "failed": 0,
+      "error": 3
+    },
+    "by_layer": {
+      "l2_e2e": {
+        "n": 3,
+        "passed": 0,
+        "failed": 0,
+        "error": 3
+      }
+    },
+    "by_origin": {
+      "constructed": {
+        "n": 1,
+        "passed": 0,
+        "failed": 0,
+        "error": 1
+      },
+      "real": {
+        "n": 2,
+        "passed": 0,
+        "failed": 0,
+        "error": 2
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L2-01",
+      "layer": "l2_e2e",
+      "origin": "real",
+      "input": "这周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，找个地方逛逛然后晚上吃个火锅",
+      "expect": {
+        "restaurant_intent": "explicit",
+        "no_search_expansion": true,
+        "time_coverage_min": 0.3,
+        "has_restaurant": true
+      },
+      "verdict": "error",
+      "error": "链路含不可恢复错误：[fact] 所有搜索任务均失败（商圈: 'CachedAmapClient' object has no attribute 'search_pois'; 步行街: 'CachedAmapClient' object has no attribute 'search_pois'; 公园: 'CachedAmapClient' object has no attribute 'search_pois'）",
+      "checks": []
+    },
+    {
+      "id": "L2-02",
+      "layer": "l2_e2e",
+      "origin": "real",
+      "input": "这周日下午两点到晚上九点，还是四个人，从四川大学江安校区出发，找个地方聚一聚吃个饭",
+      "expect": {
+        "restaurant_intent": "open",
+        "has_restaurant": true,
+        "time_coverage_min": 0.3
+      },
+      "verdict": "error",
+      "error": "链路含不可恢复错误：[fact] 所有搜索任务均失败（茶馆: 'CachedAmapClient' object has no attribute 'search_pois'; 咖啡馆: 'CachedAmapClient' object has no attribute 'search_pois'; 桌游: 'CachedAmapClient' object has no attribute 'search_pois'）",
+      "checks": []
+    },
+    {
+      "id": "L2-03",
+      "layer": "l2_e2e",
+      "origin": "constructed",
+      "input": "周六下午两点到六点，两个人，从江安校区出发，想找个地方逛逛，不吃饭",
+      "expect": {
+        "restaurant_intent": "none",
+        "has_restaurant": false
+      },
+      "verdict": "error",
+      "error": "链路含不可恢复错误：[fact] 所有搜索任务均失败（公园: 'CachedAmapClient' object has no attribute 'search_pois'; 美术馆: 'CachedAmapClient' object has no attribute 'search_pois'; 书店: 'CachedAmapClient' object has no attribute 'search_pois'）",
+      "checks": []
+    }
+  ]
+}

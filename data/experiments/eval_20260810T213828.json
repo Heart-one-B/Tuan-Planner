@@ -1,0 +1,941 @@
+{
+  "timestamp": "2026-08-10T21:38:28.833186",
+  "cases_version": 3,
+  "layers": [
+    "l3_multiturn"
+  ],
+  "memory": false,
+  "selected": 8,
+  "summary": {
+    "overall": {
+      "n": 8,
+      "passed": 6,
+      "failed": 2,
+      "error": 0
+    },
+    "by_layer": {
+      "l3_multiturn": {
+        "n": 8,
+        "passed": 6,
+        "failed": 2,
+        "error": 0
+      }
+    },
+    "by_origin": {
+      "constructed": {
+        "n": 7,
+        "passed": 5,
+        "failed": 2,
+        "error": 0
+      },
+      "real": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L3-01",
+      "layer": "l3_multiturn",
+      "origin": "real",
+      "input": [
+        "周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，逛逛然后晚上吃火锅",
+        "晚上不想吃火锅了，吃不了辣想吃清淡点"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "no_spicy_violation": false,
+        "eval_score_min": 80,
+        "eval_reason_not_contains": [
+          "核心需求未满足",
+          "需求匹配度严重不足"
+        ]
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['九号桌游探案馆(金色校园广场店)', '巴国妹子毛肚火锅(蓝光·圣菲悦城店)'], ['千寻探案馆·剧本杀·桌游', '聚义轩茶楼(蓝光·圣菲悦城一期店)']]"
+        },
+        {
+          "key": "no_spicy_violation",
+          "passed": true,
+          "detail": "辛辣餐厅=无"
+        },
+        {
+          "key": "eval_score_min",
+          "passed": true,
+          "detail": "评分=94.0 要求≥80"
+        },
+        {
+          "key": "eval_reason_not_contains",
+          "passed": true,
+          "detail": "命中禁止词=[]；评语=晚餐选择茶楼简餐精准匹配用户调整后的清淡不辣需求，剧本杀3.5小时时长充实适合四人社交，衔接紧凑无空等，评分和通勤表现均衡优秀。"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [
+          "清淡",
+          "不辣"
+        ],
+        "must_avoid": [
+          "火锅",
+          "辣"
+        ],
+        "no_spicy": true,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅"
+        ],
+        "searched_activity_keywords": [
+          "商圈",
+          "步行街",
+          "公园",
+          "桌游"
+        ],
+        "selected_plan_id": "plan_2",
+        "selected_restaurants": [
+          {
+            "id": "B0JUVHFG5H",
+            "name": "聚义轩茶楼(蓝光·圣菲悦城一期店)",
+            "type": "050600",
+            "location": "104.000879,30.564816",
+            "rating": "4.4",
+            "cost": 24.0,
+            "environment": "unknown",
+            "eta_minutes": 9
+          }
+        ],
+        "plan_item_names": [
+          "千寻探案馆·剧本杀·桌游",
+          "聚义轩茶楼(蓝光·圣菲悦城一期店)"
+        ],
+        "time_coverage": 0.59375,
+        "eval_score": 94.0,
+        "eval_reason": "晚餐选择茶楼简餐精准匹配用户调整后的清淡不辣需求，剧本杀3.5小时时长充实适合四人社交，衔接紧凑无空等，评分和通勤表现均衡优秀。",
+        "adjust_history": [
+          "晚上不想吃火锅了，吃不了辣想吃清淡点"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=explicit clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=explicit restaurant_keywords=['火锅'] adjust=0 origin=四川大学江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到20个活动候选、8家餐厅候选（按用户点名精确检索：火锅）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户针对当前方案中的晚餐环节提出修改意见，要求将火锅替换为清淡口味的餐厅",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['粤菜', '茶餐厅', '潮汕牛肉火锅', '江浙菜'] adjust=1 origin=四川大学江安校区 start=14:00 end=22:00",
+          "orchestrator: replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_2"
+        ],
+        "turn_items": [
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "巴国妹子毛肚火锅(蓝光·圣菲悦城店)"
+          ],
+          [
+            "千寻探案馆·剧本杀·桌游",
+            "聚义轩茶楼(蓝光·圣菲悦城一期店)"
+          ]
+        ],
+        "eta_before": 7,
+        "eta_after": 9
+      }
+    },
+    {
+      "id": "L3-02",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "这个餐厅太远了，换个近点的"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "eta_decreased": true
+      },
+      "verdict": "failed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['茂业天地(双流店)', '九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)', '九号桌游探案馆(金色校园广场店)'], ['世纪百盛购物中心(金色校园广场店)', '秦嬢串串']]"
+        },
+        {
+          "key": "eta_decreased",
+          "passed": false,
+          "detail": "eta 7 → 9"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "烧烤",
+          "川菜馆",
+          "日料"
+        ],
+        "searched_activity_keywords": [
+          "步行街",
+          "商场",
+          "咖啡馆",
+          "桌游"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0H2BAJGG5",
+            "name": "秦嬢串串",
+            "type": "050117|050118",
+            "location": "104.005149,30.548460",
+            "rating": "4.3",
+            "cost": 59.0,
+            "environment": "unknown",
+            "eta_minutes": 9
+          }
+        ],
+        "plan_item_names": [
+          "世纪百盛购物中心(金色校园广场店)",
+          "秦嬢串串"
+        ],
+        "time_coverage": 0.46875,
+        "eval_score": 88.0,
+        "eval_reason": "完全满足就近用餐和逛街需求，avg_eta_minutes最低(9.5)，节奏舒适，综合质量最优",
+        "adjust_history": [
+          "这个餐厅太远了，换个近点的"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '日料'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到24个活动候选、32家餐厅候选",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=88.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户针对当前方案中的餐厅环节提出距离过远的问题，要求更换更近的餐厅，属于对现有方案的局部调整",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['川菜馆', '烧烤店', '火锅店', '茶餐厅'] adjust=1 origin=江安校区 start=14:00 end=22:00",
+          "orchestrator: replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ],
+        "turn_items": [
+          [
+            "茂业天地(双流店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "九号桌游探案馆(金色校园广场店)"
+          ],
+          [
+            "世纪百盛购物中心(金色校园广场店)",
+            "秦嬢串串"
+          ]
+        ],
+        "eta_before": 7,
+        "eta_after": 9
+      }
+    },
+    {
+      "id": "L3-03",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "下午的活动换一个，不想逛商场"
+      ],
+      "expect": {
+        "plan_changed": true
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['九号桌游探案馆(金色校园广场店)', '九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)', 'AJ79·KTV(韩国城店)'], ['千寻探案馆·剧本杀·桌游', '九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)', 'AJ79·KTV(韩国城店)']]"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [
+          "商场"
+        ],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "烧烤",
+          "川菜馆",
+          "日料"
+        ],
+        "searched_activity_keywords": [
+          "咖啡馆",
+          "桌游",
+          "KTV",
+          "书店"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0LB9AMH59",
+            "name": "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "type": "050000",
+            "location": "104.005030,30.551112",
+            "rating": "4.2",
+            "cost": 58.0,
+            "environment": "unknown",
+            "eta_minutes": 7
+          }
+        ],
+        "plan_item_names": [
+          "千寻探案馆·剧本杀·桌游",
+          "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+          "AJ79·KTV(韩国城店)"
+        ],
+        "time_coverage": 0.78125,
+        "eval_score": 92.0,
+        "eval_reason": "下午安排独立门店的剧本杀探案馆，精准满足'非商场'调整需求且适合4人好友社交；晚餐与KTV衔接节奏舒适（30分钟缓冲含通勤），整体动线流畅无空档；avg_rating 4.3、avg_eta 11.7分钟表现均衡。",
+        "adjust_history": [
+          "下午的活动换一个，不想逛商场"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '日料'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到32个活动候选、32家餐厅候选",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户明确要求更换当前方案中的下午活动，属于对现有方案具体环节的调整",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '日料'] adjust=1 origin=江安校区 start=14:00 end=22:00",
+          "orchestrator: replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ],
+        "turn_items": [
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "AJ79·KTV(韩国城店)"
+          ],
+          [
+            "千寻探案馆·剧本杀·桌游",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "AJ79·KTV(韩国城店)"
+          ]
+        ],
+        "eta_before": 7,
+        "eta_after": 7
+      }
+    },
+    {
+      "id": "L3-04",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "不吃辣",
+        "也别太贵"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "adjust_history_len": 2,
+        "no_spicy_violation": false
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['九号桌游探案馆(金色校园广场店)', '九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)', '待确认'], ['九号桌游探案馆(金色校园广场店)', '百家宴海鲜酒楼.海鲜.闽菜.粤菜'], ['千寻探案馆·剧本杀·桌游', '粤小川·石磨肠粉·潮汕汤粉(总店)']]"
+        },
+        {
+          "key": "adjust_history_len",
+          "passed": true,
+          "detail": "adjust_history 长度: 期望=2 实际=2"
+        },
+        {
+          "key": "no_spicy_violation",
+          "passed": true,
+          "detail": "辛辣餐厅=无"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [
+          "不辣",
+          "平价"
+        ],
+        "must_avoid": [
+          "辣",
+          "高价餐厅"
+        ],
+        "no_spicy": true,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "烧烤",
+          "川菜馆",
+          "创意料理",
+          "江浙菜",
+          "粤菜",
+          "日料",
+          "茶餐厅",
+          "本帮菜",
+          "淮扬菜"
+        ],
+        "searched_activity_keywords": [
+          "咖啡馆",
+          "桌游",
+          "书店",
+          "公园"
+        ],
+        "selected_plan_id": "plan_2",
+        "selected_restaurants": [
+          {
+            "id": "B0MDPOMUFT",
+            "name": "粤小川·石磨肠粉·潮汕汤粉(总店)",
+            "type": "050100",
+            "location": "103.987118,30.545634",
+            "rating": "3.9",
+            "cost": 12.0,
+            "environment": "unknown",
+            "eta_minutes": 14
+          }
+        ],
+        "plan_item_names": [
+          "千寻探案馆·剧本杀·桌游",
+          "粤小川·石磨肠粉·潮汕汤粉(总店)"
+        ],
+        "time_coverage": 0.53125,
+        "eval_score": 92.0,
+        "eval_reason": "晚餐粤小川石磨肠粉人均12元，清淡不辣且价格极低，精准满足当前'不辣+平价'核心需求；剧本杀适合4人朋友聚会，室内避暑合理；avg_rating 4.0为三方案最高，节奏紧凑但剧本杀后直接就餐可接受。",
+        "adjust_history": [
+          "不吃辣",
+          "也别太贵"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '创意料理'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到32个活动候选、26家餐厅候选",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=88.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户提出不吃辣的饮食偏好，是对当前方案中火锅餐厅选择的修改意见",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['粤菜', '日料', '江浙菜', '茶餐厅'] adjust=1 origin=江安校区 start=14:00 end=22:00",
+          "orchestrator: search_pois: done → replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户对当前方案中的餐厅消费水平提出了价格限制，属于对现有方案的调整意见",
+          "intent: adjust模式，累计2条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['粤菜', '日料', '茶餐厅', '江浙菜'] adjust=2 origin=江安校区 start=14:00 end=22:00",
+          "orchestrator: replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_2"
+        ],
+        "turn_items": [
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "待确认"
+          ],
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "百家宴海鲜酒楼.海鲜.闽菜.粤菜"
+          ],
+          [
+            "千寻探案馆·剧本杀·桌游",
+            "粤小川·石磨肠粉·潮汕汤粉(总店)"
+          ]
+        ],
+        "eta_before": 7,
+        "eta_after": 14
+      }
+    },
+    {
+      "id": "L3-05",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，想吃火锅",
+        "算了还是吃火锅吧，刚才说错了"
+      ],
+      "expect": {
+        "restaurant_intent_final": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent_final",
+          "passed": true,
+          "detail": "最终 restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "火锅"
+        ],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅"
+        ],
+        "searched_activity_keywords": [
+          "博物馆",
+          "公园",
+          "美术馆",
+          "商场",
+          "购物中心"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0LB9AMH59",
+            "name": "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "type": "050000",
+            "location": "104.005030,30.551112",
+            "rating": "4.2",
+            "cost": 58.0,
+            "environment": "unknown",
+            "eta_minutes": 7
+          }
+        ],
+        "plan_item_names": [
+          "四川大学江安校区美术馆",
+          "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)"
+        ],
+        "time_coverage": 0.375,
+        "eval_score": 92.0,
+        "eval_reason": "晚餐安排'九里场家乡人鲜毛肚火锅'精确匹配用户当前有效的火锅需求，avg_eta仅7分钟通勤最优，美术馆+火锅组合适合朋友聚会且间隔120分钟节奏宽松舒适。",
+        "adjust_history": [
+          "算了还是吃火锅吧，刚才说错了"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=explicit clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=explicit restaurant_keywords=['火锅'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到28个活动候选、8家餐厅候选（按用户点名精确检索：火锅）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户纠正了之前的表述，确认保留火锅安排，属于对当前方案餐饮环节的调整确认",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=explicit clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=explicit restaurant_keywords=['火锅'] adjust=1 origin=江安校区 start=14:00 end=22:00",
+          "orchestrator: replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ],
+        "turn_items": [
+          [
+            "世纪百盛购物中心(金色校园广场店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)"
+          ],
+          [
+            "四川大学江安校区美术馆",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)"
+          ]
+        ],
+        "eta_before": 7,
+        "eta_after": 7
+      }
+    },
+    {
+      "id": "L3-06",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "挺好的，就这个吧"
+      ],
+      "expect": {
+        "plan_changed": false,
+        "route": "chat"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['九号桌游探案馆(金色校园广场店)', '九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)', '待确认'], ['九号桌游探案馆(金色校园广场店)', '九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)', '待确认']]"
+        },
+        {
+          "key": "route",
+          "passed": true,
+          "detail": "最后一轮 route: 期望='chat' 实际='chat'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "烧烤",
+          "川菜馆",
+          "日料"
+        ],
+        "searched_activity_keywords": [
+          "咖啡馆",
+          "桌游",
+          "书店",
+          "公园"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0LB9AMH59",
+            "name": "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "type": "050000",
+            "location": "104.005030,30.551112",
+            "rating": "4.2",
+            "cost": 58.0,
+            "environment": "unknown",
+            "eta_minutes": 7
+          }
+        ],
+        "plan_item_names": [
+          "九号桌游探案馆(金色校园广场店)",
+          "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+          "待确认"
+        ],
+        "time_coverage": 0.65625,
+        "eval_score": 92.0,
+        "eval_reason": "用户无具体点名需求，方案以室内桌游+火锅+咖啡的组合完美匹配四人朋友'逛逛吃饭'的泛需求；节奏舒适（桌游后30分钟缓冲衔接晚餐），avg_eta最低(9min)且avg_rating最高(4.2)，综合表现最优。",
+        "adjust_history": [],
+        "last_route": "chat",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '日料'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到32个活动候选、32家餐厅候选",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=chat reason=用户明确表示确认当前方案，未提出任何修改或新需求",
+          "chat: 回复生成成功"
+        ],
+        "turn_items": [
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "待确认"
+          ],
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "待确认"
+          ]
+        ],
+        "eta_before": 7,
+        "eta_after": 7
+      }
+    },
+    {
+      "id": "L3-07",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "明天改成两个人去看电影吧"
+      ],
+      "expect": {
+        "route": "new_plan"
+      },
+      "verdict": "failed",
+      "checks": [
+        {
+          "key": "route",
+          "passed": false,
+          "detail": "最后一轮 route: 期望='new_plan' 实际='clarify_reply'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "partial",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "烧烤",
+          "川菜馆",
+          "日料",
+          "川菜",
+          "火锅"
+        ],
+        "searched_activity_keywords": [
+          "密室逃脱",
+          "咖啡馆",
+          "桌游",
+          "书店",
+          "密室",
+          "电影院"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0LB9AMH59",
+            "name": "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "type": "050000",
+            "location": "104.005030,30.551112",
+            "rating": "4.2",
+            "cost": 58.0,
+            "environment": "unknown",
+            "eta_minutes": 7
+          }
+        ],
+        "plan_item_names": [
+          "承光影界(航空港店)",
+          "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)"
+        ],
+        "time_coverage": 0.5,
+        "eval_score": 92.0,
+        "eval_reason": "完全满足看电影+逛逛吃饭的核心需求，高分影院+火锅组合适合4人朋友聚会，评分最高且通勤最短，节奏舒适留白合理。",
+        "adjust_history": [],
+        "last_route": "clarify_reply",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '日料'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到24个活动候选、32家餐厅候选（缺口补搜：密室）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=new_plan reason=用户将活动从桌游探案改为看电影，且人数变为两人，属于出行目的和核心活动的根本性变更，需重新规划方案",
+          "intent: scenario=couple restaurant_intent=none clarification_needed=True missing_slots=['time_window', 'origin_area']",
+          "clarification: round=1 question生成成功",
+          "routing: 检测到待澄清状态，本轮输入作为澄清回复，累计1轮历史",
+          "intent: clarify_reply模式，拼接1轮历史重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['川菜', '火锅', '烤肉', '茶餐厅'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=partial no_spicy=False summary=搜到8个活动候选、16家餐厅候选（类别盲补：餐厅（补搜 川菜、火锅））",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ],
+        "turn_items": [
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)",
+            "待确认"
+          ],
+          [
+            "承光影界(航空港店)",
+            "九里场家乡人鲜毛肚火锅(郑贰捌斤全牛宴火锅)"
+          ]
+        ],
+        "eta_before": 7,
+        "eta_after": 7
+      }
+    },
+    {
+      "id": "L3-08",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "晚饭想吃日料"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "restaurant_intent_final": "explicit"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['艺术码头(四川大学江安校区)', '待确认', '熙蜀印象简朴菜(西航港店)'], ['九号桌游探案馆(金色校园广场店)', '芳草汀日式料理(花天锦地店)', '待确认']]"
+        },
+        {
+          "key": "restaurant_intent_final",
+          "passed": true,
+          "detail": "最终 restaurant_intent: 期望='explicit' 实际='explicit'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "日本料理"
+        ],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "烧烤",
+          "川菜馆",
+          "创意餐厅",
+          "日料",
+          "日本料理",
+          "寿司"
+        ],
+        "searched_activity_keywords": [
+          "密室逃脱",
+          "咖啡馆",
+          "桌游",
+          "书店",
+          "密室",
+          "剧本杀"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0FFIRC5X0",
+            "name": "芳草汀日式料理(花天锦地店)",
+            "type": "050202",
+            "location": "104.004328,30.571592",
+            "rating": "4.0",
+            "cost": 69.0,
+            "environment": "unknown",
+            "eta_minutes": 14
+          }
+        ],
+        "plan_item_names": [
+          "九号桌游探案馆(金色校园广场店)",
+          "芳草汀日式料理(花天锦地店)",
+          "待确认"
+        ],
+        "time_coverage": 0.5625,
+        "eval_score": 88.0,
+        "eval_reason": "晚餐芳草汀日式料理精确满足日料需求，下午桌游+晚间咖啡的组合适合朋友聚会且节奏舒适，avg_rating 4.2 为三方案最高，通勤距离适中。",
+        "adjust_history": [
+          "晚饭想吃日料"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '创意餐厅'] adjust=0 origin=江安校区 start=14:00 end=22:00",
+          "fact: status=ok no_spicy=False summary=搜到30个活动候选、27家餐厅候选（缺口补搜：密室、剧本杀）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_2 score=88.0",
+          "presentation: 渲染完成 plan_id=plan_2",
+          "routing: route=adjust reason=用户针对当前方案中的晚餐环节提出了具体的菜品偏好修改意见",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=explicit clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=explicit restaurant_keywords=['日本料理'] adjust=1 origin=江安校区 start=14:00 end=22:00",
+          "orchestrator: search_pois: done → replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ],
+        "turn_items": [
+          [
+            "艺术码头(四川大学江安校区)",
+            "待确认",
+            "熙蜀印象简朴菜(西航港店)"
+          ],
+          [
+            "九号桌游探案馆(金色校园广场店)",
+            "芳草汀日式料理(花天锦地店)",
+            "待确认"
+          ]
+        ],
+        "eta_before": 11,
+        "eta_after": 14
+      }
+    }
+  ]
+}

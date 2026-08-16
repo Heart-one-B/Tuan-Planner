@@ -1,0 +1,332 @@
+{
+  "timestamp": "2026-08-12T18:33:51.021793",
+  "cases_version": 3,
+  "layers": [
+    "l3_multiturn"
+  ],
+  "memory": false,
+  "selected": 8,
+  "summary": {
+    "overall": {
+      "n": 5,
+      "passed": 1,
+      "failed": 1,
+      "error": 3
+    },
+    "by_layer": {
+      "l3_multiturn": {
+        "n": 5,
+        "passed": 1,
+        "failed": 1,
+        "error": 3
+      }
+    },
+    "by_origin": {
+      "constructed": {
+        "n": 4,
+        "passed": 0,
+        "failed": 1,
+        "error": 3
+      },
+      "real": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L3-01",
+      "layer": "l3_multiturn",
+      "origin": "real",
+      "input": [
+        "周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，逛逛然后晚上吃火锅",
+        "晚上不想吃火锅了，吃不了辣想吃清淡点"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "no_spicy_violation": false,
+        "eval_score_min": 80,
+        "eval_reason_not_contains": [
+          "核心需求未满足",
+          "需求匹配度严重不足"
+        ]
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": true,
+          "detail": "逐轮方案项=[['茂业天地(双流店)', '金色校园广场'], ['四川大学江安校区明远湖', '韩国城购物中心', '芳草汀日式料理(花天锦地店)']]"
+        },
+        {
+          "key": "no_spicy_violation",
+          "passed": true,
+          "detail": "辛辣餐厅=无"
+        },
+        {
+          "key": "eval_score_min",
+          "passed": true,
+          "detail": "评分=88.0 要求≥80"
+        },
+        {
+          "key": "eval_reason_not_contains",
+          "passed": true,
+          "detail": "命中禁止词=[]；评语=三个活动动静结合体验丰富，日料晚餐完全符合清淡不辣需求，通勤时间短"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [
+          "清淡",
+          "不辣"
+        ],
+        "must_avoid": [
+          "辣",
+          "火锅"
+        ],
+        "no_spicy": true,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅",
+          "江浙菜",
+          "粤菜",
+          "日料",
+          "茶餐厅",
+          "海鲜"
+        ],
+        "searched_activity_keywords": [
+          "步行街",
+          "商场",
+          "景点"
+        ],
+        "selected_plan_id": "plan_2",
+        "selected_restaurants": [
+          {
+            "id": "B0FFIRC5X0",
+            "name": "芳草汀日式料理(花天锦地店)",
+            "type": "050202",
+            "location": "104.004328,30.571592",
+            "rating": "4.0",
+            "cost": 69.0,
+            "environment": "unknown",
+            "eta_minutes": 11
+          }
+        ],
+        "plan_item_names": [
+          "四川大学江安校区明远湖",
+          "韩国城购物中心",
+          "芳草汀日式料理(花天锦地店)"
+        ],
+        "time_coverage": 0.53125,
+        "eval_score": 88.0,
+        "eval_reason": "三个活动动静结合体验丰富，日料晚餐完全符合清淡不辣需求，通勤时间短",
+        "adjust_history": [
+          "晚上不想吃火锅了，吃不了辣想吃清淡点"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=explicit clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=explicit a_intent=open r_kw=['火锅'] a_kw=['逛街', '商场', '步行街', '景点'] adjust=0 origin=四川大学江安校区@成都 14:00-22:00",
+          "fact: status=partial no_spicy=False summary=搜到17个活动候选、0家餐厅候选（餐饮按点名精确检索：火锅），用户点名的「火锅」附近未搜到",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户希望将当前方案中的晚餐类型从火锅调整为清淡口味，属于对具体环节的修改。",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=open a_intent=open r_kw=['粤菜', '江浙菜', '茶餐厅', '日料', '海鲜'] a_kw=['逛街', '商场', '步行街', '公园', '咖啡馆'] adjust=1 origin=四川大学江安校区@成都 14:00-22:00",
+          "orchestrator: search_pois: done → replan: done → evaluate: done → orchestrator: 推理完成，无更多工具调用",
+          "presentation: 渲染完成 plan_id=plan_2"
+        ],
+        "turn_items": [
+          [
+            "茂业天地(双流店)",
+            "金色校园广场"
+          ],
+          [
+            "四川大学江安校区明远湖",
+            "韩国城购物中心",
+            "芳草汀日式料理(花天锦地店)"
+          ]
+        ],
+        "eta_before": null,
+        "eta_after": 11
+      }
+    },
+    {
+      "id": "L3-02",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "这个餐厅太远了，换个近点的"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "eta_decreased": true
+      },
+      "verdict": "failed",
+      "checks": [
+        {
+          "key": "plan_changed",
+          "passed": false,
+          "detail": "逐轮方案项=[['韩国城购物中心', '炭火匠人·烧烤(航空港店)', 'AJ79·KTV(韩国城店)'], ['韩国城购物中心', '炭火匠人·烧烤(航空港店)', 'AJ79·KTV(韩国城店)']]"
+        },
+        {
+          "key": "eta_decreased",
+          "passed": false,
+          "detail": "eta 11 → 11"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "日料",
+          "火锅",
+          "川菜",
+          "烧烤",
+          "日本料理"
+        ],
+        "searched_activity_keywords": [
+          "剧本杀",
+          "商场",
+          "咖啡馆",
+          "电影院",
+          "KTV",
+          "桌游",
+          "购物中心"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0LBTC3I5H",
+            "name": "炭火匠人·烧烤(航空港店)",
+            "type": "050000",
+            "location": "103.989448,30.553252",
+            "rating": "4.2",
+            "cost": 53.0,
+            "environment": "unknown",
+            "eta_minutes": 11
+          }
+        ],
+        "plan_item_names": [
+          "韩国城购物中心",
+          "炭火匠人·烧烤(航空港店)",
+          "AJ79·KTV(韩国城店)"
+        ],
+        "time_coverage": 0.75,
+        "eval_score": 88.0,
+        "eval_reason": "包含真正的购物中心逛街环节最贴合'逛逛'需求，KTV是经典朋友聚会活动，活动组合多样有层次，节奏合理",
+        "adjust_history": [
+          "这个餐厅太远了，换个近点的"
+        ],
+        "last_route": "adjust",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=open a_intent=open r_kw=['火锅', '川菜', '烧烤', '日料'] a_kw=['咖啡馆', '电影院', 'KTV', '桌游', '剧本杀', '商场'] adjust=0 origin=江安校区@成都 14:00-22:00",
+          "fact: status=ok no_spicy=False summary=搜到40个活动候选、32家餐厅候选（缺口补搜：购物中心、日本料理）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=88.0",
+          "presentation: 渲染完成 plan_id=plan_1",
+          "routing: route=adjust reason=用户希望替换当前方案中的晚餐地点，属于对具体环节的修改。",
+          "intent: adjust模式，累计1条调整意见重新解析",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=open a_intent=open r_kw=['川菜', '火锅', '烧烤', '家常菜'] a_kw=['公园', '步行街', '商场', '咖啡馆'] adjust=1 origin=江安校区@成都 14:00-22:00",
+          "orchestrator: Orchestrator 运行异常: Error code: 403 - {'error': {'message': 'Free quota exhausted. To continue accessing the model on a paid basis, please add funds or disable the \"use free tier only\" mode in the management console.', 'type': 'AllocationQuota.FreeTierOnly', 'param': None, 'code': 'AllocationQuota.FreeTierOnly'}, 'id': 'chatcmpl-5c2ef596-3d02-9fe3-a9e2-6ddb854dace3', 'request_id': '5c2ef596-3d02-9fe3-a9e2-6ddb854dace3'}",
+          "orchestrator: 未产出新方案（未触发 replan / evaluate 失败 / 无合格候选），本轮展示维持不变"
+        ],
+        "turn_items": [
+          [
+            "韩国城购物中心",
+            "炭火匠人·烧烤(航空港店)",
+            "AJ79·KTV(韩国城店)"
+          ],
+          [
+            "韩国城购物中心",
+            "炭火匠人·烧烤(航空港店)",
+            "AJ79·KTV(韩国城店)"
+          ]
+        ],
+        "eta_before": 11,
+        "eta_after": 11
+      }
+    },
+    {
+      "id": "L3-03",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "下午的活动换一个，不想逛商场"
+      ],
+      "expect": {
+        "plan_changed": true
+      },
+      "verdict": "error",
+      "error": "链路含不可恢复错误：[intent] Error code: 403 - {'error': {'message': 'Free quota exhausted. To continue accessing the model on a paid basis, please add funds or disable the \"use free tier only\" mode in the management console.', '",
+      "checks": []
+    },
+    {
+      "id": "L3-04",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，逛逛吃饭",
+        "不吃辣",
+        "也别太贵"
+      ],
+      "expect": {
+        "plan_changed": true,
+        "adjust_history_len": 2,
+        "no_spicy_violation": false
+      },
+      "verdict": "error",
+      "error": "链路含不可恢复错误：[intent] Error code: 403 - {'error': {'message': 'Free quota exhausted. To continue accessing the model on a paid basis, please add funds or disable the \"use free tier only\" mode in the management console.', '",
+      "checks": []
+    },
+    {
+      "id": "L3-05",
+      "layer": "l3_multiturn",
+      "origin": "constructed",
+      "input": [
+        "周六下午两点到晚上十点，四个人和朋友，江安校区出发，想吃火锅",
+        "算了还是吃火锅吧，刚才说错了"
+      ],
+      "expect": {
+        "restaurant_intent_final": "explicit"
+      },
+      "verdict": "error",
+      "error": "链路含不可恢复错误：[intent] Error code: 403 - {'error': {'message': 'Free quota exhausted. To continue accessing the model on a paid basis, please add funds or disable the \"use free tier only\" mode in the management console.', '",
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,308 @@
+{
+  "timestamp": "2026-08-14T21:17:33.770527",
+  "cases_version": 3,
+  "layers": [
+    "l2_e2e"
+  ],
+  "memory": false,
+  "selected": 3,
+  "summary": {
+    "overall": {
+      "n": 3,
+      "passed": 3,
+      "failed": 0,
+      "error": 0
+    },
+    "by_layer": {
+      "l2_e2e": {
+        "n": 3,
+        "passed": 3,
+        "failed": 0,
+        "error": 0
+      }
+    },
+    "by_origin": {
+      "constructed": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      },
+      "real": {
+        "n": 2,
+        "passed": 2,
+        "failed": 0,
+        "error": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L2-01",
+      "layer": "l2_e2e",
+      "origin": "real",
+      "input": "这周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，找个地方逛逛然后晚上吃个火锅",
+      "expect": {
+        "restaurant_intent": "explicit",
+        "no_search_expansion": true,
+        "time_coverage_min": 0.3,
+        "has_restaurant": true
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='explicit' 实际='explicit'"
+        },
+        {
+          "key": "no_search_expansion",
+          "passed": true,
+          "detail": "实搜=['火锅'] 点名=['火锅'] 擅自扩展=[]"
+        },
+        {
+          "key": "time_coverage_min",
+          "passed": true,
+          "detail": "时段覆盖率=50% 要求≥30%（阈值未校准）"
+        },
+        {
+          "key": "has_restaurant",
+          "passed": true,
+          "detail": "方案里有餐厅: 期望=True 实际=True"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "explicit",
+        "restaurant_explicit_types": [
+          "火锅"
+        ],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "火锅"
+        ],
+        "searched_activity_keywords": [
+          "商场",
+          "步行街",
+          "公园",
+          "文创园",
+          "景点"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0FFI0R5EE",
+            "name": "五味缘钢管厂小郡肝串串香(蓝光圣菲悦城店)",
+            "type": "050117",
+            "location": "104.002011,30.566196",
+            "rating": "4.5",
+            "cost": 55.0,
+            "environment": "unknown",
+            "eta_minutes": 7
+          }
+        ],
+        "plan_item_names": [
+          "圣菲购物中心",
+          "五味缘钢管厂小郡肝串串香(蓝光圣菲悦城店)"
+        ],
+        "time_coverage": 0.5,
+        "eval_score": 92.0,
+        "eval_reason": "完全满足'逛逛+火锅'需求，串串香属于火锅品类精确匹配；下午逛街时长充足且与晚餐间隔60分钟节奏舒适；距离最近(7min)且评分最高(4.5)，综合体验最佳。",
+        "adjust_history": [],
+        "last_route": "new_plan",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=explicit clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=explicit a_intent=open r_kw=['火锅'] a_kw=['商场', '步行街', '公园', '文创园', '景点'] adjust=0 origin=四川大学江安校区@成都 14:00-22:00",
+          "fact: status=ok no_spicy=False summary=搜到27个活动候选、8家餐厅候选（餐饮按点名精确检索：火锅）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ]
+      }
+    },
+    {
+      "id": "L2-02",
+      "layer": "l2_e2e",
+      "origin": "real",
+      "input": "这周日下午两点到晚上九点，还是四个人，从四川大学江安校区出发，找个地方聚一聚吃个饭",
+      "expect": {
+        "restaurant_intent": "open",
+        "has_restaurant": true,
+        "time_coverage_min": 0.3
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='open' 实际='open'"
+        },
+        {
+          "key": "has_restaurant",
+          "passed": true,
+          "detail": "方案里有餐厅: 期望=True 实际=True"
+        },
+        {
+          "key": "time_coverage_min",
+          "passed": true,
+          "detail": "时段覆盖率=64% 要求≥30%（阈值未校准）"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "餐厅",
+          "聚餐",
+          "火锅",
+          "烧烤",
+          "中餐馆"
+        ],
+        "searched_activity_keywords": [
+          "桌游",
+          "KTV",
+          "茶馆",
+          "咖啡厅"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [
+          {
+            "id": "B0FFHSK5NF",
+            "name": "巴国妹子毛肚火锅(蓝光·圣菲悦城店)",
+            "type": "050117",
+            "location": "104.001877,30.566475",
+            "rating": "4.5",
+            "cost": 106.0,
+            "environment": "unknown",
+            "eta_minutes": 7
+          }
+        ],
+        "plan_item_names": [
+          "九号桌游探案馆(金色校园广场店)",
+          "巴国妹子毛肚火锅(蓝光·圣菲悦城店)"
+        ],
+        "time_coverage": 0.6428571428571429,
+        "eval_score": 92.0,
+        "eval_reason": "桌游+火锅是四人朋友聚会的经典高适配组合，30分钟转场间隔提供了舒适缓冲，avg_rating 4.5且通勤仅7分钟，整体节奏和质量最优。",
+        "adjust_history": [],
+        "last_route": "new_plan",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=open a_intent=open r_kw=['餐厅', '聚餐', '中餐馆', '火锅', '烧烤'] a_kw=['桌游', 'KTV', '茶馆', '咖啡厅'] adjust=0 origin=四川大学江安校区@成都 14:00-21:00",
+          "fact: status=ok no_spicy=False summary=搜到32个活动候选、35家餐厅候选",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ]
+      }
+    },
+    {
+      "id": "L2-03",
+      "layer": "l2_e2e",
+      "origin": "constructed",
+      "input": "周六下午两点到六点，两个人，从江安校区出发，想找个地方逛逛，不吃饭",
+      "expect": {
+        "restaurant_intent": "none",
+        "has_restaurant": false
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "restaurant_intent",
+          "passed": true,
+          "detail": "restaurant_intent: 期望='none' 实际='none'"
+        },
+        {
+          "key": "has_restaurant",
+          "passed": true,
+          "detail": "方案里有餐厅: 期望=False 实际=False"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "none",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_only",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 2,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [],
+        "searched_activity_keywords": [
+          "公园",
+          "美术馆",
+          "书店",
+          "展览",
+          "创意园区",
+          "文创园"
+        ],
+        "selected_plan_id": "plan_1",
+        "selected_restaurants": [],
+        "plan_item_names": [
+          "四川大学江安校区美术馆",
+          "江安河公园"
+        ],
+        "time_coverage": 0.75,
+        "eval_score": 92.0,
+        "eval_reason": "从江安校区出发零通勤，美术馆+河公园动静结合完美契合两人闲逛场景，时间填满且节奏舒适，完全满足不吃饭的泛需求。",
+        "adjust_history": [],
+        "last_route": "clarify_reply",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=unknown restaurant_intent=none clarification_needed=True missing_slots=['scenario']",
+          "clarification: round=1 question生成成功",
+          "routing: 检测到待澄清状态，本轮输入作为澄清回复，累计1轮历史",
+          "intent: clarify_reply模式，拼接1轮历史重新解析",
+          "intent: scenario=unknown restaurant_intent=none clarification_needed=True missing_slots=['scenario']",
+          "clarification: round=2 question生成成功",
+          "routing: 检测到待澄清状态，本轮输入作为澄清回复，累计2轮历史",
+          "intent: clarify_reply模式，拼接2轮历史重新解析",
+          "intent: scenario=unknown restaurant_intent=none clarification_needed=True missing_slots=['scenario']",
+          "clarification: round=3 question生成成功",
+          "routing: 检测到待澄清状态，本轮输入作为澄清回复，累计3轮历史",
+          "intent: clarify_reply模式，拼接3轮历史重新解析",
+          "intent: scenario=unknown restaurant_intent=none clarification_needed=True missing_slots=['scenario']",
+          "clarification: 已达3轮上限，使用默认值兜底 ['scenario']",
+          "constraint: scenario=friends plan_mode=activity_only r_intent=none a_intent=open r_kw=[] a_kw=['公园', '美术馆', '书店', '展览', '创意园区'] adjust=0 origin=江安校区@成都 14:00-18:00",
+          "fact: status=ok no_spicy=False summary=搜到35个活动候选、0家餐厅候选（缺口补搜：文创园）",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_1 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_1"
+        ]
+      }
+    }
+  ]
+}

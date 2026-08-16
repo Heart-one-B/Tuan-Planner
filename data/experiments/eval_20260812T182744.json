@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-08-12T18:27:44.695806",
+  "cases_version": 3,
+  "layers": [
+    "l2_e2e"
+  ],
+  "memory": false,
+  "selected": 1,
+  "summary": {
+    "overall": {
+      "n": 1,
+      "passed": 1,
+      "failed": 0,
+      "error": 0
+    },
+    "by_layer": {
+      "l2_e2e": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    },
+    "by_origin": {
+      "constructed": {
+        "n": 1,
+        "passed": 1,
+        "failed": 0,
+        "error": 0
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "L2-14",
+      "layer": "l2_e2e",
+      "origin": "constructed",
+      "input": "周六下午两点到晚上十点，四个人和朋友，从春熙路出发，逛逛吃饭",
+      "expect": {
+        "origin_city": "成都"
+      },
+      "verdict": "passed",
+      "checks": [
+        {
+          "key": "origin_city",
+          "passed": true,
+          "detail": "origin_city: 期望='成都' 实际='成都'"
+        }
+      ],
+      "obs": {
+        "restaurant_intent": "open",
+        "restaurant_explicit_types": [],
+        "scenario": "friends",
+        "plan_mode": "activity_plus_meal",
+        "clarification_needed": false,
+        "missing_slots": [],
+        "people_count": 4,
+        "diet_preference": [],
+        "must_avoid": [],
+        "no_spicy": false,
+        "origin_city": "成都",
+        "waypoints": [],
+        "fact_status": "ok",
+        "searched_restaurant_keywords": [
+          "川菜",
+          "日料",
+          "烧烤",
+          "火锅",
+          "西餐"
+        ],
+        "searched_activity_keywords": [
+          "剧本杀",
+          "电影院",
+          "逛街",
+          "KTV",
+          "密室逃脱",
+          "酒吧"
+        ],
+        "selected_plan_id": "plan_2",
+        "selected_restaurants": [
+          {
+            "id": "B0FFGDU0MT",
+            "name": "而绘空中花园·川味西餐(春熙路10年老店)",
+            "type": "080000",
+            "location": "",
+            "rating": "",
+            "cost": null,
+            "environment": "unknown",
+            "eta_minutes": null
+          }
+        ],
+        "plan_item_names": [
+          "而绘·花园沉浸式喜剧戏剧场-王府井店(王府井百货店)",
+          "而绘空中花园·川味西餐(春熙路10年老店)",
+          "奇遇酒馆"
+        ],
+        "time_coverage": 0.71875,
+        "eval_score": 92.0,
+        "eval_reason": "沉浸式喜剧剧场互动性强适合朋友增进感情，同地点用餐减少转场，酒馆收尾轻松惬意；avg_eta仅9分钟通勤最便捷，rating 4.4优秀，整体体验独特且有层次感",
+        "adjust_history": [],
+        "last_route": "new_plan",
+        "produced_plan": true,
+        "errors": [],
+        "task_log": [
+          "routing: no existing plan, route=new_plan",
+          "intent: scenario=friends restaurant_intent=open clarification_needed=False missing_slots=[]",
+          "constraint: scenario=friends plan_mode=activity_plus_meal r_intent=open a_intent=open r_kw=['火锅', '川菜', '烧烤', '日料', '西餐'] a_kw=['逛街', '电影院', 'KTV', '剧本杀', '密室逃脱', '酒吧'] adjust=0 origin=春熙路@成都 14:00-22:00",
+          "fact: status=ok no_spicy=False summary=搜到40个活动候选、16家餐厅候选",
+          "planning: status=ok summary=生成 3 个候选方案",
+          "evaluation: status=ok selected=plan_2 score=92.0",
+          "presentation: 渲染完成 plan_id=plan_2"
+        ]
+      }
+    }
+  ]
+}
