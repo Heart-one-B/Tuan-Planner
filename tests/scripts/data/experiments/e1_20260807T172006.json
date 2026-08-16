@@ -1,0 +1,607 @@
+{
+  "config": {
+    "n": 5,
+    "reuse_memory": false,
+    "session1": [
+      "这周六下午两点到晚上十点，四个人朋友聚会，从四川大学江安校区出发，找个地方逛逛然后吃个饭",
+      "这个火锅算了，我们几个都不太能吃辣，换个清淡点的口味吧",
+      "这家看着像连锁店，想找点本地特色的小馆子"
+    ],
+    "session2": "这周日下午两点到晚上九点，还是四个人，从四川大学江安校区出发，找个地方聚一聚吃个饭"
+  },
+  "summary": {
+    "main": {
+      "group": "main",
+      "n": 5,
+      "valid": 5,
+      "passed": 5,
+      "invalid_reason": [],
+      "median_tokens": 10730,
+      "recalled": 2,
+      "no_plan": 0
+    },
+    "control": {
+      "group": "control",
+      "n": 5,
+      "valid": 5,
+      "passed": 5,
+      "invalid_reason": [],
+      "median_tokens": 10507,
+      "recalled": 0,
+      "no_plan": 0
+    }
+  },
+  "records": [
+    {
+      "rep": 1,
+      "group": "main",
+      "tag": "M1-6af5",
+      "memories": [
+        "user_dining_venue_preference",
+        "user_dietary_preference"
+      ],
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "粤菜馆",
+        "江浙菜",
+        "本地特色小馆",
+        "茶餐厅"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [
+          "清淡",
+          "不辣"
+        ],
+        "activity_style": [],
+        "must_avoid": [
+          "连锁店",
+          "重辣",
+          "火锅"
+        ]
+      },
+      "recalled": true,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "绿茶餐厅(成都双流茂业天地店)",
+          "typecode": "050118",
+          "cost": 60.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "绿茶餐厅(成都双流茂业天地店)[特色/地方风味餐厅]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "绿茶餐厅(成都双流茂业天地店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "memory: 召回 命中（已推送 2 条）",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['粤菜馆', '江浙菜', '本地特色小馆', '茶餐厅'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到31个活动候选、20家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_1 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_1"
+      ],
+      "root_trace_id": "6ed076dd-19a7-46b5-83fc-84855f56e206",
+      "tokens": 10730,
+      "duration_ms": 42535
+    },
+    {
+      "rep": 2,
+      "group": "main",
+      "tag": "M2-bdb8",
+      "memories": [
+        "user_dining_style_preference",
+        "user_dietary_preference"
+      ],
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "粤菜",
+        "茶餐厅",
+        "潮汕牛肉火锅"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [
+          "清淡",
+          "不辣",
+          "本地特色小馆子"
+        ],
+        "activity_style": [],
+        "must_avoid": [
+          "连锁店",
+          "辣"
+        ]
+      },
+      "recalled": true,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "山海悦·港式粤菜·手工茶点",
+          "typecode": "050100",
+          "cost": 113.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "山海悦·港式粤菜·手工茶点[中餐厅]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": []
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "memory: 召回 命中（已推送 2 条）",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['粤菜', '茶餐厅', '潮汕牛肉火锅'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到31个活动候选、24家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_1 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_1"
+      ],
+      "root_trace_id": "8985952f-3d48-4e7e-b914-28d4abc34d87",
+      "tokens": 10932,
+      "duration_ms": 39062
+    },
+    {
+      "rep": 3,
+      "group": "main",
+      "tag": "M3-002d",
+      "memories": [],
+      "error": "记忆库为空，本次主组样本无效",
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烧烤",
+        "川菜馆",
+        "创意餐厅"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "巴国妹子毛肚火锅(蓝光·圣菲悦城店)",
+          "typecode": "050117",
+          "cost": 106.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "巴国妹子毛肚火锅(蓝光·圣菲悦城店)[火锅店]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "巴国妹子毛肚火锅(蓝光·圣菲悦城店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "memory: 召回 无（已推送 0 条）",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '创意餐厅'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到31个活动候选、27家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_1 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_1"
+      ],
+      "root_trace_id": "a7f75a18-e78b-406d-834b-e014464b3b18",
+      "tokens": 10725,
+      "duration_ms": 37684
+    },
+    {
+      "rep": 4,
+      "group": "main",
+      "tag": "M4-81aa",
+      "memories": [],
+      "error": "记忆库为空，本次主组样本无效",
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烧烤",
+        "川菜馆",
+        "创意餐厅"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "聚义轩茶楼(蓝光·圣菲悦城一期店)",
+          "typecode": "050600",
+          "cost": 24.0
+        },
+        {
+          "name": "肖老板烧烤·虾蟹江湖菜",
+          "typecode": "050118",
+          "cost": 65.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "聚义轩茶楼(蓝光·圣菲悦城一期店)[茶艺馆]",
+          "肖老板烧烤·虾蟹江湖菜[特色/地方风味餐厅]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "聚义轩茶楼(蓝光·圣菲悦城一期店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "memory: 召回 无（已推送 0 条）",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '创意餐厅'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到24个活动候选、27家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_2 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_2"
+      ],
+      "root_trace_id": "0a65b6b1-066d-48c3-b7bb-38a381e87f59",
+      "tokens": 10194,
+      "duration_ms": 38499
+    },
+    {
+      "rep": 5,
+      "group": "main",
+      "tag": "M5-5e02",
+      "memories": [],
+      "error": "记忆库为空，本次主组样本无效",
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烧烤",
+        "川菜馆",
+        "日料"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+          "typecode": "050000",
+          "cost": 57.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)[餐饮相关场所]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "memory: 召回 无（已推送 0 条）",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '日料'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到31个活动候选、32家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_2 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_2"
+      ],
+      "root_trace_id": "e797d933-b676-4c77-850e-dfc0dc449581",
+      "tokens": 11081,
+      "duration_ms": 36120
+    },
+    {
+      "rep": 1,
+      "group": "control",
+      "tag": "C1-ddca",
+      "memories": [],
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烧烤",
+        "川菜馆",
+        "创意融合菜"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+          "typecode": "050000",
+          "cost": 57.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)[餐饮相关场所]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '创意融合菜'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到31个活动候选、27家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_2 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_2"
+      ],
+      "root_trace_id": "8eedcd72-0bcf-43da-90cb-9956f7277714",
+      "tokens": 10682,
+      "duration_ms": 34941
+    },
+    {
+      "rep": 2,
+      "group": "control",
+      "tag": "C2-460c",
+      "memories": [],
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烧烤",
+        "川菜馆",
+        "江湖菜"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+          "typecode": "050000",
+          "cost": 57.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)[餐饮相关场所]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '江湖菜'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到31个活动候选、31家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_2 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_2"
+      ],
+      "root_trace_id": "c7af816d-6f02-4e15-99df-f70ef6087474",
+      "tokens": 10731,
+      "duration_ms": 33662
+    },
+    {
+      "rep": 3,
+      "group": "control",
+      "tag": "C3-3efc",
+      "memories": [],
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烤肉",
+        "川菜馆",
+        "创意料理"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "巴国妹子毛肚火锅(蓝光·圣菲悦城店)",
+          "typecode": "050117",
+          "cost": 106.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "巴国妹子毛肚火锅(蓝光·圣菲悦城店)[火锅店]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "巴国妹子毛肚火锅(蓝光·圣菲悦城店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烤肉', '川菜馆', '创意料理'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到24个活动候选、26家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_1 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_1"
+      ],
+      "root_trace_id": "3e39edf5-0aa4-4584-9c1d-693afa3be205",
+      "tokens": 10275,
+      "duration_ms": 35408
+    },
+    {
+      "rep": 4,
+      "group": "control",
+      "tag": "C4-3a89",
+      "memories": [],
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烧烤",
+        "川菜馆",
+        "创意料理"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "巴国妹子毛肚火锅(蓝光·圣菲悦城店)",
+          "typecode": "050117",
+          "cost": 106.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "巴国妹子毛肚火锅(蓝光·圣菲悦城店)[火锅店]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "巴国妹子毛肚火锅(蓝光·圣菲悦城店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '创意料理'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到24个活动候选、26家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_1 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_1"
+      ],
+      "root_trace_id": "0a3eee6b-b30a-451d-b93d-ab458a16e335",
+      "tokens": 10026,
+      "duration_ms": 33299
+    },
+    {
+      "rep": 5,
+      "group": "control",
+      "tag": "C5-e134",
+      "memories": [],
+      "restaurant_intent": "open",
+      "restaurant_keywords": [
+        "火锅",
+        "烧烤",
+        "川菜馆",
+        "创意融合菜"
+      ],
+      "preferences": {
+        "distance_preference": null,
+        "diet_preference": [],
+        "activity_style": [],
+        "must_avoid": []
+      },
+      "recalled": false,
+      "produced_plan": true,
+      "selected_restaurants": [
+        {
+          "name": "尹小姐·齐齐哈尔烤肉(圣菲店)",
+          "typecode": "050000",
+          "cost": 57.0
+        }
+      ],
+      "spicy": {
+        "valid": true,
+        "passed": true,
+        "violations": [],
+        "detail": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)[餐饮相关场所]"
+        ]
+      },
+      "chain_obs": {
+        "known_chain_brands": [],
+        "name_has_paren": [
+          "尹小姐·齐齐哈尔烤肉(圣菲店)"
+        ]
+      },
+      "task_log": [
+        "routing: no existing plan, route=new_plan",
+        "intent: scenario=friends clarification_needed=False missing_slots=[]",
+        "constraint: scenario=friends plan_mode=activity_plus_meal restaurant_intent=open restaurant_keywords=['火锅', '烧烤', '川菜馆', '创意融合菜'] origin=四川大学江安校区 start=14:00 end=21:00",
+        "fact: status=ok summary=搜到30个活动候选、27家餐厅候选",
+        "planning: status=ok summary=生成 3 个候选方案",
+        "evaluation: status=ok selected=plan_2 score=88.0",
+        "presentation: 渲染完成 plan_id=plan_2"
+      ],
+      "root_trace_id": "b9ffe16a-60ab-4ab4-b910-eb554290e62a",
+      "tokens": 10507,
+      "duration_ms": 83524
+    }
+  ]
+}

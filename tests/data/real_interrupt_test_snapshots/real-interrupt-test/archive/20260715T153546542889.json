@@ -1,0 +1,28 @@
+{
+  "session_id": "real-interrupt-test",
+  "task": "用一句话介绍一下你自己。",
+  "trace_id": "007fe313-1f1e-4ed8-abcc-39ae8d3fb190",
+  "status": "completed",
+  "rounds": 1,
+  "tool_calls_used": 0,
+  "messages": [
+    {
+      "role": "system",
+      "content": "你是助手,回答简洁。"
+    },
+    {
+      "role": "user",
+      "content": "用一句话介绍一下你自己。"
+    },
+    {
+      "role": "assistant",
+      "content": "我是你的AI助手，随时为你提供简洁高效的帮助。"
+    }
+  ],
+  "compaction_history": [],
+  "offload_records": [],
+  "total_tokens": 0,
+  "token_source": "estimated",
+  "created_at": "2026-07-15T15:35:46.527200",
+  "version": 1
+}

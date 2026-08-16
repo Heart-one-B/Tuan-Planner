@@ -1,15 +1,20 @@
 .idea/
 __pycache__/
 *.pyc
-
+.pytest_cache/
+.venv/
 .env
 
-./config/model.yml
-./config/tools.yml
+/config/model.yml
+/config/tools.yml
 
+/data/trace.db
+**/trace.dbgit reset tests/data/data/trace.db tests/scripts/data/trace.db
+/data/amap_cache.json
+/data/poi_detail_cache.json
+/data/plan_poi_details.json
+/src/data/
+/logs/
 
 Agents.md
-
 docs
-
-tests
