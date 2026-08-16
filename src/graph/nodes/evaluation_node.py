@@ -1,19 +1,21 @@
+# src/graph/nodes/evaluation_node.py
 from __future__ import annotations
 
 from agents.evaluation.agent import EvaluationAgent
-from src.model.factory import build_llm_client
 from src.graph.state import AgentState
+from src.graph.tracing import parent_span_of
+from src.model.factory import build_llm_client
 
 
 async def evaluation_node(state: AgentState) -> dict:
     task_log = list(state.get("task_log") or [])
-    errors   = list(state.get("errors") or [])
+    errors = list(state.get("errors") or [])
     agent_outputs = dict(state.get("agent_outputs") or {})
 
-    plan_output  = agent_outputs.get("planning") or {}
-    plan_data    = plan_output.get("data") or {}
+    plan_output = agent_outputs.get("planning") or {}
+    plan_data = plan_output.get("data") or {}
     plan_context = state.get("plan_context") or {}
-    fact_data    = (agent_outputs.get("fact") or {}).get("data") or {}
+    fact_data = (agent_outputs.get("fact") or {}).get("data") or {}
 
     if not plan_data:
         errors.append({"node": "evaluation", "error": "plan_data 缺失", "recoverable": False})
@@ -25,7 +27,7 @@ async def evaluation_node(state: AgentState) -> dict:
             plan_data=plan_data,
             plan_context=plan_context,
             fact_data=fact_data,
-            trace_id=state.get("session_id"),
+            parent_span=parent_span_of(state),
         )
         agent_outputs["evaluation"] = {
             "status": result.status,
